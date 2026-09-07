@@ -1,1 +1,375 @@
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#10141c;color:#fff}.container{max-width:1200px;margin:auto;padding:20px}header{text-align:center;margin-bottom:25px}header h1,.card h3{color:#00d4ff}.controls{display:flex;flex-wrap:wrap;gap:15px;background:#1b2230;padding:20px;border-radius:12px}.controls div{display:flex;flex-direction:column;gap:7px;flex:1;min-width:170px}label{color:#aaa}select,button{padding:12px;border-radius:8px;border:none}button{background:#00c853;color:white;cursor:pointer;font-weight:bold;min-width:150px;align-self:end}.status-card,.best-signal,.card,.digit-section,.live-section,.recent-section{background:#1b2230;border-radius:12px}.status-card{margin-top:20px;padding:15px}.best-signal{text-align:center;padding:30px;margin-top:20px}.big-digit{font-size:70px;color:#00d4ff;font-weight:bold;margin:12px}.confidence{font-size:24px}#entryStatus{margin:18px 0;font-size:20px}.best-signal small,.card small{color:#aaa}.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin-top:20px}.card{padding:20px;text-align:center}.card strong{display:block;font-size:25px;margin:8px 0}.secondary .card{min-height:130px}.digit-section,.live-section,.recent-section{margin-top:20px;padding:20px}.digit-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.digit-card{background:#252e3f;padding:14px;text-align:center;border-radius:10px}.digit-number{font-size:28px;color:#00d4ff}.live-section{text-align:center}.live-price{font-size:42px;color:#00ff88;font-weight:bold}#recentDigits{display:flex;flex-wrap:wrap;gap:8px}.recent-digit{background:#252e3f;padding:10px;border-radius:6px;min-width:35px;text-align:center}.hot{outline:2px solid #00c853}.cold{outline:2px solid #7f8c8d}@media(max-width:600px){.controls{flex-direction:column}.controls div{width:100%}.controls select,.controls button{width:100%}.digit-grid{grid-template-columns:repeat(2,1fr)}}
+* {
+  box-sizing: border-box;
+  }
+
+body {
+margin: 0;
+
+```
+font-family: Arial, sans-serif;
+
+background: #10141c;
+
+color: white;
+```
+
+}
+
+.container {
+
+```
+max-width: 1200px;
+
+margin: auto;
+
+padding: 20px;
+```
+
+}
+
+header {
+
+```
+text-align: center;
+
+margin-bottom: 25px;
+```
+
+}
+
+header h1 {
+
+```
+color: #00d4ff;
+```
+
+}
+
+.controls {
+
+```
+display: flex;
+
+flex-wrap: wrap;
+
+gap: 15px;
+
+background: #1b2230;
+
+padding: 20px;
+
+border-radius: 12px;
+```
+
+}
+
+.controls div {
+
+```
+display: flex;
+
+flex-direction: column;
+
+gap: 7px;
+
+flex: 1;
+
+min-width: 170px;
+```
+
+}
+
+label {
+
+```
+color: #aaa;
+```
+
+}
+
+select,
+button {
+
+```
+padding: 12px;
+
+border-radius: 8px;
+
+border: none;
+```
+
+}
+
+button {
+
+```
+background: #00c853;
+
+color: white;
+
+cursor: pointer;
+
+font-weight: bold;
+
+min-width: 150px;
+```
+
+}
+
+button:hover {
+
+```
+opacity: 0.8;
+```
+
+}
+
+.status-card {
+
+```
+margin-top: 20px;
+
+padding: 15px;
+
+background: #1b2230;
+
+border-radius: 12px;
+```
+
+}
+
+.best-signal {
+
+```
+text-align: center;
+
+background: #1b2230;
+
+padding: 30px;
+
+border-radius: 12px;
+
+margin-top: 20px;
+```
+
+}
+
+.big-digit {
+
+```
+font-size: 70px;
+
+color: #00d4ff;
+
+font-weight: bold;
+
+margin: 12px;
+```
+
+}
+
+.confidence {
+
+```
+font-size: 24px;
+```
+
+}
+
+#entryStatus {
+
+```
+margin: 18px 0;
+
+font-size: 20px;
+```
+
+}
+
+.best-signal small,
+.card small {
+
+```
+color: #aaa;
+```
+
+}
+
+.stats-grid {
+
+```
+display: grid;
+
+grid-template-columns:
+    repeat(auto-fit, minmax(180px, 1fr));
+
+gap: 15px;
+
+margin-top: 20px;
+```
+
+}
+
+.card {
+
+```
+background: #1b2230;
+
+padding: 20px;
+
+border-radius: 12px;
+
+text-align: center;
+```
+
+}
+
+.card h3 {
+
+```
+color: #00d4ff;
+```
+
+}
+
+.card strong {
+
+```
+display: block;
+
+font-size: 25px;
+
+margin: 8px 0;
+```
+
+}
+
+.digit-section,
+.live-section,
+.recent-section {
+
+```
+margin-top: 20px;
+
+padding: 20px;
+
+background: #1b2230;
+
+border-radius: 12px;
+```
+
+}
+
+.digit-grid {
+
+```
+display: grid;
+
+grid-template-columns:
+    repeat(5, 1fr);
+
+gap: 10px;
+```
+
+}
+
+.digit-card {
+
+```
+background: #252e3f;
+
+padding: 14px;
+
+text-align: center;
+
+border-radius: 10px;
+```
+
+}
+
+.digit-number {
+
+```
+font-size: 28px;
+
+color: #00d4ff;
+```
+
+}
+
+.live-section {
+
+```
+text-align: center;
+```
+
+}
+
+.live-price {
+
+```
+font-size: 42px;
+
+color: #00ff88;
+
+font-weight: bold;
+```
+
+}
+
+#recentDigits {
+
+```
+display: flex;
+
+flex-wrap: wrap;
+
+gap: 8px;
+```
+
+}
+
+.recent-digit {
+
+```
+background: #252e3f;
+
+padding: 10px;
+
+border-radius: 6px;
+
+min-width: 35px;
+
+text-align: center;
+```
+
+}
+
+@media (max-width: 600px) {
+
+```
+.controls {
+
+    flex-direction: column;
+
+}
+
+
+.controls div,
+.controls select,
+.controls button {
+
+    width: 100%;
+
+}
+
+
+.digit-grid {
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+}
+```
+
+}
