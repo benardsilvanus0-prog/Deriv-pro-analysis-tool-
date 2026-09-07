@@ -1,1 +1,351 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+```
+<title>Deriv Digit Analyzer Pro</title>
+
+<link rel="stylesheet" href="style.css">
+```
+
+</head>
+
+<body>
+
+<div class="container">
+
+```
+<header>
+    <h1>📊 Deriv Digit Analyzer Pro</h1>
+    <p>
+        Live Statistical Analysis • Matches • Over/Under • Even/Odd
+    </p>
+</header>
+
+
+<!-- CONTROLS -->
+
+<section class="controls">
+
+    <div>
+        <label>Market</label>
+
+        <select id="marketSelect">
+            <option>Connect to load markets...</option>
+        </select>
+    </div>
+
+
+    <div>
+        <label>Tick History</label>
+
+        <select id="tickCount">
+            <option value="100">100 Ticks</option>
+            <option value="500">500 Ticks</option>
+            <option value="1000" selected>1000 Ticks</option>
+        </select>
+    </div>
+
+
+    <div>
+        <label>Over / Under Barrier</label>
+
+        <select id="barrier"></select>
+    </div>
+
+
+    <div>
+        <label>Entry Threshold</label>
+
+        <select id="threshold">
+            <option value="60">60%</option>
+            <option value="65" selected>65%</option>
+            <option value="70">70%</option>
+            <option value="75">75%</option>
+        </select>
+    </div>
+
+
+    <button id="connectBtn">
+        🔌 Connect
+    </button>
+
+</section>
+
+
+<!-- CONNECTION STATUS -->
+
+<div class="status-card">
+
+    Status:
+
+    <span id="connectionStatus">
+        🔴 Disconnected
+    </span>
+
+</div>
+
+
+<!-- BEST SIGNAL -->
+
+<section class="best-signal">
+
+    <h2>🏆 Best Statistical Signal</h2>
+
+    <div id="bestStrategy">
+        Waiting for data...
+    </div>
+
+
+    <div class="big-digit" id="bestDigit">
+        -
+    </div>
+
+
+    <div class="confidence">
+
+        Score:
+
+        <span id="bestConfidence">
+            0%
+        </span>
+
+    </div>
+
+
+    <div id="entryStatus">
+
+        ⏳ Collecting ticks...
+
+    </div>
+
+
+    <small>
+        Statistical analysis only — not a guarantee of future results.
+    </small>
+
+</section>
+
+
+<!-- MAIN STRATEGIES -->
+
+<section class="stats-grid">
+
+
+    <!-- DIGIT MATCH -->
+
+    <div class="card">
+
+        <h3>🔢 DIGIT MATCH</h3>
+
+        <p>
+
+            Candidate:
+
+            <strong id="matchDigit">
+                -
+            </strong>
+
+        </p>
+
+
+        <p>
+
+            Score:
+
+            <strong id="matchConfidence">
+                0%
+            </strong>
+
+        </p>
+
+
+        <small id="matchGap">
+
+            Gap: -
+
+        </small>
+
+    </div>
+
+
+    <!-- OVER -->
+
+    <div class="card">
+
+        <h3>📈 DIGIT OVER</h3>
+
+        <p id="overLabel">
+            OVER -
+        </p>
+
+        <strong id="overConfidence">
+            0%
+        </strong>
+
+    </div>
+
+
+    <!-- UNDER -->
+
+    <div class="card">
+
+        <h3>📉 DIGIT UNDER</h3>
+
+        <p id="underLabel">
+            UNDER -
+        </p>
+
+        <strong id="underConfidence">
+            0%
+        </strong>
+
+    </div>
+
+
+    <!-- EVEN -->
+
+    <div class="card">
+
+        <h3>🔵 EVEN</h3>
+
+        <strong id="evenConfidence">
+            0%
+        </strong>
+
+    </div>
+
+
+    <!-- ODD -->
+
+    <div class="card">
+
+        <h3>🟠 ODD</h3>
+
+        <strong id="oddConfidence">
+            0%
+        </strong>
+
+    </div>
+
+</section>
+
+
+<!-- EXTRA ANALYSIS -->
+
+<section class="stats-grid">
+
+
+    <div class="card">
+
+        <h3>🔥 HOT DIGIT</h3>
+
+        <strong id="hotDigit">
+            -
+        </strong>
+
+        <small id="hotInfo"></small>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>❄️ COLD DIGIT</h3>
+
+        <strong id="coldDigit">
+            -
+        </strong>
+
+        <small id="coldInfo"></small>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>📊 TICKS</h3>
+
+        <strong id="tickTotal">
+            0
+        </strong>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>⚡ MOMENTUM</h3>
+
+        <strong id="momentumInfo">
+            -
+        </strong>
+
+    </div>
+
+</section>
+
+
+<!-- DIGIT DISTRIBUTION -->
+
+<section class="digit-section">
+
+    <h2>🔢 Digit Distribution & Gap</h2>
+
+    <div
+        id="digitGrid"
+        class="digit-grid">
+    </div>
+
+</section>
+
+
+<!-- LIVE TICK -->
+
+<section class="live-section">
+
+    <h2>⚡ Live Tick</h2>
+
+    <div
+        class="live-price"
+        id="livePrice">
+
+        ---
+
+    </div>
+
+
+    <p>
+
+        Last Digit:
+
+        <strong id="lastDigit">
+            -
+        </strong>
+
+    </p>
+
+</section>
+
+
+<!-- RECENT DIGITS -->
+
+<section class="recent-section">
+
+    <h2>📜 Recent Digits</h2>
+
+    <div id="recentDigits"></div>
+
+</section>
+```
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
 
