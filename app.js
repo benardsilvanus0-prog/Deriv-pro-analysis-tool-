@@ -1,1207 +1,1090 @@
+// ==========================================
+// DERIV DIGIT ANALYZER - FIXED CONNECTION
+// ==========================================
+
 let ws = null;
-
 let ticks = [];
-
 let maxTicks = 1000;
+let currentSymbol = null;
 
-/* =========================
-GET HTML ELEMENTS
-========================= */
+
+// ==========================================
+// HTML ELEMENTS
+// ==========================================
 
 const $ = (id) => document.getElementById(id);
 
 const marketSelect = $("marketSelect");
-
 const tickCountSelect = $("tickCount");
-
 const barrierSelect = $("barrier");
-
 const thresholdSelect = $("threshold");
-
 const connectBtn = $("connectBtn");
 
-/* =========================
-CREATE BARRIERS
-========================= */
+
+// ==========================================
+// CREATE DIGIT BARRIERS
+// ==========================================
 
 for (let i = 0; i <= 9; i++) {
 
-```
-const option = document.createElement("option");
+    const option = document.createElement("option");
 
-option.value = i;
+    option.value = i;
+    option.textContent = i;
 
-option.textContent = i;
+    if (i === 5) {
+        option.selected = true;
+    }
 
-
-if (i === 5) {
-
-    option.selected = true;
-
+    barrierSelect.appendChild(option);
 }
 
 
-barrierSelect.appendChild(option);
-```
-
-}
-
-/* =========================
-CONNECTION STATUS
-========================= */
+// ==========================================
+// STATUS
+// ==========================================
 
 function setStatus(message) {
 
-```
-$("connectionStatus").textContent = message;
-```
+    $("connectionStatus").textContent = message;
 
 }
 
-/* =========================
-SEND WEBSOCKET MESSAGE
-========================= */
+
+// ==========================================
+// SEND WEBSOCKET MESSAGE
+// ==========================================
 
 function send(data) {
 
-```
-if (
-    ws &&
-    ws.readyState === WebSocket.OPEN
-) {
+    if (!ws) return;
 
-    ws.send(
-        JSON.stringify(data)
-    );
+    if (ws.readyState === WebSocket.OPEN) {
 
-}
-```
+        ws.send(JSON.stringify(data));
+
+        console.log("SENT:", data);
+
+    }
 
 }
 
-/* =========================
-CONNECT TO DERIV
-========================= */
+
+// ==========================================
+// CONNECT TO DERIV
+// ==========================================
 
 function connectDeriv() {
 
-```
-if (
-    ws &&
-    ws.readyState === WebSocket.OPEN
-) {
+    // Prevent multiple connections
 
-    subscribeMarket();
+    if (ws && ws.readyState === WebSocket.OPEN) {
 
-    return;
-
-}
-
-
-setStatus("🟡 Connecting...");
-
-
-ws = new WebSocket(
-
-    "wss://ws.derivws.com/websockets/v3?app_id=1089"
-
-);
-
-
-ws.onopen = () => {
-
-    setStatus(
-        "🟢 Connected — Loading markets..."
-    );
-
-
-    send({
-
-        active_symbols: "brief"
-
-    });
-
-};
-
-
-ws.onmessage = (event) => {
-
-    const data =
-        JSON.parse(event.data);
-
-
-    /* API ERROR */
-
-    if (data.error) {
-
-        console.error(
-            data.error
-        );
-
-
-        setStatus(
-
-            "🔴 " +
-            data.error.message
-
-        );
+        setStatus("🟢 Already connected");
 
         return;
 
     }
 
 
-    /* ACTIVE SYMBOLS */
+    setStatus("🟡 Connecting to Deriv...");
 
-    if (
-        data.msg_type ===
-        "active_symbols"
-    ) {
+    connectBtn.disabled = true;
 
-        loadMarkets(
-            data.active_symbols || []
-        );
-
-    }
+    connectBtn.textContent = "Connecting...";
 
 
-    /* HISTORY */
+    // Deriv WebSocket
 
-    if (
-        data.msg_type ===
-        "history"
-    ) {
-
-        loadHistory(
-            data.history
-        );
-
-    }
-
-
-    /* LIVE TICK */
-
-    if (
-        data.msg_type ===
-        "tick"
-    ) {
-
-        handleTick(
-            data.tick
-        );
-
-    }
-
-};
-
-
-ws.onerror = () => {
-
-    setStatus(
-        "🔴 Connection Error"
+    ws = new WebSocket(
+        "wss://ws.binaryws.com/websockets/v3?app_id=1089"
     );
 
-};
+
+    // ==========================================
+    // CONNECTION OPEN
+    // ==========================================
+
+    ws.onopen = function () {
+
+        console.log("Deriv WebSocket Connected");
+
+        setStatus("🟢 Connected — Loading markets...");
+
+        connectBtn.disabled = false;
+
+        connectBtn.textContent = "🔄 Connected";
 
 
-ws.onclose = () => {
+        // Request markets
 
-    setStatus(
-        "🔴 Disconnected"
-    );
+        send({
 
-};
-```
+            active_symbols: "brief",
+
+            req_id: 1
+
+        });
+
+    };
+
+
+    // ==========================================
+    // RECEIVE DATA
+    // ==========================================
+
+    ws.onmessage = function (event) {
+
+        let data;
+
+        try {
+
+            data = JSON.parse(event.data);
+
+        } catch (error) {
+
+            console.error("JSON Error:", error);
+
+            return;
+
+        }
+
+
+        console.log("RECEIVED:", data);
+
+
+        // ==========================================
+        // API ERROR
+        // ==========================================
+
+        if (data.error) {
+
+            console.error("Deriv API Error:", data.error);
+
+            setStatus(
+                "🔴 API Error: " +
+                data.error.message
+            );
+
+            return;
+
+        }
+
+
+        // ==========================================
+        // ACTIVE SYMBOLS
+        // ==========================================
+
+        if (data.msg_type === "active_symbols") {
+
+            console.log(
+                "Markets received:",
+                data.active_symbols
+            );
+
+            loadMarkets(
+                data.active_symbols || []
+            );
+
+        }
+
+
+        // ==========================================
+        // TICK HISTORY
+        // ==========================================
+
+        if (data.msg_type === "history") {
+
+            loadHistory(data.history);
+
+        }
+
+
+        // ==========================================
+        // LIVE TICK
+        // ==========================================
+
+        if (data.msg_type === "tick") {
+
+            handleTick(data.tick);
+
+        }
+
+    };
+
+
+    // ==========================================
+    // CONNECTION ERROR
+    // ==========================================
+
+    ws.onerror = function (error) {
+
+        console.error("WebSocket Error:", error);
+
+        setStatus(
+            "🔴 Connection error — check internet"
+        );
+
+        connectBtn.disabled = false;
+
+        connectBtn.textContent = "🔌 Connect";
+
+    };
+
+
+    // ==========================================
+    // CONNECTION CLOSED
+    // ==========================================
+
+    ws.onclose = function () {
+
+        console.log("WebSocket Disconnected");
+
+        setStatus("🔴 Disconnected");
+
+        connectBtn.disabled = false;
+
+        connectBtn.textContent = "🔌 Connect";
+
+    };
 
 }
 
-/* =========================
-LOAD MARKETS
-========================= */
+
+// ==========================================
+// LOAD MARKETS
+// ==========================================
 
 function loadMarkets(symbols) {
 
-```
-/*
-  Prefer Synthetic Markets
-*/
-
-const preferredMarkets =
-    symbols.filter(symbol => {
+    marketSelect.innerHTML = "";
 
 
-        const text =
+    if (!symbols || symbols.length === 0) {
 
-            (
-                (symbol.display_name || "") +
-                " " +
-                (symbol.market || "")
-            ).toLowerCase();
+        const option =
+            document.createElement("option");
+
+        option.textContent =
+            "No markets received";
+
+        marketSelect.appendChild(option);
+
+        setStatus("🔴 No markets returned");
+
+        return;
+
+    }
 
 
-        return (
+    // ==========================================
+    // SUPPORT OLD AND NEW DERIV API FIELD NAMES
+    // ==========================================
 
-            text.includes("volatility") ||
-            text.includes("synthetic") ||
-            text.includes("crash") ||
-            text.includes("boom") ||
-            text.includes("jump") ||
-            text.includes("step")
+    const formattedMarkets = symbols.map(function (item) {
 
-        );
+        return {
+
+            symbol:
+
+                item.symbol ||
+                item.underlying_symbol,
+
+
+            name:
+
+                item.display_name ||
+                item.underlying_symbol_name ||
+                item.symbol ||
+                item.underlying_symbol,
+
+
+            market:
+
+                item.market || ""
+
+        };
 
     });
 
 
-const markets =
+    // Remove invalid markets
 
-    preferredMarkets.length > 0
+    const validMarkets =
+        formattedMarkets.filter(function (item) {
 
-        ? preferredMarkets
+            return item.symbol;
 
-        : symbols;
-
-
-marketSelect.innerHTML = "";
+        });
 
 
-if (!markets.length) {
+    // ==========================================
+    // PREFER SYNTHETIC MARKETS
+    // ==========================================
 
-    const option =
-        document.createElement("option");
+    let syntheticMarkets =
+        validMarkets.filter(function (item) {
 
-    option.textContent =
-        "No markets returned";
+            const text =
+                (
+                    item.name +
+                    " " +
+                    item.market
+                ).toLowerCase();
 
 
-    marketSelect.appendChild(option);
+            return (
+
+                text.includes("volatility") ||
+
+                text.includes("synthetic") ||
+
+                text.includes("jump") ||
+
+                text.includes("boom") ||
+
+                text.includes("crash") ||
+
+                text.includes("step")
+
+            );
+
+        });
+
+
+    // If no synthetic markets found, show all
+
+    if (syntheticMarkets.length === 0) {
+
+        syntheticMarkets = validMarkets;
+
+    }
+
+
+    // Sort markets
+
+    syntheticMarkets.sort(function (a, b) {
+
+        return a.name.localeCompare(b.name);
+
+    });
+
+
+    // Add markets to dropdown
+
+    syntheticMarkets.forEach(function (item) {
+
+        const option =
+            document.createElement("option");
+
+
+        option.value = item.symbol;
+
+
+        option.textContent =
+            item.name +
+            " (" +
+            item.symbol +
+            ")";
+
+
+        marketSelect.appendChild(option);
+
+    });
+
+
+    // Select first market
+
+    currentSymbol =
+        marketSelect.value;
 
 
     setStatus(
-        "🔴 No markets available"
+        "🟢 Markets loaded — Loading ticks..."
     );
 
-    return;
+
+    // Start analysis
+
+    subscribeMarket();
 
 }
 
 
-markets.sort((a, b) =>
-
-    (a.display_name || "")
-        .localeCompare(
-            b.display_name || ""
-        )
-
-);
-
-
-markets.forEach(symbol => {
-
-
-    const option =
-        document.createElement("option");
-
-
-    option.value =
-        symbol.symbol;
-
-
-    option.textContent =
-
-        symbol.display_name +
-        " (" +
-        symbol.symbol +
-        ")";
-
-
-    marketSelect.appendChild(option);
-
-});
-
-
-subscribeMarket();
-```
-
-}
-
-/* =========================
-SUBSCRIBE TO MARKET
-========================= */
+// ==========================================
+// SUBSCRIBE TO MARKET
+// ==========================================
 
 function subscribeMarket() {
 
-```
-if (
+    if (!ws) return;
 
-    !ws ||
 
-    ws.readyState !==
-    WebSocket.OPEN ||
+    if (ws.readyState !== WebSocket.OPEN) {
 
-    !marketSelect.value
+        setStatus("🔴 Not connected");
 
-) {
+        return;
 
-    return;
+    }
 
-}
 
+    if (!marketSelect.value) {
 
-maxTicks =
-    Number(
-        tickCountSelect.value
-    );
+        return;
 
+    }
 
-ticks = [];
 
+    currentSymbol =
+        marketSelect.value;
 
-setStatus(
 
-    "🟡 Loading " +
-    maxTicks +
-    " ticks..."
-
-);
-
-
-/*
-  Remove old subscriptions
-*/
-
-send({
-
-    forget_all: "ticks"
-
-});
-
-
-/*
-  GET TICK HISTORY
-*/
-
-send({
-
-    ticks_history:
-        marketSelect.value,
-
-    count:
-        maxTicks,
-
-    end:
-        "latest",
-
-    style:
-        "ticks"
-
-});
-
-
-/*
-  SUBSCRIBE TO LIVE TICKS
-*/
-
-send({
-
-    ticks:
-        marketSelect.value,
-
-    subscribe:
-        1
-
-});
-```
-
-}
-
-/* =========================
-LOAD HISTORY
-========================= */
-
-function loadHistory(history) {
-
-```
-if (
-
-    !history ||
-
-    !Array.isArray(
-        history.prices
-    )
-
-) {
-
-    return;
-
-}
-
-
-ticks =
-
-    history.prices
-
-        .map(Number)
-
-        .filter(
-            Number.isFinite
-        )
-
-        .slice(-maxTicks);
-
-
-setStatus(
-    "🟢 Live"
-);
-
-
-updateAnalysis();
-```
-
-}
-
-/* =========================
-HANDLE LIVE TICK
-========================= */
-
-function handleTick(tick) {
-
-```
-if (!tick) {
-
-    return;
-
-}
-
-
-const price =
-    Number(tick.quote);
-
-
-$("livePrice").textContent =
-    price;
-
-
-const digit =
-    getLastDigit(price);
-
-
-$("lastDigit").textContent =
-    digit;
-
-
-ticks.push(price);
-
-
-if (
-    ticks.length >
-    maxTicks
-) {
-
-    ticks.shift();
-
-}
-
-
-updateAnalysis();
-```
-
-}
-
-/* =========================
-GET LAST DIGIT
-========================= */
-
-function getLastDigit(value) {
-
-```
-const text =
-    String(value);
-
-
-const match =
-    text.match(
-        /(\d)(?!.*\d)/
-    );
-
-
-if (match) {
-
-    return Number(
-        match[1]
-    );
-
-}
-
-
-return 0;
-```
-
-}
-
-/* =========================
-MAIN ANALYSIS
-========================= */
-
-function updateAnalysis() {
-
-```
-if (ticks.length < 20) {
-
-    return;
-
-}
-
-
-const digits =
-
-    ticks.map(
-        getLastDigit
-    );
-
-
-const frequency =
-    Array(10).fill(0);
-
-
-digits.forEach(digit => {
-
-    frequency[digit]++;
-
-});
-
-
-/* BEST DIGIT */
-
-const bestDigit =
-
-    frequency.indexOf(
-
-        Math.max(
-            ...frequency
-        )
-
-    );
-
-
-/* COLD DIGIT */
-
-const coldDigit =
-
-    frequency.indexOf(
-
-        Math.min(
-            ...frequency
-        )
-
-    );
-
-
-/* BARRIER */
-
-const barrier =
-    Number(
-        barrierSelect.value
-    );
-
-
-/* MATCH SCORE */
-
-const matchConfidence =
-
-    (
-        frequency[bestDigit] /
-        digits.length
-    ) * 100;
-
-
-/* OVER */
-
-const overCount =
-
-    digits.filter(
-        digit =>
-            digit > barrier
-    ).length;
-
-
-const overConfidence =
-
-    (
-        overCount /
-        digits.length
-    ) * 100;
-
-
-/* UNDER */
-
-const underCount =
-
-    digits.filter(
-        digit =>
-            digit < barrier
-    ).length;
-
-
-const underConfidence =
-
-    (
-        underCount /
-        digits.length
-    ) * 100;
-
-
-/* EVEN */
-
-const evenCount =
-
-    digits.filter(
-
-        digit =>
-            digit % 2 === 0
-
-    ).length;
-
-
-const evenConfidence =
-
-    (
-        evenCount /
-        digits.length
-    ) * 100;
-
-
-/* ODD */
-
-const oddCount =
-
-    digits.filter(
-
-        digit =>
-            digit % 2 === 1
-
-    ).length;
-
-
-const oddConfidence =
-
-    (
-        oddCount /
-        digits.length
-    ) * 100;
-
-
-/* UPDATE MATCH */
-
-$("matchDigit").textContent =
-    bestDigit;
-
-
-$("matchConfidence").textContent =
-
-    matchConfidence.toFixed(1) +
-    "%";
-
-
-/* UPDATE OVER */
-
-$("overLabel").textContent =
-    "OVER " + barrier;
-
-
-$("overConfidence").textContent =
-
-    overConfidence.toFixed(1) +
-    "%";
-
-
-/* UPDATE UNDER */
-
-$("underLabel").textContent =
-    "UNDER " + barrier;
-
-
-$("underConfidence").textContent =
-
-    underConfidence.toFixed(1) +
-    "%";
-
-
-/* UPDATE EVEN */
-
-$("evenConfidence").textContent =
-
-    evenConfidence.toFixed(1) +
-    "%";
-
-
-/* UPDATE ODD */
-
-$("oddConfidence").textContent =
-
-    oddConfidence.toFixed(1) +
-    "%";
-
-
-/* HOT DIGIT */
-
-const recentDigits =
-    digits.slice(-50);
-
-
-const recentFrequency =
-    Array(10).fill(0);
-
-
-recentDigits.forEach(digit => {
-
-    recentFrequency[digit]++;
-
-});
-
-
-const hotDigit =
-
-    recentFrequency.indexOf(
-
-        Math.max(
-            ...recentFrequency
-        )
-
-    );
-
-
-$("hotDigit").textContent =
-    hotDigit;
-
-
-$("hotInfo").textContent =
-
-    recentFrequency[hotDigit] +
-
-    " appearances in last " +
-
-    recentDigits.length;
-
-
-/* COLD DIGIT */
-
-$("coldDigit").textContent =
-    coldDigit;
-
-
-$("coldInfo").textContent =
-
-    frequency[coldDigit] +
-
-    " appearances in " +
-
-    digits.length;
-
-
-/* TOTAL TICKS */
-
-$("tickTotal").textContent =
-    digits.length;
-
-
-/* MOMENTUM */
-
-$("momentumInfo").textContent =
-    "LIVE";
-
-
-/* GAP */
-
-const lastIndex =
-
-    digits.lastIndexOf(
-        bestDigit
-    );
-
-
-const gap =
-
-    digits.length -
-    1 -
-    lastIndex;
-
-
-$("matchGap").textContent =
-
-    "Gap: " +
-    gap +
-    " ticks";
-
-
-/* RENDER */
-
-renderDigitDistribution(
-    frequency,
-    digits
-);
-
-
-renderRecentDigits(
-    digits
-);
-
-
-determineBestSignal({
-
-    bestDigit,
-
-    matchConfidence,
-
-    barrier,
-
-    overConfidence,
-
-    underConfidence,
-
-    evenConfidence,
-
-    oddConfidence
-
-});
-```
-
-}
-
-/* =========================
-DIGIT DISTRIBUTION
-========================= */
-
-function renderDigitDistribution(
-frequency,
-digits
-) {
-
-```
-const grid =
-    $("digitGrid");
-
-
-grid.innerHTML = "";
-
-
-for (
-    let digit = 0;
-    digit < 10;
-    digit++
-) {
-
-
-    const card =
-        document.createElement(
-            "div"
+    maxTicks =
+        Number(
+            tickCountSelect.value
         );
 
 
-    card.className =
-        "digit-card";
+    ticks = [];
 
 
-    const percentage =
+    setStatus(
+        "🟡 Loading " +
+        maxTicks +
+        " ticks..."
+    );
 
+
+    // Remove previous tick subscriptions
+
+    send({
+
+        forget_all: "ticks"
+
+    });
+
+
+    // ==========================================
+    // GET TICK HISTORY
+    // ==========================================
+
+    send({
+
+        ticks_history:
+            currentSymbol,
+
+        count:
+            maxTicks,
+
+        end:
+            "latest",
+
+        style:
+            "ticks",
+
+        req_id: 2
+
+    });
+
+
+    // ==========================================
+    // SUBSCRIBE TO LIVE TICKS
+    // ==========================================
+
+    send({
+
+        ticks:
+            currentSymbol,
+
+        subscribe:
+            1,
+
+        req_id: 3
+
+    });
+
+}
+
+
+// ==========================================
+// LOAD HISTORY
+// ==========================================
+
+function loadHistory(history) {
+
+    if (!history) return;
+
+    if (!Array.isArray(history.prices)) return;
+
+
+    ticks = history.prices
+        .map(Number)
+        .filter(Number.isFinite)
+        .slice(-maxTicks);
+
+
+    console.log(
+        "History loaded:",
+        ticks.length
+    );
+
+
+    $("tickTotal").textContent =
+        ticks.length;
+
+
+    setStatus("🟢 Live");
+
+    updateAnalysis();
+
+}
+
+
+// ==========================================
+// GET LAST DIGIT
+// ==========================================
+
+function getLastDigit(value) {
+
+    const text =
+        String(value);
+
+
+    const numbers =
+        text.match(/\d/g);
+
+
+    if (!numbers || numbers.length === 0) {
+
+        return 0;
+
+    }
+
+
+    return Number(
+        numbers[numbers.length - 1]
+    );
+
+}
+
+
+// ==========================================
+// HANDLE LIVE TICK
+// ==========================================
+
+function handleTick(tick) {
+
+    if (!tick) return;
+
+
+    const quote =
+        Number(tick.quote);
+
+
+    if (!Number.isFinite(quote)) {
+
+        return;
+
+    }
+
+
+    // Display price
+
+    $("livePrice").textContent =
+        tick.quote;
+
+
+    // Get last digit
+
+    const digit =
+        getLastDigit(tick.quote);
+
+
+    $("lastDigit").textContent =
+        digit;
+
+
+    // Add tick
+
+    ticks.push(quote);
+
+
+    // Keep selected number of ticks
+
+    if (ticks.length > maxTicks) {
+
+        ticks.shift();
+
+    }
+
+
+    $("tickTotal").textContent =
+        ticks.length;
+
+
+    // Update analysis
+
+    updateAnalysis();
+
+}
+
+
+// ==========================================
+// MAIN ANALYSIS
+// ==========================================
+
+function updateAnalysis() {
+
+    if (ticks.length < 20) {
+
+        return;
+
+    }
+
+
+    const digits =
+        ticks.map(getLastDigit);
+
+
+    const frequency =
+        Array(10).fill(0);
+
+
+    digits.forEach(function (digit) {
+
+        frequency[digit]++;
+
+    });
+
+
+    // ==========================================
+    // HOT DIGIT
+    // ==========================================
+
+    const hotDigit =
+        frequency.indexOf(
+            Math.max(...frequency)
+        );
+
+
+    // ==========================================
+    // COLD DIGIT
+    // ==========================================
+
+    const coldDigit =
+        frequency.indexOf(
+            Math.min(...frequency)
+        );
+
+
+    // ==========================================
+    // BARRIER
+    // ==========================================
+
+    const barrier =
+        Number(barrierSelect.value);
+
+
+    // ==========================================
+    // MATCH FREQUENCY
+    // ==========================================
+
+    const matchRate =
         (
-            frequency[digit] /
+            frequency[hotDigit] /
             digits.length
         ) * 100;
 
 
-    const lastIndex =
+    // ==========================================
+    // OVER
+    // ==========================================
 
-        digits.lastIndexOf(
-            digit
-        );
+    const overCount =
+        digits.filter(function (digit) {
+
+            return digit > barrier;
+
+        }).length;
+
+
+    const overRate =
+        (
+            overCount /
+            digits.length
+        ) * 100;
+
+
+    // ==========================================
+    // UNDER
+    // ==========================================
+
+    const underCount =
+        digits.filter(function (digit) {
+
+            return digit < barrier;
+
+        }).length;
+
+
+    const underRate =
+        (
+            underCount /
+            digits.length
+        ) * 100;
+
+
+    // ==========================================
+    // EVEN
+    // ==========================================
+
+    const evenCount =
+        digits.filter(function (digit) {
+
+            return digit % 2 === 0;
+
+        }).length;
+
+
+    const evenRate =
+        (
+            evenCount /
+            digits.length
+        ) * 100;
+
+
+    // ==========================================
+    // ODD
+    // ==========================================
+
+    const oddCount =
+        digits.filter(function (digit) {
+
+            return digit % 2 !== 0;
+
+        }).length;
+
+
+    const oddRate =
+        (
+            oddCount /
+            digits.length
+        ) * 100;
+
+
+    // ==========================================
+    // UPDATE SCREEN
+    // ==========================================
+
+    $("matchDigit").textContent =
+        hotDigit;
+
+
+    $("matchConfidence").textContent =
+        matchRate.toFixed(1) + "%";
+
+
+    $("overLabel").textContent =
+        "OVER " + barrier;
+
+
+    $("overConfidence").textContent =
+        overRate.toFixed(1) + "%";
+
+
+    $("underLabel").textContent =
+        "UNDER " + barrier;
+
+
+    $("underConfidence").textContent =
+        underRate.toFixed(1) + "%";
+
+
+    $("evenConfidence").textContent =
+        evenRate.toFixed(1) + "%";
+
+
+    $("oddConfidence").textContent =
+        oddRate.toFixed(1) + "%";
+
+
+    // ==========================================
+    // HOT / COLD
+    // ==========================================
+
+    $("hotDigit").textContent =
+        hotDigit;
+
+
+    $("hotInfo").textContent =
+        frequency[hotDigit] +
+        " appearances";
+
+
+    $("coldDigit").textContent =
+        coldDigit;
+
+
+    $("coldInfo").textContent =
+        frequency[coldDigit] +
+        " appearances";
+
+
+    // ==========================================
+    // DIGIT GAP
+    // ==========================================
+
+    const lastPosition =
+        digits.lastIndexOf(hotDigit);
 
 
     const gap =
-
         digits.length -
         1 -
-        lastIndex;
+        lastPosition;
 
 
-    card.innerHTML = `
-
-        <div class="digit-number">
-            ${digit}
-        </div>
-
-        <div>
-            ${frequency[digit]} ticks
-        </div>
-
-        <strong>
-            ${percentage.toFixed(1)}%
-        </strong>
-
-        <small>
-            Gap: ${gap}
-        </small>
-
-    `;
+    $("matchGap").textContent =
+        "Gap: " +
+        gap +
+        " ticks";
 
 
-    grid.appendChild(card);
+    // ==========================================
+    // MOMENTUM
+    // ==========================================
 
-}
-```
-
-}
-
-/* =========================
-RECENT DIGITS
-========================= */
-
-function renderRecentDigits(
-digits
-) {
-
-```
-const container =
-    $("recentDigits");
+    $("momentumInfo").textContent =
+        "LIVE";
 
 
-container.innerHTML = "";
+    // ==========================================
+    // RENDER DIGITS
+    // ==========================================
 
-
-const recent =
-    digits.slice(-30);
-
-
-recent.forEach(digit => {
-
-
-    const element =
-        document.createElement(
-            "div"
-        );
-
-
-    element.className =
-        "recent-digit";
-
-
-    element.textContent =
-        digit;
-
-
-    container.appendChild(
-        element
+    renderDigitDistribution(
+        frequency,
+        digits
     );
 
-});
-```
 
-}
-
-/* =========================
-BEST SIGNAL
-========================= */
-
-function determineBestSignal(
-data
-) {
-
-```
-const signals = [
-
-    {
-
-        strategy:
-            "DIGIT MATCH",
-
-        value:
-            data.bestDigit,
-
-        confidence:
-            data.matchConfidence
-
-    },
+    renderRecentDigits(digits);
 
 
-    {
+    // ==========================================
+    // BEST SIGNAL
+    // ==========================================
 
-        strategy:
-            "DIGIT OVER",
+    const signals = [
 
-        value:
-            "OVER " +
-            data.barrier,
+        {
+            name: "DIGIT MATCH",
+            value: hotDigit,
+            score: matchRate
+        },
 
-        confidence:
-            data.overConfidence
+        {
+            name: "DIGIT OVER",
+            value: "OVER " + barrier,
+            score: overRate
+        },
 
-    },
+        {
+            name: "DIGIT UNDER",
+            value: "UNDER " + barrier,
+            score: underRate
+        },
 
+        {
+            name: "EVEN",
+            value: "EVEN",
+            score: evenRate
+        },
 
-    {
+        {
+            name: "ODD",
+            value: "ODD",
+            score: oddRate
+        }
 
-        strategy:
-            "DIGIT UNDER",
-
-        value:
-            "UNDER " +
-            data.barrier,
-
-        confidence:
-            data.underConfidence
-
-    },
-
-
-    {
-
-        strategy:
-            "EVEN",
-
-        value:
-            "EVEN",
-
-        confidence:
-            data.evenConfidence
-
-    },
+    ];
 
 
-    {
+    signals.sort(function (a, b) {
 
-        strategy:
-            "ODD",
+        return b.score - a.score;
 
-        value:
-            "ODD",
+    });
 
-        confidence:
-            data.oddConfidence
+
+    const best =
+        signals[0];
+
+
+    $("bestStrategy").textContent =
+        best.name;
+
+
+    $("bestDigit").textContent =
+        best.value;
+
+
+    $("bestConfidence").textContent =
+        best.score.toFixed(1) + "%";
+
+
+    const threshold =
+        Number(thresholdSelect.value);
+
+
+    if (best.score >= threshold) {
+
+        $("entryStatus").textContent =
+            "🟢 STRONGEST CURRENT STATISTICAL SIGNAL";
+
+    } else {
+
+        $("entryStatus").textContent =
+            "🟡 WAIT — More data/confirmation needed";
 
     }
 
-];
+}
 
 
-signals.sort(
+// ==========================================
+// DIGIT DISTRIBUTION
+// ==========================================
 
-    (a, b) =>
-
-        b.confidence -
-        a.confidence
-
-);
-
-
-const best =
-    signals[0];
-
-
-$("bestStrategy").textContent =
-    best.strategy;
-
-
-$("bestDigit").textContent =
-    best.value;
-
-
-$("bestConfidence").textContent =
-
-    best.confidence.toFixed(1) +
-    "%";
-
-
-const threshold =
-    Number(
-        thresholdSelect.value
-    );
-
-
-if (
-    best.confidence >=
-    threshold
+function renderDigitDistribution(
+    frequency,
+    digits
 ) {
 
-    $("entryStatus").textContent =
+    const grid =
+        $("digitGrid");
 
-        "🟢 ENTRY CONDITIONS MET — Statistical Signal";
+
+    grid.innerHTML = "";
+
+
+    for (let digit = 0; digit <= 9; digit++) {
+
+        const card =
+            document.createElement("div");
+
+
+        card.className =
+            "digit-card";
+
+
+        const percentage =
+            (
+                frequency[digit] /
+                digits.length
+            ) * 100;
+
+
+        const lastIndex =
+            digits.lastIndexOf(digit);
+
+
+        const gap =
+            lastIndex === -1
+                ? digits.length
+                : digits.length - 1 - lastIndex;
+
+
+        card.innerHTML =
+
+            `<div class="digit-number">${digit}</div>
+
+             <div>${frequency[digit]} ticks</div>
+
+             <strong>
+                ${percentage.toFixed(1)}%
+             </strong>
+
+             <small>
+                Gap: ${gap}
+             </small>`;
+
+
+        grid.appendChild(card);
+
+    }
 
 }
 
-else if (
 
-    best.confidence >=
-    threshold - 8
+// ==========================================
+// RECENT DIGITS
+// ==========================================
 
-) {
+function renderRecentDigits(digits) {
 
-    $("entryStatus").textContent =
+    const container =
+        $("recentDigits");
 
-        "🟡 WATCH — Wait for stronger confirmation";
+
+    container.innerHTML = "";
+
+
+    const recent =
+        digits.slice(-30);
+
+
+    recent.forEach(function (digit) {
+
+        const item =
+            document.createElement("div");
+
+
+        item.className =
+            "recent-digit";
+
+
+        item.textContent =
+            digit;
+
+
+        container.appendChild(item);
+
+    });
 
 }
 
-else {
 
-    $("entryStatus").textContent =
-
-        "🔴 WAIT — Weak statistical conditions";
-
-}
-```
-
-}
-
-/* =========================
-EVENT LISTENERS
-========================= */
+// ==========================================
+// BUTTON EVENTS
+// ==========================================
 
 connectBtn.addEventListener(
-
-```
-"click",
-
-connectDeriv
-```
-
+    "click",
+    connectDeriv
 );
+
 
 marketSelect.addEventListener(
-
-```
-"change",
-
-subscribeMarket
-```
-
+    "change",
+    subscribeMarket
 );
+
 
 tickCountSelect.addEventListener(
-
-```
-"change",
-
-subscribeMarket
-```
-
+    "change",
+    subscribeMarket
 );
+
 
 barrierSelect.addEventListener(
-
-```
-"change",
-
-updateAnalysis
-```
-
+    "change",
+    updateAnalysis
 );
 
+
 thresholdSelect.addEventListener(
-
-```
-"change",
-
-updateAnalysis
-```
-
+    "change",
+    updateAnalysis
 );
