@@ -1,351 +1,407 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-```
-<title>Deriv Digit Analyzer Pro</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="style.css">
-```
+    <title>Matches Signal Scanner</title>
 
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div class="container">
+<div class="app">
 
-```
-<header>
-    <h1>📊 Deriv Digit Analyzer Pro</h1>
-    <p>
-        Live Statistical Analysis • Matches • Over/Under • Even/Odd
-    </p>
-</header>
+    <!-- HEADER -->
 
+    <header class="topbar">
 
-<!-- CONTROLS -->
+        <div class="brand">
 
-<section class="controls">
+            <div class="logo">◉</div>
 
-    <div>
-        <label>Market</label>
+            <div>
+                <h1>Matches Signal Scanner</h1>
+                <p>LAST DIGIT SCAN</p>
+            </div>
 
-        <select id="marketSelect">
-            <option>Connect to load markets...</option>
-        </select>
-    </div>
+        </div>
 
+        <div id="connectionDot"
+             class="connection-dot offline"></div>
 
-    <div>
-        <label>Tick History</label>
-
-        <select id="tickCount">
-            <option value="100">100 Ticks</option>
-            <option value="500">500 Ticks</option>
-            <option value="1000" selected>1000 Ticks</option>
-        </select>
-    </div>
+    </header>
 
 
-    <div>
-        <label>Over / Under Barrier</label>
+    <!-- SETTINGS -->
 
-        <select id="barrier"></select>
-    </div>
+    <section class="settings-card">
 
+        <div class="setting">
 
-    <div>
-        <label>Entry Threshold</label>
+            <label>Market</label>
 
-        <select id="threshold">
-            <option value="60">60%</option>
-            <option value="65" selected>65%</option>
-            <option value="70">70%</option>
-            <option value="75">75%</option>
-        </select>
-    </div>
+            <select id="marketSelect">
+                <option value="">Connect to load markets</option>
+            </select>
+
+        </div>
 
 
-    <button id="connectBtn">
-        🔌 Connect
-    </button>
+        <div class="setting-row">
 
-</section>
+            <div class="setting">
 
+                <label>Tick History</label>
 
-<!-- CONNECTION STATUS -->
+                <select id="tickCount">
 
-<div class="status-card">
+                    <option value="100">100 ticks</option>
+                    <option value="300">300 ticks</option>
+                    <option value="500">500 ticks</option>
+                    <option value="1000" selected>1000 ticks</option>
 
-    Status:
+                </select>
 
-    <span id="connectionStatus">
-        🔴 Disconnected
-    </span>
-
-</div>
+            </div>
 
 
-<!-- BEST SIGNAL -->
+            <div class="setting">
 
-<section class="best-signal">
+                <label>Entry Level</label>
 
-    <h2>🏆 Best Statistical Signal</h2>
+                <select id="threshold">
 
-    <div id="bestStrategy">
-        Waiting for data...
-    </div>
+                    <option value="55">55%</option>
+                    <option value="60">60%</option>
+                    <option value="65" selected>65%</option>
+                    <option value="70">70%</option>
+                    <option value="75">75%</option>
 
+                </select>
 
-    <div class="big-digit" id="bestDigit">
-        -
-    </div>
+            </div>
 
-
-    <div class="confidence">
-
-        Score:
-
-        <span id="bestConfidence">
-            0%
-        </span>
-
-    </div>
+        </div>
 
 
-    <div id="entryStatus">
+        <button id="connectBtn"
+                class="connect-button">
 
-        ⏳ Collecting ticks...
+            ⚡ Connect Scanner
 
-    </div>
+        </button>
 
-
-    <small>
-        Statistical analysis only — not a guarantee of future results.
-    </small>
-
-</section>
+    </section>
 
 
-<!-- MAIN STRATEGIES -->
+    <!-- MAIN SIGNAL -->
 
-<section class="stats-grid">
+    <section class="main-signal">
+
+        <div class="signal-header">
+
+            <div>
+                <span class="eyebrow">
+                    ⚡ RECOMMENDED SIGNAL
+                </span>
+
+                <h2 id="signalTitle">
+                    Waiting for market
+                </h2>
+            </div>
+
+            <span id="liveBadge"
+                  class="live-badge">
+                OFFLINE
+            </span>
+
+        </div>
 
 
-    <!-- DIGIT MATCH -->
+        <div class="signal-body">
 
-    <div class="card">
+            <div class="signal-digit"
+                 id="bestDigit">
 
-        <h3>🔢 DIGIT MATCH</h3>
-
-        <p>
-
-            Candidate:
-
-            <strong id="matchDigit">
                 -
-            </strong>
+
+            </div>
+
+
+            <div class="signal-info">
+
+                <div class="confidence-label">
+
+                    CONFIDENCE
+
+                </div>
+
+
+                <div class="confidence-number">
+
+                    <span id="bestConfidence">
+                        0.0
+                    </span>%
+
+                </div>
+
+
+                <div class="progress">
+
+                    <div id="confidenceBar"
+                         class="progress-fill">
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <p id="signalExplanation"
+           class="signal-explanation">
+
+            Connect to Deriv and scan the market.
 
         </p>
 
 
-        <p>
+        <div id="entryStatus"
+             class="entry-status waiting">
 
-            Score:
+            ⏳ WAITING FOR DATA
 
-            <strong id="matchConfidence">
-                0%
-            </strong>
+        </div>
 
-        </p>
+    </section>
 
 
-        <small id="matchGap">
+    <!-- SCAN CONTROLS -->
 
-            Gap: -
+    <section class="scanner-card">
 
-        </small>
+        <div class="section-title">
 
-    </div>
+            <span>📊 Trading Signals</span>
 
+            <span id="tickStatus">
+                0 ticks
+            </span>
 
-    <!-- OVER -->
+        </div>
 
-    <div class="card">
 
-        <h3>📈 DIGIT OVER</h3>
+        <div class="mode-buttons">
 
-        <p id="overLabel">
-            OVER -
-        </p>
+            <button class="mode active"
+                    data-mode="match">
 
-        <strong id="overConfidence">
-            0%
-        </strong>
+                🎯 Matches
 
-    </div>
+            </button>
 
 
-    <!-- UNDER -->
+            <button class="mode"
+                    data-mode="diff">
 
-    <div class="card">
+                🔄 Differs
 
-        <h3>📉 DIGIT UNDER</h3>
+            </button>
 
-        <p id="underLabel">
-            UNDER -
-        </p>
+        </div>
 
-        <strong id="underConfidence">
-            0%
-        </strong>
 
-    </div>
+        <div class="signal-buttons">
 
+            <button class="type-button active"
+                    data-type="MATCH">
 
-    <!-- EVEN -->
+                MATCH
 
-    <div class="card">
+            </button>
 
-        <h3>🔵 EVEN</h3>
 
-        <strong id="evenConfidence">
-            0%
-        </strong>
+            <button class="type-button"
+                    data-type="OVER">
 
-    </div>
+                OVER
 
+            </button>
 
-    <!-- ODD -->
 
-    <div class="card">
+            <button class="type-button"
+                    data-type="UNDER">
 
-        <h3>🟠 ODD</h3>
+                UNDER
 
-        <strong id="oddConfidence">
-            0%
-        </strong>
+            </button>
 
-    </div>
 
-</section>
+            <button class="type-button"
+                    data-type="EVEN">
 
+                EVEN
 
-<!-- EXTRA ANALYSIS -->
+            </button>
 
-<section class="stats-grid">
 
+            <button class="type-button"
+                    data-type="ODD">
 
-    <div class="card">
+                ODD
 
-        <h3>🔥 HOT DIGIT</h3>
+            </button>
 
-        <strong id="hotDigit">
-            -
-        </strong>
+        </div>
 
-        <small id="hotInfo"></small>
 
-    </div>
+        <div class="barrier-box">
 
+            <label>Barrier / Digit</label>
 
-    <div class="card">
+            <select id="barrier">
 
-        <h3>❄️ COLD DIGIT</h3>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5" selected>5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
 
-        <strong id="coldDigit">
-            -
-        </strong>
+            </select>
 
-        <small id="coldInfo"></small>
+        </div>
 
-    </div>
 
+        <label class="auto-scan">
 
-    <div class="card">
+            <input type="checkbox"
+                   id="autoScan"
+                   checked>
 
-        <h3>📊 TICKS</h3>
+            <span>Auto-scan every 30 seconds</span>
 
-        <strong id="tickTotal">
-            0
-        </strong>
+        </label>
 
-    </div>
 
+        <button id="scanBtn"
+                class="scan-button">
 
-    <div class="card">
+            ✨ Re-scan Market
 
-        <h3>⚡ MOMENTUM</h3>
+        </button>
 
-        <strong id="momentumInfo">
-            -
-        </strong>
+    </section>
 
-    </div>
 
-</section>
+    <!-- LIVE MARKET -->
 
+    <section class="live-card">
 
-<!-- DIGIT DISTRIBUTION -->
+        <div class="section-title">
 
-<section class="digit-section">
+            <span>📡 Live Market</span>
 
-    <h2>🔢 Digit Distribution & Gap</h2>
+            <span id="statusText"
+                  class="status-text">
 
-    <div
-        id="digitGrid"
-        class="digit-grid">
-    </div>
+                Disconnected
 
-</section>
+            </span>
 
+        </div>
 
-<!-- LIVE TICK -->
 
-<section class="live-section">
+        <div class="live-grid">
 
-    <h2>⚡ Live Tick</h2>
+            <div>
 
-    <div
-        class="live-price"
-        id="livePrice">
+                <span>LIVE PRICE</span>
 
-        ---
+                <strong id="livePrice">
+                    -
+                </strong>
 
-    </div>
+            </div>
 
 
-    <p>
+            <div>
 
-        Last Digit:
+                <span>LAST DIGIT</span>
 
-        <strong id="lastDigit">
-            -
-        </strong>
+                <strong id="lastDigit">
+                    -
+                </strong>
 
-    </p>
+            </div>
 
-</section>
+        </div>
 
+    </section>
 
-<!-- RECENT DIGITS -->
 
-<section class="recent-section">
+    <!-- DIGIT DISTRIBUTION -->
 
-    <h2>📜 Recent Digits</h2>
+    <section class="digits-card">
 
-    <div id="recentDigits"></div>
+        <div class="section-title">
 
-</section>
-```
+            <span>🔢 Digit Statistics</span>
+
+            <span id="marketName">
+                -
+            </span>
+
+        </div>
+
+
+        <div id="digitGrid"
+             class="digit-grid">
+
+        </div>
+
+    </section>
+
+
+    <!-- RECENT DIGITS -->
+
+    <section class="recent-card">
+
+        <div class="section-title">
+
+            <span>🕒 Recent Digits</span>
+
+        </div>
+
+
+        <div id="recentDigits"
+             class="recent-digits">
+
+        </div>
+
+    </section>
+
+
+    <footer>
+
+        Statistical analysis only.
+        Signals do not guarantee future results.
+
+    </footer>
 
 </div>
+
 
 <script src="app.js"></script>
 
 </body>
 </html>
-
