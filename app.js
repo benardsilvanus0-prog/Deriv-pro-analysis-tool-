@@ -1,6 +1,6 @@
 /**
  * ======================================================
- * DERIV DIGIT ANALYZER PRO (ES6+ Refactored)
+ * DERIV DIGIT ANALYZER PRO (ES6+ Optimized & Fixed)
  * ======================================================
  */
 
@@ -231,6 +231,9 @@
       return;
     }
 
+    // FIX: Unsubscribe from all previous tick streams before requesting a new one
+    state.ws.send(JSON.stringify({ forget_all: "ticks" }));
+
     state.currentSymbol = symbol;
     state.maxTicks = Number(DOM.tickCount?.value) || 1000;
 
@@ -272,6 +275,9 @@
 
   const receiveTick = (tick) => {
     if (!tick) return;
+
+    // FIX: Guard clause to reject "ghost ticks" from previous markets
+    if (tick.symbol !== state.currentSymbol) return;
 
     const price = Number(tick.quote);
     if (!Number.isFinite(price)) return;
@@ -414,36 +420,52 @@
   const renderDigitGrid = (counts, percentages) => {
     if (!DOM.digitGrid) return;
 
-    const fragment = document.createDocumentFragment();
-
-    for (let digit = 0; digit <= 9; digit++) {
-      const box = document.createElement("div");
-      box.className = "digit-stat";
-      box.innerHTML = `
-        <div class="digit-number">${digit}</div>
-        <div class="digit-count">${counts[digit]} hits</div>
-        <div class="digit-percent">${percentages[digit].toFixed(1)}%</div>
-      `;
-      fragment.appendChild(box);
+    // FIX: Only construct the elements once to prevent DOM thrashing
+    if (DOM.digitGrid.children.length === 0) {
+      const fragment = document.createDocumentFragment();
+      for (let digit = 0; digit <= 9; digit++) {
+        const box = document.createElement("div");
+        box.className = "digit-stat";
+        box.innerHTML = `
+          <div class="digit-number">${digit}</div>
+          <div class="digit-count">0 hits</div>
+          <div class="digit-percent">0.0%</div>
+        `;
+        fragment.appendChild(box);
+      }
+      DOM.digitGrid.appendChild(fragment);
     }
 
-    DOM.digitGrid.replaceChildren(fragment);
+    // FIX: Update existing text content safely instead of replacing HTML
+    const children = DOM.digitGrid.children;
+    for (let digit = 0; digit <= 9; digit++) {
+      const box = children[digit];
+      box.children[1].textContent = `${counts[digit]} hits`;
+      box.children[2].textContent = `${percentages[digit].toFixed(1)}%`;
+    }
   };
 
   const renderRecentDigits = () => {
     if (!DOM.recentDigits) return;
 
     const digits = getDigits().slice(-30).reverse();
-    const fragment = document.createDocumentFragment();
 
-    digits.forEach((digit) => {
-      const span = document.createElement("span");
-      span.textContent = digit;
-      span.className = "recent-digit";
-      fragment.appendChild(span);
-    });
+    // FIX: Build the elements exactly once
+    if (DOM.recentDigits.children.length === 0) {
+      const fragment = document.createDocumentFragment();
+      for (let i = 0; i < 30; i++) {
+        const span = document.createElement("span");
+        span.className = "recent-digit";
+        fragment.appendChild(span);
+      }
+      DOM.recentDigits.appendChild(fragment);
+    }
 
-    DOM.recentDigits.replaceChildren(fragment);
+    // FIX: Apply new values to the existing static spans
+    const children = DOM.recentDigits.children;
+    for (let i = 0; i < 30; i++) {
+      children[i].textContent = digits[i] !== undefined ? digits[i] : "";
+    }
   };
 
   // ======================================================
@@ -485,15 +507,18 @@
     DOM.barrier?.addEventListener("change", analyzeMarket);
     DOM.threshold?.addEventListener("change", analyzeMarket);
 
-    // Auto Scan Interval
-    setInterval(() => {
-      if (DOM.autoScan?.checked && state.ticks.length >= 20) {
-        analyzeMarket();
-      }
-    }, 30000);
+    // FIX: Removed the redundant setInterval. `analyzeMarket()` is already 
+    // triggered by `receiveTick()`, making the interval unnecessary CPU load.
   };
 
-  // Initialize
-  bindEvents();
-  console.log("Deriv Digit Analyzer loaded.");
+  // FIX: Wait for the DOM to fully load before running the app
+  document.addEventListener("DOMContentLoaded", () => {
+    // Re-cache DOM elements to ensure they exist now that the page is loaded
+    Object.keys(DOM).forEach(key => {
+        DOM[key] = $(key);
+    });
+    
+    bindEvents();
+    console.log("Deriv Digit Analyzer loaded and optimized.");
+  });
 })();
