@@ -1,524 +1,1915 @@
-/**
- * ======================================================
- * DERIV DIGIT ANALYZER PRO (ES6+ Optimized & Fixed)
- * ======================================================
+/*
+ * Deriv Digit Analyzer Pro
+ * Clean WebSocket client for public market data.
+ * Analysis only: no trades are executed.
  */
 
 (() => {
-  // Application State
-  const state = {
-    ws: null,
-    ticks: [],
-    currentSymbol: "",
-    currentPipSize: 2,
-    maxTicks: 1000,
-    currentMode: "match",
-    currentType: "MATCH",
-  };
+  'use strict';
 
-  // Helper for DOM caching
-  const $ = (id) => document.getElementById(id);
+  const APP_ID = '1089';
 
-  const DOM = {
-    statusText: $("statusText"),
-    connectionDot: $("connectionDot"),
-    liveBadge: $("liveBadge"),
-    connectBtn: $("connectBtn"),
-    marketSelect: $("marketSelect"),
-    marketName: $("marketName"),
-    tickStatus: $("tickStatus"),
-    livePrice: $("livePrice"),
-    lastDigit: $("lastDigit"),
-    signalTitle: $("signalTitle"),
-    signalExplanation: $("signalExplanation"),
-    bestDigit: $("bestDigit"),
-    bestConfidence: $("bestConfidence"),
-    confidenceBar: $("confidenceBar"),
-    entryStatus: $("entryStatus"),
-    barrier: $("barrier"),
-    threshold: $("threshold"),
-    tickCount: $("tickCount"),
-    digitGrid: $("digitGrid"),
-    recentDigits: $("recentDigits"),
-    autoScan: $("autoScan"),
-  };
+  const ENDPOINT =
+    `wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`;
 
-  // ======================================================
-  // UTILITIES
-  // ======================================================
+  const FALLBACK_MARKETS = [
+    ['R_10', 'Volatility 10 Index'],
+    ['R_25', 'Volatility 25 Index'],
+    ['R_50', 'Volatility 50 Index'],
+    ['R_75', 'Volatility 75 Index'],
+    ['R_100', 'Volatility 100 Index'],
+    ['1HZ10V', 'Volatility 10 (1s) Index'],
+    ['1HZ25V', 'Volatility 25 (1s) Index'],
+    ['1HZ50V', 'Volatility 50 (1s) Index'],
+    ['1HZ75V', 'Volatility 75 (1s) Index'],
+    ['1HZ100V', 'Volatility 100 (1s) Index']
+  ];
 
-  /**
-   * Fast last-digit extraction from numeric string representation
-   */
-  const getLastDigit = (value) => {
-    const str = String(value);
-    const lastChar = str[str.length - 1];
-    return Number.isInteger(+lastChar) ? +lastChar : 0;
-  };
+  let ws = null;
+  let ticks = [];
 
-  const getDigits = () =>
-    state.ticks.map((price) =>
-      getLastDigit(price.toFixed(state.currentPipSize))
+  let currentSymbol = '';
+  let currentPipSize = 0.01;
+  let currentDecimals = 2;
+
+  let maxTicks = 1000;
+  let tickSubscriptionId = null;
+
+  let reconnectTimer = null;
+  let reconnectAttempts = 0;
+  let manuallyDisconnected = false;
+
+  let currentType = 'MATCH';
+
+  // ==========================================
+  // ELEMENT HELPER
+  // ==========================================
+
+  const $ = id => document.getElementById(id);
+
+  // ==========================================
+  // SAFE TEXT UPDATE
+  // ==========================================
+
+  function text(id, value) {
+    const el = $(id);
+
+    if (el) {
+      el.textContent = String(value);
+    }
+  }
+
+  // ==========================================
+  // SAFE WIDTH UPDATE
+  // ==========================================
+
+  function setWidth(id, value) {
+    const el = $(id);
+
+    if (!el) return;
+
+    const width = Math.max(
+      0,
+      Math.min(100, Number(value) || 0)
     );
 
-  // ======================================================
-  // UI STATUS UPDATES
-  // ======================================================
+    el.style.width = `${width}%`;
+  }
 
-  const updateStatus = (message, connected = false) => {
-    if (DOM.statusText) DOM.statusText.textContent = message;
+  // ==========================================
+  // UPDATE CONNECTION STATUS
+  // ==========================================
 
-    if (DOM.connectionDot) {
-      DOM.connectionDot.className = `connection-dot ${connected ? "online" : "offline"}`;
+  function updateStatus(message, connected = false) {
+
+    text('statusText', message);
+
+    text(
+      'connectionStatus',
+      connected
+        ? '🟢 Connected'
+        : '🔴 Offline'
+    );
+
+    text(
+      'wsState',
+      connected
+        ? 'connected'
+        : 'disconnected'
+    );
+
+    const dot = $('connectionDot');
+
+    if (dot) {
+
+      dot.className =
+        `connection-dot ${
+          connected
+            ? 'online'
+            : 'offline'
+        }`;
     }
 
-    if (DOM.liveBadge) {
-      DOM.liveBadge.textContent = connected ? "LIVE" : "OFFLINE";
-      DOM.liveBadge.classList.toggle("live", connected);
+    const badge = $('liveBadge');
+
+    if (badge) {
+
+      badge.textContent =
+        connected
+          ? 'LIVE'
+          : 'OFFLINE';
+
+      badge.classList.toggle(
+        'live',
+        connected
+      );
     }
-  };
 
-  // ======================================================
-  // WEBSOCKET & MARKET MANAGEMENT
-  // ======================================================
+    const btn = $('connectBtn');
 
-  const connectDeriv = () => {
-    if (state.ws) {
-      try {
-        state.ws.close();
-      } catch (e) {
-        // Ignore close errors on reset
+    if (btn && connected) {
+
+      btn.textContent =
+        '🟢 Connected';
+    }
+  }
+
+  // ==========================================
+  // ERROR HANDLER
+  // ==========================================
+
+  function setError(message) {
+
+    console.error(
+      '[Deriv]',
+      message
+    );
+
+    updateStatus(
+      message,
+      false
+    );
+
+    text(
+      'signalTitle',
+      'Connection problem'
+    );
+
+    text(
+      'signalExplanation',
+      message
+    );
+
+    text(
+      'entryStatus',
+      '⚠️ CHECK CONNECTION'
+    );
+
+    const btn = $('connectBtn');
+
+    if (btn) {
+
+      btn.textContent =
+        '⚡ Connect Scanner';
+    }
+  }
+
+  // ==========================================
+  // PIP SIZE → DECIMAL PLACES
+  // ==========================================
+
+  function decimalsFromPip(pip) {
+
+    const n = Number(pip);
+
+    if (
+      !Number.isFinite(n) ||
+      n <= 0
+    ) {
+      return 2;
+    }
+
+    const s =
+      n.toString()
+        .toLowerCase();
+
+    if (s.includes('e-')) {
+
+      return Number(
+        s.split('e-')[1]
+      );
+    }
+
+    if (!s.includes('.')) {
+
+      return 0;
+    }
+
+    return s
+      .split('.')[1]
+      .length;
+  }
+
+  // ==========================================
+  // GET LAST DIGIT
+  // ==========================================
+
+  function getLastDigit(value) {
+
+    const s = String(value);
+
+    for (
+      let i = s.length - 1;
+      i >= 0;
+      i--
+    ) {
+
+      if (
+        s[i] >= '0' &&
+        s[i] <= '9'
+      ) {
+
+        return Number(s[i]);
       }
     }
 
-    state.ticks = [];
-    if (DOM.connectBtn) DOM.connectBtn.textContent = "Connecting...";
-    updateStatus("Connecting to Deriv...", false);
+    return 0;
+  }
 
-    state.ws = new WebSocket("wss://ws.binaryws.com/websockets/v3");
+  // ==========================================
+  // FORMAT PRICE
+  // ==========================================
 
-    state.ws.onopen = () => {
-      console.log("CONNECTED TO DERIV");
-      updateStatus("Connected - loading markets...", true);
-      if (DOM.connectBtn) DOM.connectBtn.textContent = "🟢 Connected";
+  function formatPrice(value) {
 
-      state.ws.send(
-        JSON.stringify({ active_symbols: "brief", req_id: 1 })
-      );
-    };
+    const n = Number(value);
 
-    state.ws.onmessage = handleSocketMessage;
+    if (!Number.isFinite(n)) {
 
-    state.ws.onerror = (error) => {
-      console.error("WEBSOCKET ERROR:", error);
-      updateStatus("WebSocket connection error", false);
-      if (DOM.connectBtn) DOM.connectBtn.textContent = "⚡ Connect Scanner";
-    };
+      return '--';
+    }
 
-    state.ws.onclose = () => {
-      console.log("DERIV CONNECTION CLOSED");
-      updateStatus("Disconnected", false);
-      if (DOM.connectBtn) DOM.connectBtn.textContent = "⚡ Connect Scanner";
-    };
-  };
+    return n.toFixed(
+      currentDecimals
+    );
+  }
 
-  const handleSocketMessage = (event) => {
-    let data;
+  // ==========================================
+  // CLEAR TICK SUBSCRIPTION
+  // ==========================================
+
+  function clearSubscription() {
+
+    if (
+      !ws ||
+      ws.readyState !== WebSocket.OPEN ||
+      !tickSubscriptionId
+    ) {
+
+      return;
+    }
+
     try {
-      data = JSON.parse(event.data);
+
+      ws.send(
+        JSON.stringify({
+          forget: tickSubscriptionId
+        })
+      );
+
     } catch (error) {
-      console.error("Invalid JSON:", event.data);
-      return;
+
+      console.warn(
+        'Unable to forget subscription',
+        error
+      );
     }
 
-    if (data.error) {
-      console.error("DERIV ERROR:", data.error);
-      updateStatus(`API Error: ${data.error.message || "Unknown error"}`, false);
-      if (DOM.connectBtn) DOM.connectBtn.textContent = "⚡ Connect Scanner";
-      return;
+    tickSubscriptionId = null;
+  }
+
+  // ==========================================
+  // SEND REQUEST
+  // ==========================================
+
+  function send(request) {
+
+    if (
+      !ws ||
+      ws.readyState !== WebSocket.OPEN
+    ) {
+
+      setError(
+        'Deriv is not connected. Press Connect Scanner.'
+      );
+
+      return false;
     }
 
-    switch (data.msg_type) {
-      case "active_symbols":
-        loadMarkets(data.active_symbols);
-        break;
+    try {
 
-      case "history":
-        if (Array.isArray(data.history?.prices)) {
-          state.ticks = data.history.prices
-            .map(Number)
-            .filter(Number.isFinite)
-            .slice(-state.maxTicks);
+      ws.send(
+        JSON.stringify(request)
+      );
 
-          updateTickCount();
-          renderRecentDigits();
-          analyzeMarket();
-        }
-        break;
+      return true;
 
-      case "tick":
-        receiveTick(data.tick);
-        break;
+    } catch (error) {
+
+      console.error(error);
+
+      setError(
+        'Could not send request to Deriv.'
+      );
+
+      return false;
     }
-  };
+  }
 
-  const loadMarkets = (markets = []) => {
-    const select = DOM.marketSelect;
+  // ==========================================
+  // FALLBACK MARKETS
+  // ==========================================
+
+  function populateFallbackMarkets() {
+
+    const select =
+      $('marketSelect');
+
     if (!select) return;
 
-    select.innerHTML = "";
-
-    if (!Array.isArray(markets) || markets.length === 0) {
-      select.innerHTML = `<option value="">No markets received</option>`;
-      updateStatus("Deriv returned no markets", false);
+    if (select.options.length) {
       return;
     }
 
-    const fragment = document.createDocumentFragment();
-    let validMarkets = 0;
+    select.innerHTML = '';
 
-    markets.forEach((market) => {
-      const symbol = market.underlying_symbol || market.symbol;
-      const name = market.underlying_symbol_name || market.display_name || symbol;
+    FALLBACK_MARKETS.forEach(
+      ([symbol, name]) => {
 
-      if (!symbol) return;
+        const option =
+          document.createElement(
+            'option'
+          );
 
-      const option = document.createElement("option");
-      option.value = symbol;
-      option.textContent = `${name} (${symbol})`;
-      option.dataset.pip = market.pip_size || market.pip || 2;
-      option.dataset.market = market.market || "";
+        option.value = symbol;
 
-      fragment.appendChild(option);
-      validMarkets++;
-    });
+        option.textContent =
+          `${name} (${symbol})`;
 
-    if (validMarkets === 0) {
-      select.innerHTML = `<option value="">No valid markets</option>`;
-      updateStatus("No valid symbols received", false);
-      return;
-    }
+        /*
+         * pip_size is a price increment.
+         * 0.01 means two decimal places.
+         */
+        option.dataset.pip =
+          '0.01';
 
-    select.appendChild(fragment);
+        select.appendChild(
+          option
+        );
+      }
+    );
+  }
 
-    // Prefer Synthetic / Volatility Indices
-    const preferredIndex = Array.from(select.options).findIndex((opt) => {
-      const text = opt.textContent.toLowerCase();
-      const val = opt.value.toUpperCase();
-      return (
-        val.includes("R_") ||
-        val.includes("1HZ") ||
-        ["volatility", "jump", "crash", "boom"].some((term) => text.includes(term))
+  // ==========================================
+  // LOAD MARKETS
+  // ==========================================
+
+  function loadMarkets(markets) {
+
+    const select =
+      $('marketSelect');
+
+    if (!select) {
+
+      console.error(
+        'marketSelect element not found'
       );
-    });
 
-    select.selectedIndex = preferredIndex >= 0 ? preferredIndex : 0;
+      return;
+    }
 
-    updateStatus(`${validMarkets} markets loaded`, true);
-    if (DOM.connectBtn) DOM.connectBtn.textContent = "🟢 Connected";
+    const list =
+      Array.isArray(markets)
+        ? markets
+        : [];
+
+    select.innerHTML = '';
+
+    const usable = [];
+
+    for (
+      const market of list
+    ) {
+
+      const symbol =
+        market.underlying_symbol ||
+        market.symbol;
+
+      if (!symbol) {
+        continue;
+      }
+
+      const name =
+        market.underlying_symbol_name ||
+        market.display_name ||
+        symbol;
+
+      const pip =
+        Number(
+          market.pip_size ??
+          market.pip
+        );
+
+      usable.push({
+
+        symbol,
+
+        name,
+
+        pip:
+          Number.isFinite(pip) &&
+          pip > 0
+            ? pip
+            : 0.01,
+
+        market:
+          market.market || '',
+
+        submarket:
+          market.submarket || ''
+      });
+    }
+
+    // ========================================
+    // PREFER SYNTHETIC INDICES
+    // ========================================
+
+    const synthetic =
+      usable.filter(
+        m =>
+          /^R_/.test(m.symbol) ||
+          /^1HZ/.test(m.symbol) ||
+          /synthetic|volatility|jump|boom|crash/i.test(
+            `${m.name} ${m.market} ${m.submarket}`
+          )
+      );
+
+    const finalList =
+      synthetic.length
+        ? synthetic
+        : usable;
+
+    // ========================================
+    // NOTHING RECEIVED
+    // ========================================
+
+    if (!finalList.length) {
+
+      populateFallbackMarkets();
+
+      updateStatus(
+        'No markets returned — using synthetic symbols',
+        true
+      );
+
+      subscribeMarket();
+
+      return;
+    }
+
+    // ========================================
+    // SORT MARKETS
+    // ========================================
+
+    finalList.sort(
+      (a, b) =>
+        a.name.localeCompare(
+          b.name
+        )
+    );
+
+    // ========================================
+    // CREATE OPTIONS
+    // ========================================
+
+    finalList.forEach(
+      market => {
+
+        const option =
+          document.createElement(
+            'option'
+          );
+
+        option.value =
+          market.symbol;
+
+        option.textContent =
+          `${market.name} (${market.symbol})`;
+
+        option.dataset.pip =
+          String(market.pip);
+
+        select.appendChild(
+          option
+        );
+      }
+    );
+
+    // ========================================
+    // PREFER R_100
+    // ========================================
+
+    const preferred =
+      finalList.findIndex(
+        m => m.symbol === 'R_100'
+      );
+
+    if (preferred >= 0) {
+
+      select.selectedIndex =
+        preferred;
+
+    } else {
+
+      select.selectedIndex = 0;
+    }
+
+    text(
+      'marketName',
+      select.options[
+        select.selectedIndex
+      ]?.textContent ||
+      select.value
+    );
+
+    updateStatus(
+      `${finalList.length} markets loaded`,
+      true
+    );
 
     subscribeMarket();
-  };
+  }
 
-  const subscribeMarket = () => {
-    if (!state.ws || state.ws.readyState !== WebSocket.OPEN) return;
+  // ==========================================
+  // CONNECT TO DERIV
+  // ==========================================
 
-    const select = DOM.marketSelect;
-    const symbol = select?.value;
+  function connectDeriv() {
 
-    if (!symbol) {
-      updateStatus("Select a market first", false);
+    manuallyDisconnected = false;
+
+    if (reconnectTimer) {
+
+      clearTimeout(
+        reconnectTimer
+      );
+
+      reconnectTimer = null;
+    }
+
+    if (ws) {
+
+      try {
+        ws.close();
+      } catch (_) {}
+
+      ws = null;
+    }
+
+    ticks = [];
+
+    tickSubscriptionId = null;
+
+    const btn =
+      $('connectBtn');
+
+    if (btn) {
+
+      btn.textContent =
+        'Connecting...';
+    }
+
+    updateStatus(
+      'Connecting to Deriv...',
+      false
+    );
+
+    text(
+      'signalTitle',
+      'Connecting to Deriv...'
+    );
+
+    text(
+      'signalExplanation',
+      'Loading available synthetic markets...'
+    );
+
+    try {
+
+      ws =
+        new WebSocket(
+          ENDPOINT
+        );
+
+    } catch (error) {
+
+      setError(
+        `WebSocket could not start: ${error.message}`
+      );
+
       return;
     }
 
-    // FIX: Unsubscribe from all previous tick streams before requesting a new one
-    state.ws.send(JSON.stringify({ forget_all: "ticks" }));
+    // ========================================
+    // WEBSOCKET OPEN
+    // ========================================
 
-    state.currentSymbol = symbol;
-    state.maxTicks = Number(DOM.tickCount?.value) || 1000;
+    ws.onopen = () => {
 
-    const selectedOption = select.options[select.selectedIndex];
-    state.currentPipSize = Number(selectedOption.dataset.pip) || 2;
+      console.log(
+        'Deriv WebSocket connected'
+      );
 
-    if (DOM.marketName) DOM.marketName.textContent = selectedOption.textContent;
-    if (DOM.tickStatus) DOM.tickStatus.textContent = "Loading ticks...";
+      reconnectAttempts = 0;
 
-    state.ticks = [];
+      updateStatus(
+        'Connected — loading markets...',
+        true
+      );
 
-    // History Request
-    state.ws.send(
-      JSON.stringify({
-        ticks_history: state.currentSymbol,
-        count: state.maxTicks,
-        end: "latest",
-        style: "ticks",
-        req_id: 2,
-      })
+      if (btn) {
+
+        btn.textContent =
+          '🟢 Connected';
+      }
+
+      // Request available markets
+      send({
+
+        active_symbols:
+          'brief',
+
+        req_id: 1
+      });
+    };
+
+    // ========================================
+    // WEBSOCKET MESSAGE
+    // ========================================
+
+    ws.onmessage =
+      event => {
+
+        let data;
+
+        try {
+
+          data =
+            JSON.parse(
+              event.data
+            );
+
+        } catch (error) {
+
+          console.error(
+            'Invalid Deriv response',
+            event.data
+          );
+
+          return;
+        }
+
+        console.debug(
+          '[Deriv]',
+          data
+        );
+
+        // ==================================
+        // API ERROR
+        // ==================================
+
+        if (data.error) {
+
+          const message =
+            data.error.message ||
+            'Unknown Deriv API error';
+
+          setError(
+            `API Error: ${message}`
+          );
+
+          return;
+        }
+
+        // ==================================
+        // ACTIVE SYMBOLS
+        // ==================================
+
+        if (
+          data.msg_type ===
+          'active_symbols'
+        ) {
+
+          console.log(
+            'Markets:',
+            data.active_symbols
+          );
+
+          loadMarkets(
+            data.active_symbols
+          );
+
+          return;
+        }
+
+        // ==================================
+        // HISTORY
+        // ==================================
+
+        if (
+          data.msg_type === 'history' &&
+          data.history
+        ) {
+
+          loadHistory(
+            data.history
+          );
+
+          return;
+        }
+
+        // ==================================
+        // LIVE TICK
+        // ==================================
+
+        if (
+          data.msg_type === 'tick' &&
+          data.tick
+        ) {
+
+          if (
+            data.subscription &&
+            data.subscription.id
+          ) {
+
+            tickSubscriptionId =
+              data.subscription.id;
+          }
+
+          receiveTick(
+            data.tick
+          );
+        }
+      };
+
+    // ========================================
+    // WEBSOCKET ERROR
+    // ========================================
+
+    ws.onerror = () => {
+
+      setError(
+        'WebSocket connection error. Check your internet connection or try again.'
+      );
+    };
+
+    // ========================================
+    // WEBSOCKET CLOSED
+    // ========================================
+
+    ws.onclose = () => {
+
+      console.log(
+        'Deriv WebSocket closed'
+      );
+
+      tickSubscriptionId = null;
+
+      if (manuallyDisconnected) {
+
+        updateStatus(
+          'Disconnected',
+          false
+        );
+
+        return;
+      }
+
+      updateStatus(
+        'Connection closed — reconnecting...',
+        false
+      );
+
+      const delay =
+        Math.min(
+          30000,
+          1000 *
+          Math.pow(
+            2,
+            reconnectAttempts++
+          )
+        );
+
+      reconnectTimer =
+        setTimeout(
+          connectDeriv,
+          delay
+        );
+    };
+  }
+
+  // ==========================================
+  // SUBSCRIBE TO MARKET
+  // ==========================================
+
+  function subscribeMarket() {
+
+    if (
+      !ws ||
+      ws.readyState !== WebSocket.OPEN
+    ) {
+
+      return;
+    }
+
+    const select =
+      $('marketSelect');
+
+    if (
+      !select ||
+      !select.value
+    ) {
+
+      return;
+    }
+
+    clearSubscription();
+
+    currentSymbol =
+      select.value;
+
+    maxTicks =
+      Number(
+        $('tickCount')?.value ||
+        1000
+      );
+
+    const option =
+      select.options[
+        select.selectedIndex
+      ];
+
+    currentPipSize =
+      Number(
+        option?.dataset?.pip
+      ) || 0.01;
+
+    currentDecimals =
+      decimalsFromPip(
+        currentPipSize
+      );
+
+    ticks = [];
+
+    text(
+      'marketName',
+      option?.textContent ||
+      currentSymbol
     );
 
-    // Stream Subscription
-    state.ws.send(
-      JSON.stringify({
-        ticks: state.currentSymbol,
-        subscribe: 1,
-        req_id: 3,
-      })
+    text(
+      'tickStatus',
+      `Loading ${maxTicks} ticks...`
     );
 
-    updateStatus(`Receiving ${state.currentSymbol} ticks`, true);
+    text(
+      'signalTitle',
+      'Collecting ticks...'
+    );
 
-    if (DOM.signalTitle) DOM.signalTitle.textContent = "Collecting market data";
-    if (DOM.signalExplanation) {
-      DOM.signalExplanation.textContent = `Analyzing the latest ticks from ${state.currentSymbol}...`;
+    text(
+      'signalExplanation',
+      `Loading ${maxTicks} recent ticks from ${currentSymbol}.`
+    );
+
+    updateStatus(
+      `Receiving ${currentSymbol} ticks`,
+      true
+    );
+
+    // ========================================
+    // GET HISTORICAL TICKS
+    // ========================================
+
+    send({
+
+      ticks_history:
+        currentSymbol,
+
+      count:
+        maxTicks,
+
+      end:
+        'latest',
+
+      style:
+        'ticks',
+
+      req_id:
+        2
+    });
+
+    // ========================================
+    // SUBSCRIBE TO LIVE TICKS
+    // ========================================
+
+    send({
+
+      ticks:
+        currentSymbol,
+
+      subscribe:
+        1,
+
+      req_id:
+        3
+    });
+  }
+
+  // ==========================================
+  // LOAD HISTORY
+  // ==========================================
+
+  function loadHistory(history) {
+
+    if (
+      !history ||
+      !Array.isArray(
+        history.prices
+      )
+    ) {
+
+      console.error(
+        'Invalid tick history',
+        history
+      );
+
+      return;
     }
-  };
 
-  const receiveTick = (tick) => {
-    if (!tick) return;
+    ticks =
+      history.prices
+        .map(Number)
+        .filter(
+          Number.isFinite
+        )
+        .slice(
+          -maxTicks
+        );
 
-    // FIX: Guard clause to reject "ghost ticks" from previous markets
-    if (tick.symbol !== state.currentSymbol) return;
+    updateTickCount();
 
-    const price = Number(tick.quote);
-    if (!Number.isFinite(price)) return;
+    renderRecentDigits();
 
-    if (tick.pip_size !== undefined) {
-      state.currentPipSize = Number(tick.pip_size) || state.currentPipSize;
+    analyzeMarket();
+
+    console.log(
+      `Loaded ${ticks.length} historical ticks`
+    );
+  }
+
+  // ==========================================
+  // RECEIVE LIVE TICK
+  // ==========================================
+
+  function receiveTick(tick) {
+
+    if (!tick) {
+      return;
     }
 
-    const formatted = price.toFixed(state.currentPipSize);
+    const price =
+      Number(
+        tick.quote
+      );
 
-    if (DOM.livePrice) DOM.livePrice.textContent = formatted;
-    if (DOM.lastDigit) DOM.lastDigit.textContent = getLastDigit(formatted);
+    if (
+      !Number.isFinite(price)
+    ) {
 
-    state.ticks.push(price);
+      return;
+    }
 
-    if (state.ticks.length > state.maxTicks) {
-      state.ticks.shift();
+    // ========================================
+    // UPDATE PIP SIZE
+    // ========================================
+
+    if (
+      tick.pip_size !== undefined
+    ) {
+
+      currentPipSize =
+        Number(
+          tick.pip_size
+        ) ||
+        currentPipSize;
+
+      currentDecimals =
+        decimalsFromPip(
+          currentPipSize
+        );
+    }
+
+    // ========================================
+    // FORMAT PRICE
+    // ========================================
+
+    const formatted =
+      formatPrice(price);
+
+    text(
+      'livePrice',
+      formatted
+    );
+
+    // ========================================
+    // LAST DIGIT
+    // ========================================
+
+    const digit =
+      getLastDigit(
+        formatted
+      );
+
+    text(
+      'lastDigit',
+      digit
+    );
+
+    // ========================================
+    // STORE TICK
+    // ========================================
+
+    ticks.push(
+      price
+    );
+
+    if (
+      ticks.length >
+      maxTicks
+    ) {
+
+      ticks.shift();
     }
 
     updateTickCount();
+
     renderRecentDigits();
+
     analyzeMarket();
-  };
+  }
 
-  // ======================================================
-  // ANALYTICS & RENDERING
-  // ======================================================
+  // ==========================================
+  // GET DIGITS
+  // ==========================================
 
-  const updateTickCount = () => {
-    if (DOM.tickStatus) DOM.tickStatus.textContent = `${state.ticks.length} ticks`;
-  };
+  function getDigits() {
 
-  const analyzeMarket = () => {
-    const digits = getDigits();
-    const total = digits.length;
+    return ticks.map(
+      value =>
+        getLastDigit(
+          formatPrice(value)
+        )
+    );
+  }
 
-    if (total < 20) {
-      if (DOM.signalTitle) DOM.signalTitle.textContent = "Collecting ticks...";
-      if (DOM.bestDigit) DOM.bestDigit.textContent = "-";
-      if (DOM.bestConfidence) DOM.bestConfidence.textContent = "0.0";
-      if (DOM.confidenceBar) DOM.confidenceBar.style.width = "0%";
-      if (DOM.entryStatus) DOM.entryStatus.textContent = "⏳ COLLECTING DATA";
+  // ==========================================
+  // UPDATE TICK COUNT
+  // ==========================================
+
+  function updateTickCount() {
+
+    text(
+      'tickStatus',
+      `${ticks.length} ticks`
+    );
+
+    text(
+      'tickTotal',
+      ticks.length
+    );
+  }
+
+  // ==========================================
+  // RENDER DIGIT GRID
+  // ==========================================
+
+  function renderDigitGrid(
+    counts,
+    percentages
+  ) {
+
+    const grid =
+      $('digitGrid');
+
+    if (!grid) {
       return;
     }
 
-    const counts = Array(10).fill(0);
-    digits.forEach((digit) => counts[digit]++);
+    grid.innerHTML = '';
 
-    const percentages = counts.map((count) => (count / total) * 100);
-    renderDigitGrid(counts, percentages);
+    const max =
+      Math.max(
+        ...counts,
+        0
+      );
 
-    let bestDigit = percentages.reduce(
-      (maxIdx, curr, idx, arr) => (curr > arr[maxIdx] ? idx : maxIdx),
-      0
-    );
+    for (
+      let digit = 0;
+      digit <= 9;
+      digit++
+    ) {
 
-    let confidence = percentages[bestDigit];
-    const barrier = Number(DOM.barrier?.value || 0);
+      const box =
+        document.createElement(
+          'div'
+        );
 
-    // Signal type calculations
-    switch (state.currentType) {
-      case "OVER":
-        confidence = (digits.filter((d) => d > barrier).length / total) * 100;
-        break;
-      case "UNDER":
-        confidence = (digits.filter((d) => d < barrier).length / total) * 100;
-        break;
-      case "EVEN":
-        confidence = (digits.filter((d) => d % 2 === 0).length / total) * 100;
-        break;
-      case "ODD":
-        confidence = (digits.filter((d) => d % 2 !== 0).length / total) * 100;
-        break;
-      case "MATCH":
-        confidence = percentages[barrier];
-        bestDigit = barrier;
-        break;
-    }
+      box.className =
+        'digit-stat';
 
-    confidence = Math.min(100, Math.max(0, confidence));
+      if (
+        counts[digit] === max &&
+        max > 0
+      ) {
 
-    if (DOM.bestDigit) DOM.bestDigit.textContent = bestDigit;
-    if (DOM.bestConfidence) DOM.bestConfidence.textContent = confidence.toFixed(1);
-    if (DOM.confidenceBar) DOM.confidenceBar.style.width = `${confidence}%`;
+        box.classList.add(
+          'hot'
+        );
+      }
 
-    if (DOM.signalTitle) {
-      DOM.signalTitle.textContent = getSignalName(state.currentType, bestDigit, barrier);
-    }
-    if (DOM.signalExplanation) {
-      DOM.signalExplanation.textContent = getExplanation(
-        state.currentType,
-        bestDigit,
-        confidence,
-        barrier
+      box.innerHTML = `
+        <div class="digit-number">
+          ${digit}
+        </div>
+
+        <div class="digit-count">
+          ${counts[digit]} hits
+        </div>
+
+        <div class="digit-percent">
+          ${percentages[digit].toFixed(1)}%
+        </div>
+      `;
+
+      grid.appendChild(
+        box
       );
     }
+  }
 
-    const threshold = Number(DOM.threshold?.value || 0);
+  // ==========================================
+  // RECENT DIGITS
+  // ==========================================
 
-    if (DOM.entryStatus) {
-      if (confidence >= threshold) {
-        DOM.entryStatus.textContent = "🟢 ENTRY CONDITION MET";
-        DOM.entryStatus.className = "entry-status ready";
-      } else {
-        DOM.entryStatus.textContent = "🟡 WAIT FOR BETTER SETUP";
-        DOM.entryStatus.className = "entry-status waiting";
-      }
+  function renderRecentDigits() {
+
+    const container =
+      $('recentDigits');
+
+    if (!container) {
+      return;
     }
-  };
 
-  const getSignalName = (type, digit, barrier) => {
-    const signals = {
-      MATCH: `MATCH ${digit}`,
-      OVER: `OVER ${barrier}`,
-      UNDER: `UNDER ${barrier}`,
-      EVEN: "EVEN",
-      ODD: "ODD",
-    };
-    return signals[type] || "Signal";
-  };
+    container.innerHTML = '';
 
-  const getExplanation = (type, digit, confidence, barrier) => {
-    const formattedConf = confidence.toFixed(1);
-    switch (type) {
-      case "MATCH":
-        return `Digit ${digit} appeared most strongly in history. Frequency: ${formattedConf}%.`;
-      case "OVER":
-        return `${formattedConf}% of analyzed digits were above barrier ${barrier}.`;
-      case "UNDER":
-        return `${formattedConf}% of analyzed digits were below barrier ${barrier}.`;
-      case "EVEN":
-        return `${formattedConf}% of analyzed digits were even.`;
-      case "ODD":
-        return `${formattedConf}% of analyzed digits were odd.`;
+    getDigits()
+      .slice(-30)
+      .reverse()
+      .forEach(
+        digit => {
+
+          const span =
+            document.createElement(
+              'span'
+            );
+
+          span.className =
+            'recent-digit';
+
+          span.textContent =
+            digit;
+
+          container.appendChild(
+            span
+          );
+        }
+      );
+  }
+
+  // ==========================================
+  // ANALYZE MARKET
+  // ==========================================
+
+  function analyzeMarket() {
+
+    const digits =
+      getDigits();
+
+    // Need enough data
+    if (
+      digits.length < 20
+    ) {
+
+      text(
+        'signalTitle',
+        'Collecting ticks...'
+      );
+
+      text(
+        'bestDigit',
+        '-'
+      );
+
+      text(
+        'bestConfidence',
+        '0.0%'
+      );
+
+      setWidth(
+        'confidenceBar',
+        0
+      );
+
+      text(
+        'entryStatus',
+        '⏳ COLLECTING DATA'
+      );
+
+      return;
+    }
+
+    // ========================================
+    // DIGIT COUNTS
+    // ========================================
+
+    const counts =
+      Array(10).fill(0);
+
+    digits.forEach(
+      digit => {
+
+        counts[digit]++;
+      }
+    );
+
+    const total =
+      digits.length;
+
+    const percentages =
+      counts.map(
+        count =>
+          count /
+          total *
+          100
+      );
+
+    renderDigitGrid(
+      counts,
+      percentages
+    );
+
+    // ========================================
+    // BARRIER
+    // ========================================
+
+    const barrier =
+      Number(
+        $('barrier')?.value ??
+        4
+      );
+
+    let confidence = 0;
+
+    let label = 'MATCH';
+
+    let candidate =
+      percentages.indexOf(
+        Math.max(
+          ...percentages
+        )
+      );
+
+    // ========================================
+    // ANALYSIS TYPE
+    // ========================================
+
+    switch (
+      currentType
+    ) {
+
+      // --------------------------------------
+      // OVER
+      // --------------------------------------
+
+      case 'OVER':
+
+        confidence =
+          digits.filter(
+            digit =>
+              digit > barrier
+          ).length /
+          total *
+          100;
+
+        label =
+          `OVER ${barrier}`;
+
+        candidate =
+          '↑';
+
+        break;
+
+      // --------------------------------------
+      // UNDER
+      // --------------------------------------
+
+      case 'UNDER':
+
+        confidence =
+          digits.filter(
+            digit =>
+              digit < barrier
+          ).length /
+          total *
+          100;
+
+        label =
+          `UNDER ${barrier}`;
+
+        candidate =
+          '↓';
+
+        break;
+
+      // --------------------------------------
+      // EVEN
+      // --------------------------------------
+
+      case 'EVEN':
+
+        confidence =
+          digits.filter(
+            digit =>
+              digit % 2 === 0
+          ).length /
+          total *
+          100;
+
+        label =
+          'EVEN';
+
+        candidate =
+          'E';
+
+        break;
+
+      // --------------------------------------
+      // ODD
+      // --------------------------------------
+
+      case 'ODD':
+
+        confidence =
+          digits.filter(
+            digit =>
+              digit % 2 !== 0
+          ).length /
+          total *
+          100;
+
+        label =
+          'ODD';
+
+        candidate =
+          'O';
+
+        break;
+
+      // --------------------------------------
+      // DIFFERS
+      // --------------------------------------
+
+      case 'DIFFERS':
+
+        confidence =
+          100 -
+          percentages[
+            barrier
+          ];
+
+        label =
+          `DIFFERS ${barrier}`;
+
+        candidate =
+          barrier;
+
+        break;
+
+      // --------------------------------------
+      // MATCH
+      // --------------------------------------
+
       default:
-        return "Statistical analysis.";
+
+        confidence =
+          percentages[
+            barrier
+          ];
+
+        label =
+          `MATCH ${barrier}`;
+
+        candidate =
+          barrier;
+
+        break;
     }
-  };
 
-  const renderDigitGrid = (counts, percentages) => {
-    if (!DOM.digitGrid) return;
+    // ========================================
+    // LIMIT CONFIDENCE
+    // ========================================
 
-    // FIX: Only construct the elements once to prevent DOM thrashing
-    if (DOM.digitGrid.children.length === 0) {
-      const fragment = document.createDocumentFragment();
-      for (let digit = 0; digit <= 9; digit++) {
-        const box = document.createElement("div");
-        box.className = "digit-stat";
-        box.innerHTML = `
-          <div class="digit-number">${digit}</div>
-          <div class="digit-count">0 hits</div>
-          <div class="digit-percent">0.0%</div>
-        `;
-        fragment.appendChild(box);
+    confidence =
+      Math.max(
+        0,
+        Math.min(
+          100,
+          confidence
+        )
+      );
+
+    // ========================================
+    // MAIN SIGNAL
+    // ========================================
+
+    text(
+      'bestDigit',
+      candidate
+    );
+
+    text(
+      'bestConfidence',
+      `${confidence.toFixed(1)}%`
+    );
+
+    setWidth(
+      'confidenceBar',
+      confidence
+    );
+
+    text(
+      'signalTitle',
+      label
+    );
+
+    text(
+      'signalExplanation',
+      `${confidence.toFixed(1)}% of the selected ${digits.length}-tick sample matches this condition. This is historical frequency, not a guaranteed prediction.`
+    );
+
+    // ========================================
+    // MATCH
+    // ========================================
+
+    text(
+      'matchDigit',
+      barrier
+    );
+
+    text(
+      'matchConfidence',
+      `${percentages[barrier].toFixed(1)}%`
+    );
+
+    text(
+      'matchGap',
+      `Frequency ${percentages[barrier].toFixed(1)}%`
+    );
+
+    // ========================================
+    // OVER
+    // ========================================
+
+    const overConfidence =
+      digits.filter(
+        digit =>
+          digit > barrier
+      ).length /
+      total *
+      100;
+
+    text(
+      'overLabel',
+      `OVER ${barrier}`
+    );
+
+    text(
+      'overConfidence',
+      `${overConfidence.toFixed(1)}%`
+    );
+
+    // ========================================
+    // UNDER
+    // ========================================
+
+    const underConfidence =
+      digits.filter(
+        digit =>
+          digit < barrier
+      ).length /
+      total *
+      100;
+
+    text(
+      'underLabel',
+      `UNDER ${barrier}`
+    );
+
+    text(
+      'underConfidence',
+      `${underConfidence.toFixed(1)}%`
+    );
+
+    // ========================================
+    // EVEN
+    // ========================================
+
+    const evenConfidence =
+      digits.filter(
+        digit =>
+          digit % 2 === 0
+      ).length /
+      total *
+      100;
+
+    text(
+      'evenConfidence',
+      `${evenConfidence.toFixed(1)}%`
+    );
+
+    // ========================================
+    // ODD
+    // ========================================
+
+    const oddConfidence =
+      digits.filter(
+        digit =>
+          digit % 2 !== 0
+      ).length /
+      total *
+      100;
+
+    text(
+      'oddConfidence',
+      `${oddConfidence.toFixed(1)}%`
+    );
+
+    // ========================================
+    // HOT DIGIT
+    // ========================================
+
+    const hot =
+      percentages.indexOf(
+        Math.max(
+          ...percentages
+        )
+      );
+
+    text(
+      'hotDigit',
+      hot
+    );
+
+    text(
+      'hotInfo',
+      `${percentages[hot].toFixed(1)}%`
+    );
+
+    // ========================================
+    // COLD DIGIT
+    // ========================================
+
+    const cold =
+      percentages.indexOf(
+        Math.min(
+          ...percentages
+        )
+      );
+
+    text(
+      'coldDigit',
+      cold
+    );
+
+    text(
+      'coldInfo',
+      `${percentages[cold].toFixed(1)}%`
+    );
+
+    // ========================================
+    // ENTRY THRESHOLD
+    // ========================================
+
+    const threshold =
+      Number(
+        $('threshold')?.value ||
+        65
+      );
+
+    const entry =
+      $('entryStatus');
+
+    if (
+      confidence >= threshold
+    ) {
+
+      text(
+        'entryStatus',
+        '🟢 ENTRY CONDITION MET'
+      );
+
+      if (entry) {
+
+        entry.className =
+          'entry-status ready';
       }
-      DOM.digitGrid.appendChild(fragment);
-    }
 
-    // FIX: Update existing text content safely instead of replacing HTML
-    const children = DOM.digitGrid.children;
-    for (let digit = 0; digit <= 9; digit++) {
-      const box = children[digit];
-      box.children[1].textContent = `${counts[digit]} hits`;
-      box.children[2].textContent = `${percentages[digit].toFixed(1)}%`;
-    }
-  };
+    } else {
 
-  const renderRecentDigits = () => {
-    if (!DOM.recentDigits) return;
+      text(
+        'entryStatus',
+        '🟡 WAIT FOR BETTER SETUP'
+      );
 
-    const digits = getDigits().slice(-30).reverse();
+      if (entry) {
 
-    // FIX: Build the elements exactly once
-    if (DOM.recentDigits.children.length === 0) {
-      const fragment = document.createDocumentFragment();
-      for (let i = 0; i < 30; i++) {
-        const span = document.createElement("span");
-        span.className = "recent-digit";
-        fragment.appendChild(span);
+        entry.className =
+          'entry-status waiting';
       }
-      DOM.recentDigits.appendChild(fragment);
+    }
+  }
+
+  // ==========================================
+  // DISCONNECT
+  // ==========================================
+
+  function disconnect() {
+
+    manuallyDisconnected =
+      true;
+
+    if (reconnectTimer) {
+
+      clearTimeout(
+        reconnectTimer
+      );
+
+      reconnectTimer = null;
     }
 
-    // FIX: Apply new values to the existing static spans
-    const children = DOM.recentDigits.children;
-    for (let i = 0; i < 30; i++) {
-      children[i].textContent = digits[i] !== undefined ? digits[i] : "";
+    clearSubscription();
+
+    if (ws) {
+
+      try {
+        ws.close();
+      } catch (_) {}
     }
+
+    ws = null;
+
+    updateStatus(
+      'Disconnected',
+      false
+    );
+
+    const btn =
+      $('connectBtn');
+
+    if (btn) {
+
+      btn.textContent =
+        '⚡ Connect Scanner';
+    }
+  }
+
+  // ==========================================
+  // BUTTON EVENTS
+  // ==========================================
+
+  function bindEvents() {
+
+    $('connectBtn')
+      ?.addEventListener(
+        'click',
+        connectDeriv
+      );
+
+    $('disconnectBtn')
+      ?.addEventListener(
+        'click',
+        disconnect
+      );
+
+    $('marketSelect')
+      ?.addEventListener(
+        'change',
+        subscribeMarket
+      );
+
+    $('tickCount')
+      ?.addEventListener(
+        'change',
+        subscribeMarket
+      );
+
+    $('barrier')
+      ?.addEventListener(
+        'change',
+        analyzeMarket
+      );
+
+    $('threshold')
+      ?.addEventListener(
+        'change',
+        analyzeMarket
+      );
+
+    $('scanBtn')
+      ?.addEventListener(
+        'click',
+        analyzeMarket
+      );
+
+    // ========================================
+    // ANALYSIS TYPE BUTTONS
+    // ========================================
+
+    document
+      .querySelectorAll(
+        '.type-button'
+      )
+      .forEach(
+        button => {
+
+          button.addEventListener(
+            'click',
+            () => {
+
+              document
+                .querySelectorAll(
+                  '.type-button'
+                )
+                .forEach(
+                  b =>
+                    b.classList.remove(
+                      'active'
+                    )
+                );
+
+              button.classList.add(
+                'active'
+              );
+
+              currentType =
+                String(
+                  button.dataset.type ||
+                  'MATCH'
+                ).toUpperCase();
+
+              analyzeMarket();
+            }
+          );
+        }
+      );
+
+    // ========================================
+    // MODE BUTTONS
+    // ========================================
+
+    document
+      .querySelectorAll(
+        '.mode'
+      )
+      .forEach(
+        button => {
+
+          button.addEventListener(
+            'click',
+            () => {
+
+              document
+                .querySelectorAll(
+                  '.mode'
+                )
+                .forEach(
+                  b =>
+                    b.classList.remove(
+                      'active'
+                    )
+                );
+
+              button.classList.add(
+                'active'
+              );
+
+              currentType =
+                String(
+                  button.dataset.type ||
+                  button.dataset.mode ||
+                  'MATCH'
+                ).toUpperCase();
+
+              analyzeMarket();
+            }
+          );
+        }
+      );
+
+    // ========================================
+    // CREATE DEFAULT BARRIERS
+    // ========================================
+
+    const barrier =
+      $('barrier');
+
+    if (
+      barrier &&
+      !barrier.options.length
+    ) {
+
+      for (
+        let digit = 0;
+        digit <= 9;
+        digit++
+      ) {
+
+        const option =
+          document.createElement(
+            'option'
+          );
+
+        option.value =
+          digit;
+
+        option.textContent =
+          digit;
+
+        if (digit === 4) {
+
+          option.selected =
+            true;
+        }
+
+        barrier.appendChild(
+          option
+        );
+      }
+    }
+  }
+
+  // ==========================================
+  // START APPLICATION
+  // ==========================================
+
+  bindEvents();
+
+  populateFallbackMarkets();
+
+  updateStatus(
+    'Offline — press Connect Scanner',
+    false
+  );
+
+  console.log(
+    '[Deriv Digit Analyzer] app.js loaded successfully'
+  );
+
+  // ==========================================
+  // DEBUG FUNCTIONS
+  // ==========================================
+
+  window.DerivAnalyzer = {
+
+    connect:
+      connectDeriv,
+
+    disconnect:
+      disconnect,
+
+    analyze:
+      analyzeMarket
   };
 
-  // ======================================================
-  // EVENT LISTENERS
-  // ======================================================
-
-  const bindEvents = () => {
-    // Mode toggle buttons
-    document.querySelectorAll(".mode").forEach((button) => {
-      button.addEventListener("click", (e) => {
-        document.querySelectorAll(".mode").forEach((b) => b.classList.remove("active"));
-        e.currentTarget.classList.add("active");
-        state.currentMode = e.currentTarget.dataset.mode;
-        analyzeMarket();
-      });
-    });
-
-    // Type selection buttons
-    document.querySelectorAll(".type-button").forEach((button) => {
-      button.addEventListener("click", (e) => {
-        document.querySelectorAll(".type-button").forEach((b) => b.classList.remove("active"));
-        e.currentTarget.classList.add("active");
-        state.currentType = e.currentTarget.dataset.type;
-        analyzeMarket();
-      });
-    });
-
-    // Controls
-    DOM.connectBtn?.addEventListener("click", connectDeriv);
-
-    DOM.marketSelect?.addEventListener("change", () => {
-      if (state.ws?.readyState === WebSocket.OPEN) subscribeMarket();
-    });
-
-    DOM.tickCount?.addEventListener("change", () => {
-      if (state.ws?.readyState === WebSocket.OPEN) subscribeMarket();
-    });
-
-    DOM.barrier?.addEventListener("change", analyzeMarket);
-    DOM.threshold?.addEventListener("change", analyzeMarket);
-
-    // FIX: Removed the redundant setInterval. `analyzeMarket()` is already 
-    // triggered by `receiveTick()`, making the interval unnecessary CPU load.
-  };
-
-  // FIX: Wait for the DOM to fully load before running the app
-  document.addEventListener("DOMContentLoaded", () => {
-    // Re-cache DOM elements to ensure they exist now that the page is loaded
-    Object.keys(DOM).forEach(key => {
-        DOM[key] = $(key);
-    });
-    
-    bindEvents();
-    console.log("Deriv Digit Analyzer loaded and optimized.");
-  });
 })();
