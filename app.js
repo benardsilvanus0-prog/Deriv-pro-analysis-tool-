@@ -2,17 +2,94 @@
 
 /* =========================================================
    MATCHES SIGNAL SCANNER
-   Deriv market-data connection
-   Analysis only — NO automatic trading
+   DERIV MARKET DATA
+   ANALYSIS ONLY - NO AUTOMATIC TRADING
    ========================================================= */
 
-/* ---------------- CONFIG ---------------- */
 
-// Fixed WebSocket endpoint
+/* =========================================================
+   CONFIGURATION
+   ========================================================= */
+
+/*
+ * Use Deriv's current websocket hostname.
+ *
+ * We deliberately do NOT use:
+ * wss://ws.binaryws.com/...
+ *
+ * We also don't use app_id=1089 here.
+ */
 const DERIV_WS =
-    "wss://ws.derivws.com/websockets/v3?app_id=1089";
+    "wss://ws.derivws.com/websockets/v3";
+
+
+/*
+ * Known synthetic symbols used as a fallback if
+ * active_symbols returns an empty array.
+ *
+ * These are only fallback choices. The scanner still
+ * requests the actual market list first.
+ */
+const FALLBACK_MARKETS = [
+    {
+        symbol: "1HZ10V",
+        name: "Volatility 10 (1s)",
+        pip: 2
+    },
+    {
+        symbol: "1HZ25V",
+        name: "Volatility 25 (1s)",
+        pip: 2
+    },
+    {
+        symbol: "1HZ50V",
+        name: "Volatility 50 (1s)",
+        pip: 2
+    },
+    {
+        symbol: "1HZ75V",
+        name: "Volatility 75 (1s)",
+        pip: 2
+    },
+    {
+        symbol: "1HZ100V",
+        name: "Volatility 100 (1s)",
+        pip: 2
+    },
+    {
+        symbol: "R_10",
+        name: "Volatility 10",
+        pip: 3
+    },
+    {
+        symbol: "R_25",
+        name: "Volatility 25",
+        pip: 3
+    },
+    {
+        symbol: "R_50",
+        name: "Volatility 50",
+        pip: 4
+    },
+    {
+        symbol: "R_75",
+        name: "Volatility 75",
+        pip: 4
+    },
+    {
+        symbol: "R_100",
+        name: "Volatility 100",
+        pip: 2
+    }
+];
+
+
+/* =========================================================
+   STATE
+   ========================================================= */
 
 let ws = null;
+
 let reconnectTimer = null;
 let pingTimer = null;
 let autoScanTimer = null;
@@ -20,10 +97,15 @@ let autoScanTimer = null;
 let connected = false;
 let connecting = false;
 
+let manualDisconnect = false;
+
 let currentSymbol = "";
 let currentMarket = null;
 
+let currentSubscriptionId = null;
+
 let pipSize = 0.01;
+
 let ticks = [];
 
 let currentMode = "match";
@@ -32,42 +114,87 @@ let currentType = "MATCH";
 let requestId = 1;
 
 
-/* ---------------- DOM ---------------- */
+/* =========================================================
+   DOM
+   ========================================================= */
 
-const $ = id => document.getElementById(id);
-
-const marketSelect = $("marketSelect");
-const tickCount = $("tickCount");
-const threshold = $("threshold");
-const barrier = $("barrier");
-
-const connectBtn = $("connectBtn");
-const scanBtn = $("scanBtn");
-const autoScan = $("autoScan");
-
-const connectionDot = $("connectionDot");
-const statusText = $("statusText");
-const liveBadge = $("liveBadge");
-
-const signalTitle = $("signalTitle");
-const bestDigit = $("bestDigit");
-const bestConfidence = $("bestConfidence");
-const confidenceBar = $("confidenceBar");
-const signalExplanation = $("signalExplanation");
-const entryStatus = $("entryStatus");
-
-const tickStatus = $("tickStatus");
-const livePrice = $("livePrice");
-const lastDigit = $("lastDigit");
-
-const marketName = $("marketName");
-const digitGrid = $("digitGrid");
-const recentDigits = $("recentDigits");
+const $ = id =>
+    document.getElementById(id);
 
 
-/* ---------------- HELPERS ---------------- */
+const marketSelect =
+    $("marketSelect");
+
+const tickCount =
+    $("tickCount");
+
+const threshold =
+    $("threshold");
+
+const barrier =
+    $("barrier");
+
+const connectBtn =
+    $("connectBtn");
+
+const scanBtn =
+    $("scanBtn");
+
+const autoScan =
+    $("autoScan");
+
+const connectionDot =
+    $("connectionDot");
+
+const statusText =
+    $("statusText");
+
+const liveBadge =
+    $("liveBadge");
+
+const signalTitle =
+    $("signalTitle");
+
+const bestDigit =
+    $("bestDigit");
+
+const bestConfidence =
+    $("bestConfidence");
+
+const confidenceBar =
+    $("confidenceBar");
+
+const signalExplanation =
+    $("signalExplanation");
+
+const entryStatus =
+    $("entryStatus");
+
+const tickStatus =
+    $("tickStatus");
+
+const livePrice =
+    $("livePrice");
+
+const lastDigit =
+    $("lastDigit");
+
+const marketName =
+    $("marketName");
+
+const digitGrid =
+    $("digitGrid");
+
+const recentDigits =
+    $("recentDigits");
+
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
 
 function setText(element, value) {
+
     if (element) {
         element.textContent = value;
     }
@@ -75,26 +202,43 @@ function setText(element, value) {
 
 
 function safeNumber(value, fallback = 0) {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : fallback;
+
+    const number =
+        Number(value);
+
+    return Number.isFinite(number)
+        ? number
+        : fallback;
+}
+
+
+function nextRequestId() {
+
+    return requestId++;
 }
 
 
 function decimalPlacesFromPip(pip) {
 
-    const n = Number(pip);
+    const number =
+        Number(pip);
 
-    if (!Number.isFinite(n) || n <= 0) {
+    if (
+        !Number.isFinite(number) ||
+        number <= 0
+    ) {
         return 2;
     }
 
-    if (n >= 1) {
+    if (number >= 1) {
         return 0;
     }
 
     return Math.max(
         0,
-        Math.round(-Math.log10(n))
+        Math.round(
+            -Math.log10(number)
+        )
     );
 }
 
@@ -102,34 +246,53 @@ function decimalPlacesFromPip(pip) {
 function formatPrice(price) {
 
     const places =
-        decimalPlacesFromPip(pipSize);
+        decimalPlacesFromPip(
+            pipSize
+        );
 
-    return Number(price).toFixed(places);
+    return Number(price).toFixed(
+        places
+    );
 }
 
 
+/*
+ * Extract the final decimal digit from
+ * the displayed quote.
+ */
 function getLastDigit(price) {
 
     const places =
-        decimalPlacesFromPip(pipSize);
+        decimalPlacesFromPip(
+            pipSize
+        );
 
     const formatted =
-        Number(price).toFixed(places);
+        Number(price).toFixed(
+            places
+        );
 
     const digits =
-        formatted.replace(/\D/g, "");
+        formatted.replace(
+            /\D/g,
+            ""
+        );
 
     if (!digits.length) {
         return null;
     }
 
     return Number(
-        digits.charAt(digits.length - 1)
+        digits.charAt(
+            digits.length - 1
+        )
     );
 }
 
 
-/* ---------------- CONNECTION UI ---------------- */
+/* =========================================================
+   CONNECTION UI
+   ========================================================= */
 
 function updateConnectionUI(
     state,
@@ -150,7 +313,9 @@ function updateConnectionUI(
                 "online"
             );
 
-        } else if (state === "connecting") {
+        } else if (
+            state === "connecting"
+        ) {
 
             connectionDot.classList.add(
                 "connecting"
@@ -192,14 +357,19 @@ function updateConnectionUI(
 
 
 /* =========================================================
-   CONNECT TO DERIV
+   CONNECT
    ========================================================= */
 
 function connectDeriv() {
 
-    if (connecting || connected) {
+    if (
+        connecting ||
+        connected
+    ) {
         return;
     }
+
+    manualDisconnect = false;
 
     connecting = true;
 
@@ -235,9 +405,11 @@ function connectDeriv() {
             DERIV_WS
         );
 
+
         ws = new WebSocket(
             DERIV_WS
         );
+
 
         ws.onopen =
             handleOpen;
@@ -287,6 +459,7 @@ function handleOpen() {
         DERIV_WS
     );
 
+
     connected = true;
     connecting = false;
 
@@ -308,47 +481,63 @@ function handleOpen() {
 
     setText(
         signalTitle,
-        "Select a market"
+        "Loading markets..."
     );
+
 
     setText(
         signalExplanation,
-        "Choose a market to start analysis."
+        "Requesting available Deriv markets..."
     );
 
 
     /*
-       Heartbeat
-    */
+     * Heartbeat.
+     */
 
     if (pingTimer) {
-        clearInterval(pingTimer);
+
+        clearInterval(
+            pingTimer
+        );
     }
 
+
     pingTimer =
-        setInterval(() => {
+        setInterval(
+            () => {
 
-            if (
-                ws &&
-                ws.readyState === WebSocket.OPEN
-            ) {
+                if (
+                    ws &&
+                    ws.readyState ===
+                        WebSocket.OPEN
+                ) {
 
-                send({
-                    ping: 1
-                });
-            }
+                    send({
+                        ping: 1
+                    });
+                }
 
-        }, 12000);
+            },
+            12000
+        );
 
 
     /*
-       Request active markets
-    */
+     * Request active symbols.
+     *
+     * IMPORTANT:
+     * No product_type parameter.
+     */
 
     send({
-        active_symbols: "brief",
-        product_type: "basic",
-        req_id: nextRequestId()
+
+        active_symbols:
+            "brief",
+
+        req_id:
+            nextRequestId()
+
     });
 }
 
@@ -361,7 +550,8 @@ function send(data) {
 
     if (
         !ws ||
-        ws.readyState !== WebSocket.OPEN
+        ws.readyState !==
+            WebSocket.OPEN
     ) {
 
         console.warn(
@@ -393,24 +583,21 @@ function send(data) {
 }
 
 
-function nextRequestId() {
-
-    return requestId++;
-}
-
-
 /* =========================================================
-   MESSAGE
+   MESSAGE HANDLER
    ========================================================= */
 
 function handleMessage(event) {
 
     let data;
 
+
     try {
 
         data =
-            JSON.parse(event.data);
+            JSON.parse(
+                event.data
+            );
 
     } catch (error) {
 
@@ -429,9 +616,9 @@ function handleMessage(event) {
     );
 
 
-    /*
+    /* -----------------------------------------
        API ERROR
-    */
+       ----------------------------------------- */
 
     if (data.error) {
 
@@ -440,69 +627,196 @@ function handleMessage(event) {
             data.error
         );
 
+
         const message =
             data.error.message ||
-            "Deriv API Error";
+            data.error.code ||
+            "Deriv API error";
+
 
         setText(
             statusText,
             message
         );
 
+
         setText(
             signalExplanation,
             message
         );
 
+
+        /*
+         * If active_symbols itself failed,
+         * use fallback markets so the UI
+         * remains usable.
+         */
+
+        if (
+            data.echo_req &&
+            data.echo_req.active_symbols
+        ) {
+
+            loadFallbackMarkets();
+        }
+
+
         return;
     }
 
 
-    /*
-       MARKETS
-    */
+    /* -----------------------------------------
+       ACTIVE SYMBOLS
+       ----------------------------------------- */
 
     if (
         data.msg_type ===
         "active_symbols"
     ) {
 
-        loadMarkets(
-            data.active_symbols || []
+        const symbols =
+            Array.isArray(
+                data.active_symbols
+            )
+                ? data.active_symbols
+                : [];
+
+
+        console.log(
+            "Markets received:",
+            symbols.length
         );
+
+
+        if (!symbols.length) {
+
+            console.warn(
+                "Deriv returned an empty active_symbols list. Using fallback markets."
+            );
+
+
+            loadFallbackMarkets();
+
+        } else {
+
+            loadMarkets(
+                symbols
+            );
+        }
+
 
         return;
     }
 
 
-    /*
+    /* -----------------------------------------
        HISTORY
-    */
+       ----------------------------------------- */
 
     if (
         data.msg_type ===
         "history"
     ) {
 
-        processHistory(data);
+        processHistory(
+            data
+        );
 
         return;
     }
 
 
-    /*
+    /* -----------------------------------------
        LIVE TICK
-    */
+       ----------------------------------------- */
 
     if (
         data.msg_type ===
         "tick"
     ) {
 
-        processTick(data);
+        processTick(
+            data
+        );
 
         return;
     }
+
+
+    /* -----------------------------------------
+       PING
+       ----------------------------------------- */
+
+    if (
+        data.msg_type ===
+        "ping"
+    ) {
+
+        return;
+    }
+}
+
+
+/* =========================================================
+   NORMALIZE MARKET
+   ========================================================= */
+
+function normalizeMarket(item) {
+
+    if (!item) {
+        return null;
+    }
+
+
+    /*
+     * Support both current and legacy
+     * Deriv market field names.
+     */
+
+    const symbol =
+        item.underlying_symbol ||
+        item.symbol ||
+        "";
+
+
+    if (!symbol) {
+        return null;
+    }
+
+
+    const name =
+        item.underlying_symbol_name ||
+        item.display_name ||
+        symbol;
+
+
+    const type =
+        item.underlying_symbol_type ||
+        item.symbol_type ||
+        "";
+
+
+    const pip =
+        item.pip_size ||
+        item.pip ||
+        "";
+
+
+    return {
+
+        symbol:
+            String(symbol),
+
+        name:
+            String(name),
+
+        type:
+            String(type),
+
+        pip:
+            Number(pip) || 0
+
+    };
 }
 
 
@@ -512,12 +826,16 @@ function handleMessage(event) {
 
 function loadMarkets(symbols) {
 
-    if (!Array.isArray(symbols)) {
+    if (
+        !Array.isArray(symbols)
+    ) {
 
         console.error(
-            "Invalid active_symbols:",
+            "Invalid market list:",
             symbols
         );
+
+        loadFallbackMarkets();
 
         return;
     }
@@ -529,74 +847,129 @@ function loadMarkets(symbols) {
     );
 
 
+    const normalized =
+        symbols
+            .map(
+                normalizeMarket
+            )
+            .filter(Boolean);
+
+
     /*
-       Prefer synthetic indices
-    */
+     * Prefer synthetic indices.
+     */
 
     let usable =
-        symbols.filter(item => {
+        normalized.filter(
+            market => {
 
-            const type =
-                item.symbol_type ||
-                item.underlying_symbol_type ||
-                "";
+                const symbol =
+                    market.symbol;
 
-
-            const symbol =
-                item.symbol ||
-                item.underlying_symbol ||
-                "";
+                const type =
+                    market.type;
 
 
-            return (
-                type === "synthetic_index" ||
-                type === "synthetic" ||
-                /^R_/i.test(symbol) ||
-                /^1HZ/i.test(symbol) ||
-                /^BOOM/i.test(symbol) ||
-                /^CRASH/i.test(symbol)
-            );
-        });
+                return (
+                    type ===
+                        "synthetic_index" ||
+
+                    type ===
+                        "synthetic" ||
+
+                    /^R_/i.test(
+                        symbol
+                    ) ||
+
+                    /^1HZ/i.test(
+                        symbol
+                    ) ||
+
+                    /^BOOM/i.test(
+                        symbol
+                    ) ||
+
+                    /^CRASH/i.test(
+                        symbol
+                    )
+                );
+            }
+        );
 
 
     /*
-       If filtering returns nothing,
-       use all markets.
-    */
+     * If the API returned markets but
+     * our filter didn't recognize them,
+     * use all normalized markets.
+     */
 
     if (!usable.length) {
 
-        usable = symbols;
+        usable =
+            normalized;
     }
 
 
-    /*
-       Sort alphabetically
-    */
+    if (!usable.length) {
 
-    usable.sort((a, b) => {
+        loadFallbackMarkets();
 
-        const nameA =
-            a.display_name ||
-            a.underlying_symbol_name ||
-            a.symbol ||
-            a.underlying_symbol ||
-            "";
-
-        const nameB =
-            b.display_name ||
-            b.underlying_symbol_name ||
-            b.symbol ||
-            b.underlying_symbol ||
-            "";
+        return;
+    }
 
 
-        return String(nameA)
-            .localeCompare(
-                String(nameB)
-            );
-    });
+    populateMarketSelect(
+        usable,
+        false
+    );
+}
 
+
+/* =========================================================
+   FALLBACK MARKETS
+   ========================================================= */
+
+function loadFallbackMarkets() {
+
+    console.warn(
+        "Using fallback synthetic markets."
+    );
+
+
+    const markets =
+        FALLBACK_MARKETS.map(
+            market => ({
+
+                symbol:
+                    market.symbol,
+
+                name:
+                    market.name,
+
+                type:
+                    "synthetic_index",
+
+                pip:
+                    market.pip
+            })
+        );
+
+
+    populateMarketSelect(
+        markets,
+        true
+    );
+}
+
+
+/* =========================================================
+   POPULATE MARKET SELECT
+   ========================================================= */
+
+function populateMarketSelect(
+    markets,
+    fallback = false
+) {
 
     if (!marketSelect) {
         return;
@@ -611,66 +984,61 @@ function loadMarkets(symbols) {
             "option"
         );
 
+
     placeholder.value = "";
 
+
     placeholder.textContent =
-        "Select market";
+        fallback
+            ? "Select synthetic market"
+            : "Select market";
+
 
     marketSelect.appendChild(
         placeholder
     );
 
 
-    usable.forEach(item => {
+    markets.forEach(
+        market => {
 
-        const symbol =
-            item.symbol ||
-            item.underlying_symbol;
-
-
-        if (!symbol) {
-            return;
-        }
+            if (!market.symbol) {
+                return;
+            }
 
 
-        const name =
-            item.display_name ||
-            item.underlying_symbol_name ||
-            symbol;
+            const option =
+                document.createElement(
+                    "option"
+                );
 
 
-        const option =
-            document.createElement(
-                "option"
+            option.value =
+                market.symbol;
+
+
+            option.textContent =
+                `${market.name} (${market.symbol})`;
+
+
+            option.dataset.name =
+                market.name;
+
+
+            option.dataset.pip =
+                market.pip || "";
+
+
+            marketSelect.appendChild(
+                option
             );
-
-
-        option.value =
-            symbol;
-
-
-        option.textContent =
-            `${name} (${symbol})`;
-
-
-        option.dataset.pip =
-            item.pip ||
-            item.pip_size ||
-            "";
-
-
-        option.dataset.name =
-            name;
-
-
-        marketSelect.appendChild(
-            option
-        );
-    });
+        }
+    );
 
 
     const count =
-        marketSelect.options.length - 1;
+        marketSelect.options.length -
+        1;
 
 
     console.log(
@@ -683,13 +1051,15 @@ function loadMarkets(symbols) {
 
         setText(
             statusText,
-            "No markets returned"
+            "No markets available"
         );
+
 
         setText(
             signalExplanation,
-            "Deriv connected but no markets were returned."
+            "No markets were returned by Deriv."
         );
+
 
         return;
     }
@@ -699,6 +1069,41 @@ function loadMarkets(symbols) {
         statusText,
         `${count} markets loaded`
     );
+
+
+    setText(
+        signalTitle,
+        "Select a market"
+    );
+
+
+    setText(
+        signalExplanation,
+        fallback
+            ? "Using the synthetic-market fallback list."
+            : "Choose a market to start analysis."
+    );
+
+
+    /*
+     * Automatically select the first
+     * market if nothing is selected.
+     */
+
+    if (
+        marketSelect.value === ""
+    ) {
+
+        marketSelect.selectedIndex =
+            1;
+    }
+
+
+    /*
+     * Do NOT automatically subscribe here.
+     * The user can select a market,
+     * and the change handler starts it.
+     */
 }
 
 
@@ -707,6 +1112,11 @@ function loadMarkets(symbols) {
    ========================================================= */
 
 function handleMarketChange() {
+
+    if (!marketSelect) {
+        return;
+    }
+
 
     const symbol =
         marketSelect.value;
@@ -727,14 +1137,9 @@ function handleMarketChange() {
         ];
 
 
-    currentMarket = {
-
-        symbol: symbol,
-
-        name:
-            option.dataset.name ||
-            symbol
-    };
+    const name =
+        option.dataset.name ||
+        symbol;
 
 
     const selectedPip =
@@ -743,8 +1148,20 @@ function handleMarketChange() {
         );
 
 
+    currentMarket = {
+
+        symbol:
+            symbol,
+
+        name:
+            name
+    };
+
+
     if (
-        Number.isFinite(selectedPip) &&
+        Number.isFinite(
+            selectedPip
+        ) &&
         selectedPip > 0
     ) {
 
@@ -761,25 +1178,25 @@ function handleMarketChange() {
 
     setText(
         marketName,
-        currentMarket.name
+        name
     );
 
 
     setText(
         signalTitle,
-        currentMarket.name
+        name
     );
 
 
     setText(
         signalExplanation,
-        "Loading tick history..."
+        `Loading ${symbol} tick history...`
     );
 
 
     setText(
         statusText,
-        "Loading ticks..."
+        `Loading ${symbol}...`
     );
 
 
@@ -790,31 +1207,66 @@ function handleMarketChange() {
 
 
 /* =========================================================
-   SUBSCRIBE
+   SUBSCRIBE TO MARKET
    ========================================================= */
 
 function subscribeToMarket(symbol) {
 
     if (
         !connected ||
-        !ws
+        !ws ||
+        ws.readyState !==
+            WebSocket.OPEN
     ) {
+
+        console.warn(
+            "Cannot subscribe. WebSocket is not connected."
+        );
+
         return;
     }
+
+
+    /*
+     * Forget previous subscription.
+     */
+
+    if (currentSubscriptionId) {
+
+        send({
+
+            forget:
+                currentSubscriptionId,
+
+            req_id:
+                nextRequestId()
+
+        });
+
+
+        currentSubscriptionId =
+            null;
+    }
+
+
+    ticks = [];
 
 
     const count =
         Math.max(
             10,
-            Number(
-                tickCount.value
-            ) || 1000
+            Math.min(
+                5000,
+                Number(
+                    tickCount?.value
+                ) || 1000
+            )
         );
 
 
     /*
-       Historical ticks
-    */
+     * Request historical ticks first.
+     */
 
     send({
 
@@ -832,12 +1284,13 @@ function subscribeToMarket(symbol) {
 
         req_id:
             nextRequestId()
+
     });
 
 
     /*
-       Live ticks
-    */
+     * Then subscribe to live ticks.
+     */
 
     send({
 
@@ -849,12 +1302,19 @@ function subscribeToMarket(symbol) {
 
         req_id:
             nextRequestId()
+
     });
 
 
     setText(
         statusText,
         `Streaming ${symbol}`
+    );
+
+
+    setText(
+        tickStatus,
+        "Loading ticks..."
     );
 }
 
@@ -877,13 +1337,19 @@ function processHistory(data) {
 
 
     const prices =
-        data.history.prices ||
-        [];
+        Array.isArray(
+            data.history.prices
+        )
+            ? data.history.prices
+            : [];
 
 
     const times =
-        data.history.times ||
-        [];
+        Array.isArray(
+            data.history.times
+        )
+            ? data.history.times
+            : [];
 
 
     if (!prices.length) {
@@ -922,7 +1388,9 @@ function processHistory(data) {
                 );
 
 
-            if (digit === null) {
+            if (
+                digit === null
+            ) {
                 return;
             }
 
@@ -936,17 +1404,26 @@ function processHistory(data) {
                     digit,
 
                 epoch:
-                    times[index] ||
+                    Number(
+                        times[index]
+                    ) ||
                     Date.now() / 1000
+
             });
         }
     );
 
 
     const max =
-        Number(
-            tickCount.value
-        ) || 1000;
+        Math.max(
+            10,
+            Math.min(
+                5000,
+                Number(
+                    tickCount?.value
+                ) || 1000
+            )
+        );
 
 
     if (
@@ -954,11 +1431,14 @@ function processHistory(data) {
     ) {
 
         ticks =
-            ticks.slice(-max);
+            ticks.slice(
+                -max
+            );
     }
 
 
     updateDisplay();
+
 
     analyze();
 
@@ -988,15 +1468,18 @@ function processTick(data) {
 
 
     if (
-        !Number.isFinite(price)
+        !Number.isFinite(
+            price
+        )
     ) {
         return;
     }
 
 
     /*
-       Update pip size
-    */
+     * Update pip size from tick
+     * when available.
+     */
 
     if (
         data.tick.pip_size !==
@@ -1020,10 +1503,14 @@ function processTick(data) {
 
 
     const digit =
-        getLastDigit(price);
+        getLastDigit(
+            price
+        );
 
 
-    if (digit === null) {
+    if (
+        digit === null
+    ) {
         return;
     }
 
@@ -1041,13 +1528,20 @@ function processTick(data) {
                 data.tick.epoch
             ) ||
             Date.now() / 1000
+
     });
 
 
     const max =
-        Number(
-            tickCount.value
-        ) || 1000;
+        Math.max(
+            10,
+            Math.min(
+                5000,
+                Number(
+                    tickCount?.value
+                ) || 1000
+            )
+        );
 
 
     if (
@@ -1055,13 +1549,17 @@ function processTick(data) {
     ) {
 
         ticks =
-            ticks.slice(-max);
+            ticks.slice(
+                -max
+            );
     }
 
 
     setText(
         livePrice,
-        formatPrice(price)
+        formatPrice(
+            price
+        )
     );
 
 
@@ -1104,6 +1602,7 @@ function analyze() {
             "0.0"
         );
 
+
         setText(
             bestDigit,
             "-"
@@ -1116,19 +1615,22 @@ function analyze() {
                 "0%";
         }
 
+
         return;
     }
 
 
     const selectedBarrier =
-        Number(
-            barrier.value
+        safeNumber(
+            barrier?.value,
+            5
         );
 
 
     const selectedThreshold =
-        Number(
-            threshold.value
+        safeNumber(
+            threshold?.value,
+            60
         );
 
 
@@ -1136,8 +1638,8 @@ function analyze() {
 
 
     /*
-       DIFFERS
-    */
+     * DIFFERS MODE
+     */
 
     if (
         currentMode === "diff" &&
@@ -1213,9 +1715,9 @@ function analyze() {
 
 
     const confidence =
-        Number(
+        safeNumber(
             result.confidence
-        ) || 0;
+        );
 
 
     setText(
@@ -1266,12 +1768,12 @@ function analyze() {
         );
 
 
-        entryStatus.classList.remove(
+        entryStatus?.classList.remove(
             "waiting"
         );
 
 
-        entryStatus.classList.add(
+        entryStatus?.classList.add(
             "ready"
         );
 
@@ -1283,12 +1785,12 @@ function analyze() {
         );
 
 
-        entryStatus.classList.remove(
+        entryStatus?.classList.remove(
             "ready"
         );
 
 
-        entryStatus.classList.add(
+        entryStatus?.classList.add(
             "waiting"
         );
     }
@@ -1307,9 +1809,17 @@ function calculateMatch() {
 
     ticks.forEach(
         tick => {
-            counts[
-                tick.digit
-            ]++;
+
+            if (
+                Number.isInteger(
+                    tick.digit
+                )
+            ) {
+
+                counts[
+                    tick.digit
+                ]++;
+            }
         }
     );
 
@@ -1353,6 +1863,7 @@ function calculateMatch() {
 
         explanation:
             `Digit ${best} appeared ${counts[best]} times out of ${ticks.length} ticks.`
+
     };
 }
 
@@ -1365,10 +1876,26 @@ function calculateDiffers(
     digit
 ) {
 
+    const selectedDigit =
+        Math.max(
+            0,
+            Math.min(
+                9,
+                Math.round(
+                    safeNumber(
+                        digit,
+                        0
+                    )
+                )
+            )
+        );
+
+
     const matches =
         ticks.filter(
             tick =>
-                tick.digit === digit
+                tick.digit ===
+                selectedDigit
         ).length;
 
 
@@ -1387,16 +1914,17 @@ function calculateDiffers(
     return {
 
         display:
-            `≠${digit}`,
+            `≠${selectedDigit}`,
 
         title:
-            `DIFFERS ${digit}`,
+            `DIFFERS ${selectedDigit}`,
 
         confidence:
             confidence,
 
         explanation:
-            `Digit ${digit} did not appear on ${differs} of the last ${ticks.length} ticks.`
+            `Digit ${selectedDigit} did not appear on ${differs} of the last ${ticks.length} ticks.`
+
     };
 }
 
@@ -1409,11 +1937,26 @@ function calculateOver(
     barrierDigit
 ) {
 
+    const digit =
+        Math.max(
+            0,
+            Math.min(
+                9,
+                Math.round(
+                    safeNumber(
+                        barrierDigit,
+                        5
+                    )
+                )
+            )
+        );
+
+
     const wins =
         ticks.filter(
             tick =>
                 tick.digit >
-                barrierDigit
+                digit
         ).length;
 
 
@@ -1427,16 +1970,17 @@ function calculateOver(
     return {
 
         display:
-            `>${barrierDigit}`,
+            `>${digit}`,
 
         title:
-            `OVER ${barrierDigit}`,
+            `OVER ${digit}`,
 
         confidence:
             confidence,
 
         explanation:
-            `${wins} of ${ticks.length} recent digits were above ${barrierDigit}.`
+            `${wins} of ${ticks.length} recent digits were above ${digit}.`
+
     };
 }
 
@@ -1449,11 +1993,26 @@ function calculateUnder(
     barrierDigit
 ) {
 
+    const digit =
+        Math.max(
+            0,
+            Math.min(
+                9,
+                Math.round(
+                    safeNumber(
+                        barrierDigit,
+                        5
+                    )
+                )
+            )
+        );
+
+
     const wins =
         ticks.filter(
             tick =>
                 tick.digit <
-                barrierDigit
+                digit
         ).length;
 
 
@@ -1467,16 +2026,17 @@ function calculateUnder(
     return {
 
         display:
-            `<${barrierDigit}`,
+            `<${digit}`,
 
         title:
-            `UNDER ${barrierDigit}`,
+            `UNDER ${digit}`,
 
         confidence:
             confidence,
 
         explanation:
-            `${wins} of ${ticks.length} recent digits were below ${barrierDigit}.`
+            `${wins} of ${ticks.length} recent digits were below ${digit}.`
+
     };
 }
 
@@ -1490,7 +2050,8 @@ function calculateEven() {
     const wins =
         ticks.filter(
             tick =>
-                tick.digit % 2 === 0
+                tick.digit % 2 ===
+                0
         ).length;
 
 
@@ -1514,6 +2075,7 @@ function calculateEven() {
 
         explanation:
             `${wins} of ${ticks.length} recent digits were even.`
+
     };
 }
 
@@ -1527,7 +2089,8 @@ function calculateOdd() {
     const wins =
         ticks.filter(
             tick =>
-                tick.digit % 2 !== 0
+                tick.digit % 2 !==
+                0
         ).length;
 
 
@@ -1551,6 +2114,7 @@ function calculateOdd() {
 
         explanation:
             `${wins} of ${ticks.length} recent digits were odd.`
+
     };
 }
 
@@ -1572,9 +2136,17 @@ function updateDigitGrid() {
 
     ticks.forEach(
         tick => {
-            counts[
-                tick.digit
-            ]++;
+
+            if (
+                Number.isInteger(
+                    tick.digit
+                )
+            ) {
+
+                counts[
+                    tick.digit
+                ]++;
+            }
         }
     );
 
@@ -1583,7 +2155,8 @@ function updateDigitGrid() {
         ticks.length;
 
 
-    digitGrid.innerHTML = "";
+    digitGrid.innerHTML =
+        "";
 
 
     for (
@@ -1606,6 +2179,10 @@ function updateDigitGrid() {
                 "div"
             );
 
+
+        /*
+         * This matches your CSS.
+         */
 
         box.className =
             "digit-item";
@@ -1652,11 +2229,14 @@ function updateRecentDigits() {
     }
 
 
-    recentDigits.innerHTML = "";
+    recentDigits.innerHTML =
+        "";
 
 
     const recent =
-        ticks.slice(-20);
+        ticks.slice(
+            -20
+        );
 
 
     recent.forEach(
@@ -1774,13 +2354,33 @@ function clearAnalysis() {
     );
 
 
+    setText(
+        entryStatus,
+        "⏳ WAITING FOR DATA"
+    );
+
+
+    entryStatus?.classList.remove(
+        "ready"
+    );
+
+
+    entryStatus?.classList.add(
+        "waiting"
+    );
+
+
     if (digitGrid) {
-        digitGrid.innerHTML = "";
+
+        digitGrid.innerHTML =
+            "";
     }
 
 
     if (recentDigits) {
-        recentDigits.innerHTML = "";
+
+        recentDigits.innerHTML =
+            "";
     }
 }
 
@@ -1800,7 +2400,8 @@ function startAutoScan() {
 
                 if (
                     connected &&
-                    currentSymbol
+                    currentSymbol &&
+                    ticks.length
                 ) {
 
                     analyze();
@@ -1820,7 +2421,8 @@ function stopAutoScan() {
             autoScanTimer
         );
 
-        autoScanTimer = null;
+        autoScanTimer =
+            null;
     }
 }
 
@@ -1849,13 +2451,20 @@ function handleClose(event) {
             pingTimer
         );
 
-        pingTimer = null;
+        pingTimer =
+            null;
     }
+
+
+    currentSubscriptionId =
+        null;
 
 
     updateConnectionUI(
         "offline",
-        "Disconnected — retrying..."
+        manualDisconnect
+            ? "Disconnected"
+            : "Disconnected — retrying..."
     );
 
 
@@ -1868,9 +2477,27 @@ function handleClose(event) {
     }
 
 
+    if (manualDisconnect) {
+
+        setText(
+            signalTitle,
+            "Disconnected"
+        );
+
+
+        setText(
+            signalExplanation,
+            "Scanner disconnected."
+        );
+
+
+        return;
+    }
+
+
     setText(
         signalTitle,
-        "Disconnected"
+        "Reconnecting..."
     );
 
 
@@ -1881,8 +2508,8 @@ function handleClose(event) {
 
 
     /*
-       Reconnect
-    */
+     * Reconnect.
+     */
 
     if (!reconnectTimer) {
 
@@ -1893,7 +2520,12 @@ function handleClose(event) {
                     reconnectTimer =
                         null;
 
-                    if (!connected) {
+                    if (
+                        !connected &&
+                        !connecting &&
+                        !manualDisconnect
+                    ) {
+
                         connectDeriv();
                     }
 
@@ -1924,7 +2556,7 @@ function handleError(error) {
 
     setText(
         signalExplanation,
-        "WebSocket connection error. Check the console."
+        "WebSocket error. Check the browser console."
     );
 }
 
@@ -1935,6 +2567,10 @@ function handleError(error) {
 
 function disconnectDeriv() {
 
+    manualDisconnect =
+        true;
+
+
     stopAutoScan();
 
 
@@ -1944,7 +2580,8 @@ function disconnectDeriv() {
             reconnectTimer
         );
 
-        reconnectTimer = null;
+        reconnectTimer =
+            null;
     }
 
 
@@ -1954,7 +2591,31 @@ function disconnectDeriv() {
             pingTimer
         );
 
-        pingTimer = null;
+        pingTimer =
+            null;
+    }
+
+
+    if (
+        currentSubscriptionId &&
+        ws &&
+        ws.readyState ===
+            WebSocket.OPEN
+    ) {
+
+        send({
+
+            forget:
+                currentSubscriptionId,
+
+            req_id:
+                nextRequestId()
+
+        });
+
+
+        currentSubscriptionId =
+            null;
     }
 
 
@@ -1966,7 +2627,9 @@ function disconnectDeriv() {
 
         } catch (error) {
 
-            console.warn(error);
+            console.warn(
+                error
+            );
         }
     }
 
@@ -1974,7 +2637,6 @@ function disconnectDeriv() {
     ws = null;
 
     connected = false;
-
     connecting = false;
 
 
@@ -1986,7 +2648,8 @@ function disconnectDeriv() {
 
     if (connectBtn) {
 
-        connectBtn.disabled = false;
+        connectBtn.disabled =
+            false;
 
         connectBtn.textContent =
             "⚡ Connect Scanner";
@@ -1995,7 +2658,7 @@ function disconnectDeriv() {
 
 
 /* =========================================================
-   EVENTS
+   CONNECT BUTTON
    ========================================================= */
 
 if (connectBtn) {
@@ -2017,6 +2680,10 @@ if (connectBtn) {
 }
 
 
+/* =========================================================
+   MARKET SELECT
+   ========================================================= */
+
 if (marketSelect) {
 
     marketSelect.addEventListener(
@@ -2026,17 +2693,36 @@ if (marketSelect) {
 }
 
 
+/* =========================================================
+   SCAN BUTTON
+   ========================================================= */
+
 if (scanBtn) {
 
     scanBtn.addEventListener(
         "click",
         () => {
 
+            if (!ticks.length) {
+
+                setText(
+                    signalExplanation,
+                    "Wait for tick data before scanning."
+                );
+
+                return;
+            }
+
+
             analyze();
         }
     );
 }
 
+
+/* =========================================================
+   AUTO SCAN
+   ========================================================= */
 
 if (autoScan) {
 
@@ -2079,10 +2765,12 @@ document
                             ".mode"
                         )
                         .forEach(
-                            b =>
+                            b => {
+
                                 b.classList.remove(
                                     "active"
-                                )
+                                );
+                            }
                         );
 
 
@@ -2123,10 +2811,12 @@ document
                             ".type-button"
                         )
                         .forEach(
-                            b =>
+                            b => {
+
                                 b.classList.remove(
                                     "active"
-                                )
+                                );
+                            }
                         );
 
 
@@ -2148,7 +2838,7 @@ document
 
 
 /* =========================================================
-   SETTINGS
+   THRESHOLD
    ========================================================= */
 
 if (threshold) {
@@ -2158,12 +2848,17 @@ if (threshold) {
         analyze
     );
 
+
     threshold.addEventListener(
         "input",
         analyze
     );
 }
 
+
+/* =========================================================
+   BARRIER
+   ========================================================= */
 
 if (barrier) {
 
@@ -2172,12 +2867,17 @@ if (barrier) {
         analyze
     );
 
+
     barrier.addEventListener(
         "input",
         analyze
     );
 }
 
+
+/* =========================================================
+   TICK COUNT
+   ========================================================= */
 
 if (tickCount) {
 
@@ -2200,12 +2900,24 @@ if (tickCount) {
 
 
 /* =========================================================
-   START
+   INITIAL STATE
    ========================================================= */
 
 console.log(
     "Matches Signal Scanner loaded successfully."
 );
+
+
+console.log(
+    "Deriv endpoint:",
+    DERIV_WS
+);
+
+
+console.log(
+    "Analysis mode: NO AUTOMATIC TRADING"
+);
+
 
 updateConnectionUI(
     "offline",
