@@ -2,11 +2,15 @@
 
 /*
 =========================================================
-DERIV MATCHES SIGNAL SCANNER
+DERIV PRO SIGNAL SCANNER
 ANALYSIS ONLY - NO AUTOMATIC TRADING
 
-Uses Deriv's current public WebSocket API.
-No account login/token is required for public market data.
+Uses Deriv public WebSocket market data.
+
+IMPORTANT:
+The confidence value is a statistical/technical
+signal-quality score. It is NOT a guaranteed probability
+of winning the next contract.
 =========================================================
 */
 
@@ -24,58 +28,137 @@ const RECONNECT_DELAY = 5000;
 
 
 /*
+=========================================================
+ANALYSIS ENGINE CONFIGURATION
+=========================================================
+*/
+
+const ANALYSIS_CONFIG = {
+
+    /*
+    Analysis windows.
+    */
+
+    LONG_WINDOW: 1000,
+
+    MEDIUM_WINDOW: 100,
+
+    SHORT_WINDOW: 30,
+
+
+    /*
+    Weight recent data more heavily.
+    */
+
+    LONG_WEIGHT: 0.20,
+
+    MEDIUM_WEIGHT: 0.30,
+
+    SHORT_WEIGHT: 0.50,
+
+
+    /*
+    Minimum data required before analysis.
+    */
+
+    MIN_ANALYSIS_TICKS: 30,
+
+    /*
+    Stronger minimum for an actual entry signal.
+    */
+
+    MIN_ENTRY_TICKS: 100,
+
+
+    /*
+    Never allow an entry below this score,
+    even if the user UI threshold is lower.
+    */
+
+    MIN_ENTRY_CONFIDENCE: 60,
+
+
+    /*
+    Quality requirements.
+    */
+
+    MIN_CONSISTENCY: 50,
+
+    MIN_AGREEMENT: 66.7,
+
+    MIN_EVIDENCE_Z: 1.5,
+
+
+    /*
+    Maximum displayed confidence.
+    */
+
+    MAX_CONFIDENCE: 95
+};
+
+
+/*
 Fallback markets.
 
-These are only used if Deriv returns no symbols.
-The application will still attempt to request live
-data from Deriv.
+Used only if active_symbols returns no usable markets.
 */
+
 const FALLBACK_MARKETS = [
+
     {
         symbol: "1HZ10V",
         name: "Volatility 10 (1s)",
         pip: 2
     },
+
     {
         symbol: "1HZ25V",
         name: "Volatility 25 (1s)",
         pip: 2
     },
+
     {
         symbol: "1HZ50V",
         name: "Volatility 50 (1s)",
         pip: 2
     },
+
     {
         symbol: "1HZ75V",
         name: "Volatility 75 (1s)",
         pip: 2
     },
+
     {
         symbol: "1HZ100V",
         name: "Volatility 100 (1s)",
         pip: 2
     },
+
     {
         symbol: "R_10",
         name: "Volatility 10",
         pip: 3
     },
+
     {
         symbol: "R_25",
         name: "Volatility 25",
         pip: 3
     },
+
     {
         symbol: "R_50",
         name: "Volatility 50",
         pip: 4
     },
+
     {
         symbol: "R_75",
         name: "Volatility 75",
         pip: 4
     },
+
     {
         symbol: "R_100",
         name: "Volatility 100",
@@ -91,16 +174,21 @@ const FALLBACK_MARKETS = [
 let ws = null;
 
 let connected = false;
+
 let connecting = false;
+
 let manualDisconnect = false;
 
 let reconnectTimer = null;
+
 let pingTimer = null;
+
 let autoScanTimer = null;
 
 let requestId = 1;
 
 let currentSymbol = "";
+
 let currentMarket = null;
 
 let currentSubscriptionId = null;
@@ -110,6 +198,7 @@ let pipSize = 0.01;
 let ticks = [];
 
 let currentMode = "match";
+
 let currentType = "MATCH";
 
 
@@ -117,56 +206,101 @@ let currentType = "MATCH";
    DOM
 ===================================================== */
 
-const $ = id => document.getElementById(id);
+const $ = id =>
+    document.getElementById(id);
 
-const marketSelect = $("marketSelect");
-const tickCount = $("tickCount");
-const threshold = $("threshold");
-const barrier = $("barrier");
 
-const connectBtn = $("connectBtn");
-const scanBtn = $("scanBtn");
-const autoScan = $("autoScan");
+const marketSelect =
+    $("marketSelect");
 
-const connectionDot = $("connectionDot");
-const statusText = $("statusText");
+const tickCount =
+    $("tickCount");
 
-const liveBadge = $("liveBadge");
+const threshold =
+    $("threshold");
 
-const signalTitle = $("signalTitle");
-const bestDigit = $("bestDigit");
-const bestConfidence = $("bestConfidence");
-const confidenceBar = $("confidenceBar");
+const barrier =
+    $("barrier");
 
-const signalExplanation = $("signalExplanation");
-const entryStatus = $("entryStatus");
+const connectBtn =
+    $("connectBtn");
 
-const tickStatus = $("tickStatus");
+const scanBtn =
+    $("scanBtn");
 
-const livePrice = $("livePrice");
-const lastDigit = $("lastDigit");
+const autoScan =
+    $("autoScan");
 
-const marketName = $("marketName");
+const connectionDot =
+    $("connectionDot");
 
-const digitGrid = $("digitGrid");
-const recentDigits = $("recentDigits");
+const statusText =
+    $("statusText");
+
+const liveBadge =
+    $("liveBadge");
+
+const signalTitle =
+    $("signalTitle");
+
+const bestDigit =
+    $("bestDigit");
+
+const bestConfidence =
+    $("bestConfidence");
+
+const confidenceBar =
+    $("confidenceBar");
+
+const signalExplanation =
+    $("signalExplanation");
+
+const entryStatus =
+    $("entryStatus");
+
+const tickStatus =
+    $("tickStatus");
+
+const livePrice =
+    $("livePrice");
+
+const lastDigit =
+    $("lastDigit");
+
+const marketName =
+    $("marketName");
+
+const digitGrid =
+    $("digitGrid");
+
+const recentDigits =
+    $("recentDigits");
 
 
 /* =====================================================
    BASIC HELPERS
 ===================================================== */
 
-function setText(element, value) {
+function setText(
+    element,
+    value
+) {
 
     if (element) {
-        element.textContent = value;
+
+        element.textContent =
+            value;
     }
 }
 
 
-function number(value, fallback = 0) {
+function number(
+    value,
+    fallback = 0
+) {
 
-    const n = Number(value);
+    const n =
+        Number(value);
 
     return Number.isFinite(n)
         ? n
@@ -177,6 +311,55 @@ function number(value, fallback = 0) {
 function nextRequestId() {
 
     return requestId++;
+}
+
+
+function clamp(
+    value,
+    min,
+    max
+) {
+
+    return Math.max(
+        min,
+        Math.min(
+            max,
+            value
+        )
+    );
+}
+
+
+function mapRange(
+    value,
+    inMin,
+    inMax,
+    outMin,
+    outMax
+) {
+
+    if (
+        inMax === inMin
+    ) {
+
+        return outMin;
+    }
+
+    const ratio =
+        (
+            value - inMin
+        ) /
+        (
+            inMax - inMin
+        );
+
+    return (
+        outMin +
+        ratio *
+        (
+            outMax - outMin
+        )
+    );
 }
 
 
@@ -234,20 +417,27 @@ function getBarrier() {
    PIP / PRICE
 ===================================================== */
 
-function decimalPlacesFromPip(pip) {
+function decimalPlacesFromPip(
+    pip
+) {
 
-    const p = Number(pip);
+    const p =
+        Number(pip);
 
     if (
         !Number.isFinite(p) ||
         p <= 0
     ) {
+
         return 2;
     }
 
+
     if (p >= 1) {
+
         return 0;
     }
+
 
     return Math.max(
         0,
@@ -258,7 +448,9 @@ function decimalPlacesFromPip(pip) {
 }
 
 
-function formatPrice(price) {
+function formatPrice(
+    price
+) {
 
     const places =
         decimalPlacesFromPip(
@@ -272,22 +464,37 @@ function formatPrice(price) {
 
 
 /*
-Get last digit using the market's pip size.
+=========================================================
+LAST DIGIT
+=========================================================
 */
-function getLastDigit(price) {
+
+function getLastDigit(
+    price,
+    suppliedPip = null
+) {
+
+    const usablePip =
+        Number(suppliedPip) > 0
+            ? Number(suppliedPip)
+            : pipSize;
+
 
     const places =
         decimalPlacesFromPip(
-            pipSize
+            usablePip
         );
+
 
     const formatted =
         Number(price).toFixed(
             places
         );
 
+
     const decimal =
         formatted.split(".")[1];
+
 
     if (!decimal) {
 
@@ -297,6 +504,7 @@ function getLastDigit(price) {
                 ""
             );
 
+
         return integer
             ? Number(
                 integer[
@@ -305,6 +513,7 @@ function getLastDigit(price) {
             )
             : null;
     }
+
 
     return Number(
         decimal[
@@ -331,7 +540,10 @@ function updateConnectionUI(
             "connecting"
         );
 
-        if (state === "online") {
+
+        if (
+            state === "online"
+        ) {
 
             connectionDot.classList.add(
                 "online"
@@ -430,11 +642,13 @@ function connectDeriv() {
         connecting ||
         connected
     ) {
+
         return;
     }
 
 
     manualDisconnect = false;
+
     connecting = true;
 
 
@@ -458,7 +672,8 @@ function connectDeriv() {
 
     if (connectBtn) {
 
-        connectBtn.disabled = true;
+        connectBtn.disabled =
+            true;
 
         connectBtn.textContent =
             "⏳ Connecting...";
@@ -509,12 +724,15 @@ function connectDeriv() {
             error
         );
 
+
         connecting = false;
+
 
         updateConnectionUI(
             "offline",
             "Connection failed"
         );
+
 
         resetConnectButton();
     }
@@ -534,6 +752,7 @@ function handleOpen() {
 
 
     connected = true;
+
     connecting = false;
 
 
@@ -545,7 +764,8 @@ function handleOpen() {
 
     if (connectBtn) {
 
-        connectBtn.disabled = false;
+        connectBtn.disabled =
+            false;
 
         connectBtn.textContent =
             "🔌 Disconnect";
@@ -566,12 +786,6 @@ function handleOpen() {
 
     startPing();
 
-
-    /*
-    Current Deriv API:
-    active_symbols does not need
-    product_type.
-    */
 
     send({
 
@@ -631,7 +845,9 @@ function stopPing() {
    MESSAGE
 ===================================================== */
 
-function handleMessage(event) {
+function handleMessage(
+    event
+) {
 
     let data;
 
@@ -739,8 +955,7 @@ function handleMessage(event) {
 
 
     /*
-    Some API versions may return
-    subscription information separately.
+    Subscription information.
     */
 
     if (
@@ -750,6 +965,7 @@ function handleMessage(event) {
 
         currentSubscriptionId =
             data.subscription.id;
+
 
         console.log(
             "Subscription ID:",
@@ -763,7 +979,9 @@ function handleMessage(event) {
    API ERROR
 ===================================================== */
 
-function handleApiError(data) {
+function handleApiError(
+    data
+) {
 
     console.error(
         "DERIV API ERROR:",
@@ -794,8 +1012,7 @@ function handleApiError(data) {
 
 
     /*
-    Only use fallback when market request
-    itself failed.
+    Use fallback only if market request failed.
     */
 
     if (
@@ -812,7 +1029,9 @@ function handleApiError(data) {
    ACTIVE SYMBOLS
 ===================================================== */
 
-function handleActiveSymbols(data) {
+function handleActiveSymbols(
+    data
+) {
 
     const symbols =
         Array.isArray(
@@ -851,17 +1070,15 @@ function handleActiveSymbols(data) {
    NORMALIZE MARKET
 ===================================================== */
 
-function normalizeMarket(item) {
+function normalizeMarket(
+    item
+) {
 
     if (!item) {
+
         return null;
     }
 
-
-    /*
-    New API field names.
-    Legacy names are retained for compatibility.
-    */
 
     const symbol =
         item.underlying_symbol ||
@@ -870,6 +1087,7 @@ function normalizeMarket(item) {
 
 
     if (!symbol) {
+
         return null;
     }
 
@@ -922,7 +1140,9 @@ function normalizeMarket(item) {
    LOAD MARKETS
 ===================================================== */
 
-function loadMarkets(symbols) {
+function loadMarkets(
+    symbols
+) {
 
     const normalized =
         symbols
@@ -938,10 +1158,6 @@ function loadMarkets(symbols) {
     );
 
 
-    /*
-    Prefer synthetic indices.
-    */
-
     let markets =
         normalized.filter(
             market => {
@@ -949,10 +1165,13 @@ function loadMarkets(symbols) {
                 const symbol =
                     market.symbol.toUpperCase();
 
+
                 const type =
                     market.type.toLowerCase();
 
+
                 return (
+
                     type.includes(
                         "synthetic"
                     ) ||
@@ -978,8 +1197,8 @@ function loadMarkets(symbols) {
 
 
     /*
-    If synthetic filtering returns
-    nothing, show all markets.
+    If no synthetic markets were detected,
+    display all returned markets.
     */
 
     if (!markets.length) {
@@ -996,10 +1215,6 @@ function loadMarkets(symbols) {
         return;
     }
 
-
-    /*
-    Sort alphabetically.
-    */
 
     markets.sort(
         (a, b) =>
@@ -1063,6 +1278,7 @@ function populateMarketSelect(
 ) {
 
     if (!marketSelect) {
+
         return;
     }
 
@@ -1077,7 +1293,8 @@ function populateMarketSelect(
         );
 
 
-    placeholder.value = "";
+    placeholder.value =
+        "";
 
 
     placeholder.textContent =
@@ -1124,7 +1341,8 @@ function populateMarketSelect(
 
 
     const count =
-        marketSelect.options.length - 1;
+        marketSelect.options.length -
+        1;
 
 
     console.log(
@@ -1159,21 +1377,18 @@ function populateMarketSelect(
     setText(
         signalExplanation,
         fallback
-            ? "Deriv returned no market list. Testing the fallback synthetic markets."
+            ? "Deriv returned no market list. Testing fallback synthetic markets."
             : "Choose a market to begin analysis."
     );
 
 
     /*
-    Select first market automatically.
+    Automatically select first market.
     */
 
-    marketSelect.selectedIndex = 1;
+    marketSelect.selectedIndex =
+        1;
 
-
-    /*
-    Start it automatically.
-    */
 
     handleMarketChange();
 }
@@ -1186,6 +1401,7 @@ function populateMarketSelect(
 function handleMarketChange() {
 
     if (!marketSelect) {
+
         return;
     }
 
@@ -1195,6 +1411,7 @@ function handleMarketChange() {
 
 
     if (!symbol) {
+
         return;
     }
 
@@ -1282,7 +1499,9 @@ function handleMarketChange() {
    SUBSCRIBE
 ===================================================== */
 
-function subscribeToMarket(symbol) {
+function subscribeToMarket(
+    symbol
+) {
 
     if (
         !connected ||
@@ -1303,7 +1522,9 @@ function subscribeToMarket(symbol) {
     Forget previous subscription.
     */
 
-    if (currentSubscriptionId) {
+    if (
+        currentSubscriptionId
+    ) {
 
         send({
 
@@ -1400,7 +1621,9 @@ function subscribeToMarket(symbol) {
    HISTORY
 ===================================================== */
 
-function processHistory(data) {
+function processHistory(
+    data
+) {
 
     if (!data.history) {
 
@@ -1410,6 +1633,29 @@ function processHistory(data) {
         );
 
         return;
+    }
+
+
+    /*
+    Update pip size if Deriv supplies it.
+    */
+
+    const historyPip =
+        Number(
+            data.history.pip_size ??
+            data.history.pip
+        );
+
+
+    if (
+        Number.isFinite(
+            historyPip
+        ) &&
+        historyPip > 0
+    ) {
+
+        pipSize =
+            historyPip;
     }
 
 
@@ -1473,6 +1719,7 @@ function processHistory(data) {
                 price
             )
         ) {
+
             continue;
         }
 
@@ -1484,8 +1731,12 @@ function processHistory(data) {
 
 
         if (
-            digit === null
+            digit === null ||
+            !Number.isInteger(
+                digit
+            )
         ) {
+
             continue;
         }
 
@@ -1532,16 +1783,15 @@ function processHistory(data) {
    LIVE TICK
 ===================================================== */
 
-function processTick(data) {
+function processTick(
+    data
+) {
 
     if (!data.tick) {
+
         return;
     }
 
-
-    /*
-    New API / legacy compatibility.
-    */
 
     const price =
         Number(
@@ -1576,7 +1826,9 @@ function processTick(data) {
 
 
     if (
-        Number.isFinite(tickPip) &&
+        Number.isFinite(
+            tickPip
+        ) &&
         tickPip > 0
     ) {
 
@@ -1587,13 +1839,17 @@ function processTick(data) {
 
     const digit =
         getLastDigit(
-            price
+            price,
+            tickPip > 0
+                ? tickPip
+                : null
         );
 
 
     if (
         digit === null
     ) {
+
         return;
     }
 
@@ -1616,10 +1872,6 @@ function processTick(data) {
 
     limitTicks();
 
-
-    /*
-    Capture subscription ID.
-    */
 
     if (
         data.subscription &&
@@ -1666,7 +1918,1498 @@ function limitTicks() {
 
 
 /* =====================================================
-   ANALYSIS
+   =====================================================
+   ADVANCED ANALYSIS ENGINE
+   =====================================================
+===================================================== */
+
+
+/*
+=========================================================
+GET ANALYSIS WINDOW
+=========================================================
+*/
+
+function getAnalysisWindow(
+    size
+) {
+
+    if (
+        ticks.length <= size
+    ) {
+
+        return ticks.slice();
+    }
+
+
+    return ticks.slice(
+        -size
+    );
+}
+
+
+/*
+=========================================================
+GET DIGIT COUNTS
+=========================================================
+*/
+
+function getDigitCounts(
+    data
+) {
+
+    const counts =
+        Array(10).fill(0);
+
+
+    data.forEach(
+        tick => {
+
+            const digit =
+                Number(
+                    tick.digit
+                );
+
+
+            if (
+                Number.isInteger(
+                    digit
+                ) &&
+                digit >= 0 &&
+                digit <= 9
+            ) {
+
+                counts[digit]++;
+            }
+        }
+    );
+
+
+    return counts;
+}
+
+
+/*
+=========================================================
+DIGIT FREQUENCY
+=========================================================
+*/
+
+function getDigitFrequency(
+    data,
+    digit
+) {
+
+    if (!data.length) {
+
+        return 0;
+    }
+
+
+    const matches =
+        data.filter(
+            tick =>
+                tick.digit ===
+                digit
+        ).length;
+
+
+    return (
+        matches /
+        data.length
+    ) * 100;
+}
+
+
+/*
+=========================================================
+GET CONDITION RATE
+=========================================================
+*/
+
+function getConditionRate(
+    data,
+    condition
+) {
+
+    if (!data.length) {
+
+        return 0;
+    }
+
+
+    const wins =
+        data.filter(
+            condition
+        ).length;
+
+
+    return (
+        wins /
+        data.length
+    ) * 100;
+}
+
+
+/*
+=========================================================
+STATISTICS
+=========================================================
+*/
+
+function getStatistics(
+    condition
+) {
+
+    const long =
+        getAnalysisWindow(
+            ANALYSIS_CONFIG.LONG_WINDOW
+        );
+
+
+    const medium =
+        getAnalysisWindow(
+            ANALYSIS_CONFIG.MEDIUM_WINDOW
+        );
+
+
+    const short =
+        getAnalysisWindow(
+            ANALYSIS_CONFIG.SHORT_WINDOW
+        );
+
+
+    const longRate =
+        getConditionRate(
+            long,
+            condition
+        );
+
+
+    const mediumRate =
+        getConditionRate(
+            medium,
+            condition
+        );
+
+
+    const shortRate =
+        getConditionRate(
+            short,
+            condition
+        );
+
+
+    const weightedRate =
+        (
+            longRate *
+            ANALYSIS_CONFIG.LONG_WEIGHT
+        ) +
+
+        (
+            mediumRate *
+            ANALYSIS_CONFIG.MEDIUM_WEIGHT
+        ) +
+
+        (
+            shortRate *
+            ANALYSIS_CONFIG.SHORT_WEIGHT
+        );
+
+
+    return {
+
+        long,
+
+        medium,
+
+        short,
+
+        longRate,
+
+        mediumRate,
+
+        shortRate,
+
+        weightedRate,
+
+        sampleSize:
+            ticks.length
+    };
+}
+
+
+/*
+=========================================================
+BINOMIAL Z SCORE
+
+Measures how far observed frequency is from expected
+frequency relative to normal sampling variation.
+=========================================================
+*/
+
+function getZScore(
+    observedRate,
+    expectedRate,
+    sampleSize
+) {
+
+    if (
+        sampleSize <= 0
+    ) {
+
+        return 0;
+    }
+
+
+    const p =
+        expectedRate / 100;
+
+
+    const observed =
+        observedRate / 100;
+
+
+    /*
+    Boundary cases.
+    */
+
+    if (
+        p <= 0
+    ) {
+
+        return observed > 0
+            ? Math.sqrt(
+                sampleSize
+            )
+            : 0;
+    }
+
+
+    if (
+        p >= 1
+    ) {
+
+        return observed < 1
+            ? -Math.sqrt(
+                sampleSize
+            )
+            : 0;
+    }
+
+
+    const standardError =
+        Math.sqrt(
+            (
+                p *
+                (1 - p)
+            ) /
+            sampleSize
+        );
+
+
+    if (
+        standardError <= 0
+    ) {
+
+        return 0;
+    }
+
+
+    return (
+        (
+            observed -
+            p
+        ) /
+        standardError
+    );
+}
+
+
+/*
+=========================================================
+CONSISTENCY
+
+100 = windows almost identical
+0 = windows strongly disagree
+=========================================================
+*/
+
+function calculateConsistency(
+    rates
+) {
+
+    if (
+        !rates.length
+    ) {
+
+        return 0;
+    }
+
+
+    const average =
+        rates.reduce(
+            (
+                total,
+                value
+            ) =>
+                total + value,
+            0
+        ) /
+        rates.length;
+
+
+    const deviation =
+        rates.reduce(
+            (
+                total,
+                value
+            ) =>
+                total +
+                Math.abs(
+                    value -
+                    average
+                ),
+            0
+        ) /
+        rates.length;
+
+
+    return clamp(
+        100 -
+        (
+            deviation *
+            6
+        ),
+        0,
+        100
+    );
+}
+
+
+/*
+=========================================================
+AGREEMENT
+
+Measures how many windows are above the expected baseline.
+For an actual signal, at least two windows should agree.
+=========================================================
+*/
+
+function calculateAgreement(
+    rates,
+    expected
+) {
+
+    if (
+        !rates.length
+    ) {
+
+        return 0;
+    }
+
+
+    const tolerance =
+        1;
+
+
+    const agreeing =
+        rates.filter(
+            rate =>
+                rate >
+                expected +
+                tolerance
+        ).length;
+
+
+    return (
+        agreeing /
+        rates.length
+    ) * 100;
+}
+
+
+/*
+=========================================================
+MINIMUM EDGE
+
+The observed condition should be meaningfully above its
+mathematical baseline.
+=========================================================
+*/
+
+function getMinimumEdge(
+    expected
+) {
+
+    return clamp(
+        expected * 0.05,
+        2,
+        5
+    );
+}
+
+
+/*
+=========================================================
+SIGNAL QUALITY
+=========================================================
+*/
+
+function getSignalQuality(
+    confidence
+) {
+
+    if (
+        confidence >= 70
+    ) {
+
+        return "STRONG";
+    }
+
+
+    if (
+        confidence >= 60
+    ) {
+
+        return "MODERATE";
+    }
+
+
+    if (
+        confidence >= 55
+    ) {
+
+        return "WEAK";
+    }
+
+
+    return "NO SIGNAL";
+}
+
+
+/*
+=========================================================
+BUILD CONFIDENCE
+
+This deliberately does NOT treat raw percentage as
+confidence.
+
+It combines:
+
+1. Statistical evidence
+2. Edge above expected probability
+3. Consistency
+4. Window agreement
+5. Sample reliability
+6. Positive momentum
+=========================================================
+*/
+
+function buildConfidence(
+    stats,
+    expected
+) {
+
+    const {
+
+        longRate,
+
+        mediumRate,
+
+        shortRate,
+
+        weightedRate,
+
+        sampleSize
+
+    } = stats;
+
+
+    const edge =
+        weightedRate -
+        expected;
+
+
+    /*
+    Only positive edge is considered
+    a trade-supporting signal.
+    */
+
+    const positiveEdge =
+        Math.max(
+            0,
+            edge
+        );
+
+
+    /*
+    Z scores.
+    */
+
+    const longZ =
+        getZScore(
+            longRate,
+            expected,
+            stats.long.length
+        );
+
+
+    const mediumZ =
+        getZScore(
+            mediumRate,
+            expected,
+            stats.medium.length
+        );
+
+
+    const shortZ =
+        getZScore(
+            shortRate,
+            expected,
+            stats.short.length
+        );
+
+
+    /*
+    Weighted statistical evidence.
+    */
+
+    const weightedZ =
+        (
+            longZ *
+            ANALYSIS_CONFIG.LONG_WEIGHT
+        ) +
+
+        (
+            mediumZ *
+            ANALYSIS_CONFIG.MEDIUM_WEIGHT
+        ) +
+
+        (
+            shortZ *
+            ANALYSIS_CONFIG.SHORT_WEIGHT
+        );
+
+
+    /*
+    Only positive evidence helps the signal.
+    */
+
+    const positiveZ =
+        Math.max(
+            0,
+            weightedZ
+        );
+
+
+    /*
+    Consistency.
+    */
+
+    const consistency =
+        calculateConsistency([
+            longRate,
+            mediumRate,
+            shortRate
+        ]);
+
+
+    /*
+    Agreement.
+    */
+
+    const agreement =
+        calculateAgreement(
+            [
+                longRate,
+                mediumRate,
+                shortRate
+            ],
+            expected
+        );
+
+
+    /*
+    Momentum.
+
+    Positive = condition became more frequent
+    in the recent window.
+    */
+
+    const momentum =
+        shortRate -
+        longRate;
+
+
+    const positiveMomentum =
+        Math.max(
+            0,
+            momentum
+        );
+
+
+    /*
+    SCORE COMPONENTS
+    */
+
+    const evidenceScore =
+        clamp(
+            positiveZ * 7,
+            0,
+            28
+        );
+
+
+    const edgeScore =
+        clamp(
+            positiveEdge *
+            (
+                expected <= 10
+                    ? 1.1
+                    : 0.8
+            ),
+            0,
+            16
+        );
+
+
+    const consistencyScore =
+        consistency *
+        0.15;
+
+
+    const agreementScore =
+        agreement *
+        0.12;
+
+
+    const sampleScore =
+        clamp(
+            mapRange(
+                sampleSize,
+                30,
+                500,
+                0,
+                10
+            ),
+            0,
+            10
+        );
+
+
+    const momentumScore =
+        clamp(
+            positiveMomentum *
+            0.4,
+            0,
+            8
+        );
+
+
+    /*
+    Start conservative.
+    */
+
+    let confidence =
+        20 +
+
+        evidenceScore +
+
+        edgeScore +
+
+        consistencyScore +
+
+        agreementScore +
+
+        sampleScore +
+
+        momentumScore;
+
+
+    /*
+    No positive edge = no strong signal.
+    */
+
+    if (
+        edge <= 0
+    ) {
+
+        confidence =
+            Math.min(
+                confidence,
+                45
+            );
+    }
+
+
+    /*
+    Insufficient sample penalty.
+    */
+
+    if (
+        sampleSize < 100
+    ) {
+
+        confidence -=
+            10;
+    }
+
+
+    /*
+    Weak agreement penalty.
+    */
+
+    if (
+        agreement < 66.7
+    ) {
+
+        confidence -=
+            8;
+    }
+
+
+    /*
+    Low consistency penalty.
+    */
+
+    if (
+        consistency < 50
+    ) {
+
+        confidence -=
+            8;
+    }
+
+
+    confidence =
+        clamp(
+            confidence,
+            0,
+            ANALYSIS_CONFIG.MAX_CONFIDENCE
+        );
+
+
+    return {
+
+        confidence,
+
+        expected,
+
+        weightedRate,
+
+        edge,
+
+        longRate,
+
+        mediumRate,
+
+        shortRate,
+
+        momentum,
+
+        consistency,
+
+        agreement,
+
+        weightedZ,
+
+        longZ,
+
+        mediumZ,
+
+        shortZ,
+
+        sampleSize,
+
+        quality:
+            getSignalQuality(
+                confidence
+            )
+    };
+}
+
+
+/*
+=========================================================
+ENTRY DECISION
+=========================================================
+*/
+
+function getEntryDecision(
+    result
+) {
+
+    const required =
+        Math.max(
+            ANALYSIS_CONFIG.MIN_ENTRY_CONFIDENCE,
+            getThreshold()
+        );
+
+
+    const minimumEdge =
+        getMinimumEdge(
+            result.expected
+        );
+
+
+    const conditions = {
+
+        enoughTicks:
+            result.sampleSize >=
+            ANALYSIS_CONFIG.MIN_ENTRY_TICKS,
+
+        confidence:
+            result.confidence >=
+            required,
+
+        positiveEdge:
+            result.edge >=
+            minimumEdge,
+
+        recentAboveBaseline:
+            result.shortRate >
+            result.expected,
+
+        agreement:
+            result.agreement >=
+            ANALYSIS_CONFIG.MIN_AGREEMENT,
+
+        consistency:
+            result.consistency >=
+            ANALYSIS_CONFIG.MIN_CONSISTENCY,
+
+        evidence:
+            result.weightedZ >=
+            ANALYSIS_CONFIG.MIN_EVIDENCE_Z
+    };
+
+
+    const entry =
+        Object.values(
+            conditions
+        ).every(
+            Boolean
+        );
+
+
+    return {
+
+        entry,
+
+        required,
+
+        minimumEdge,
+
+        conditions
+    };
+}
+
+
+/*
+=========================================================
+BUILD EXPLANATION
+=========================================================
+*/
+
+function buildExplanation(
+    result
+) {
+
+    const edgeText =
+        result.edge >= 0
+            ? `+${result.edge.toFixed(1)} pts`
+            : `${result.edge.toFixed(1)} pts`;
+
+
+    const momentumText =
+        result.momentum >= 0
+            ? `+${result.momentum.toFixed(1)} pts`
+            : `${result.momentum.toFixed(1)} pts`;
+
+
+    return [
+
+        `Expected baseline: ${result.expected.toFixed(1)}%.`,
+
+        `Observed weighted rate: ${result.weightedRate.toFixed(1)}% (${edgeText}).`,
+
+        `Long ${result.longRate.toFixed(1)}% • 100-tick ${result.mediumRate.toFixed(1)}% • 30-tick ${result.shortRate.toFixed(1)}%.`,
+
+        `Momentum: ${momentumText}.`,
+
+        `Window agreement: ${result.agreement.toFixed(0)}% • Consistency: ${result.consistency.toFixed(0)}%.`,
+
+        `Statistical evidence: Z ${result.weightedZ.toFixed(2)}.`,
+
+        `Sample: ${result.sampleSize} ticks.`,
+
+        `Signal quality: ${result.quality}.`
+
+    ].join(" ");
+}
+
+
+/*
+=========================================================
+ANALYZE CONDITION
+=========================================================
+*/
+
+function analyzeCondition(
+    model
+) {
+
+    const stats =
+        getStatistics(
+            model.condition
+        );
+
+
+    const result =
+        buildConfidence(
+            stats,
+            model.expected
+        );
+
+
+    const finalResult = {
+
+        ...result,
+
+        display:
+            model.display,
+
+        title:
+            model.title,
+
+        type:
+            model.type,
+
+        explanation:
+            buildExplanation(
+                result
+            )
+    };
+
+
+    const decision =
+        getEntryDecision(
+            finalResult
+        );
+
+
+    finalResult.entry =
+        decision.entry;
+
+
+    finalResult.required =
+        decision.required;
+
+
+    finalResult.minimumEdge =
+        decision.minimumEdge;
+
+
+    finalResult.entryConditions =
+        decision.conditions;
+
+
+    return finalResult;
+}
+
+
+/* =====================================================
+   MATCH MODEL
+===================================================== */
+
+function createMatchModel(
+    digit
+) {
+
+    return {
+
+        type:
+            "MATCH",
+
+        expected:
+            10,
+
+        display:
+            String(digit),
+
+        title:
+            `MATCH ${digit}`,
+
+        condition:
+            tick =>
+                tick.digit ===
+                digit
+    };
+}
+
+
+/* =====================================================
+   FIND BEST MATCH DIGIT
+===================================================== */
+
+function calculateMatch() {
+
+    /*
+    Analyze every digit independently.
+    */
+
+    const candidates =
+        [];
+
+
+    for (
+        let digit = 0;
+        digit <= 9;
+        digit++
+    ) {
+
+        const result =
+            analyzeCondition(
+                createMatchModel(
+                    digit
+                )
+            );
+
+
+        candidates.push(
+            result
+        );
+    }
+
+
+    /*
+    Prefer the strongest positive edge.
+
+    Statistical evidence and recent momentum
+    help break ties.
+    */
+
+    candidates.sort(
+        (a, b) => {
+
+            const scoreA =
+
+                (
+                    Math.max(
+                        0,
+                        a.edge
+                    ) *
+                    2
+                ) +
+
+                (
+                    Math.max(
+                        0,
+                        a.weightedZ
+                    ) *
+                    3
+                ) +
+
+                (
+                    Math.max(
+                        0,
+                        a.momentum
+                    ) *
+                    0.4
+                );
+
+
+            const scoreB =
+
+                (
+                    Math.max(
+                        0,
+                        b.edge
+                    ) *
+                    2
+                ) +
+
+                (
+                    Math.max(
+                        0,
+                        b.weightedZ
+                    ) *
+                    3
+                ) +
+
+                (
+                    Math.max(
+                        0,
+                        b.momentum
+                    ) *
+                    0.4
+                );
+
+
+            return scoreB - scoreA;
+        }
+    );
+
+
+    const best =
+        candidates[0];
+
+
+    /*
+    Make sure the display is still the
+    selected digit even if there is no signal.
+    */
+
+    return {
+
+        ...best,
+
+        title:
+            `MATCH ${best.display}`,
+
+        explanation:
+            `Digit ${best.display} analysis. ${best.explanation}`
+    };
+}
+
+
+/* =====================================================
+   DIFFERS
+===================================================== */
+
+function calculateDiffers(
+    selectedDigit
+) {
+
+    const model = {
+
+        type:
+            "DIFFERS",
+
+        expected:
+            90,
+
+        display:
+            `≠${selectedDigit}`,
+
+        title:
+            `DIFFERS ${selectedDigit}`,
+
+        condition:
+            tick =>
+                tick.digit !==
+                selectedDigit
+    };
+
+
+    return analyzeCondition(
+        model
+    );
+}
+
+
+/* =====================================================
+   OVER
+===================================================== */
+
+function calculateOver(
+    selectedBarrier
+) {
+
+    /*
+    Digits above barrier:
+
+    OVER 0 = 90%
+    OVER 1 = 80%
+    OVER 2 = 70%
+    OVER 3 = 60%
+    OVER 4 = 50%
+    OVER 5 = 40%
+    OVER 6 = 30%
+    OVER 7 = 20%
+    OVER 8 = 10%
+    OVER 9 = 0%
+    */
+
+    const expected =
+        (
+            9 -
+            selectedBarrier
+        ) /
+        10 *
+        100;
+
+
+    const model = {
+
+        type:
+            "OVER",
+
+        expected:
+            expected,
+
+        display:
+            `>${selectedBarrier}`,
+
+        title:
+            `OVER ${selectedBarrier}`,
+
+        condition:
+            tick =>
+                tick.digit >
+                selectedBarrier
+    };
+
+
+    return analyzeCondition(
+        model
+    );
+}
+
+
+/* =====================================================
+   UNDER
+===================================================== */
+
+function calculateUnder(
+    selectedBarrier
+) {
+
+    /*
+    UNDER 0 = 0%
+    UNDER 1 = 10%
+    UNDER 2 = 20%
+    UNDER 3 = 30%
+    UNDER 4 = 40%
+    UNDER 5 = 50%
+    UNDER 6 = 60%
+    UNDER 7 = 70%
+    UNDER 8 = 80%
+    UNDER 9 = 90%
+    */
+
+    const expected =
+        (
+            selectedBarrier
+        ) /
+        10 *
+        100;
+
+
+    const model = {
+
+        type:
+            "UNDER",
+
+        expected:
+            expected,
+
+        display:
+            `<${selectedBarrier}`,
+
+        title:
+            `UNDER ${selectedBarrier}`,
+
+        condition:
+            tick =>
+                tick.digit <
+                selectedBarrier
+    };
+
+
+    return analyzeCondition(
+        model
+    );
+}
+
+
+/* =====================================================
+   EVEN
+===================================================== */
+
+function calculateEven() {
+
+    const model = {
+
+        type:
+            "EVEN",
+
+        expected:
+            50,
+
+        display:
+            "EVEN",
+
+        title:
+            "EVEN",
+
+        condition:
+            tick =>
+                tick.digit % 2 ===
+                0
+    };
+
+
+    return analyzeCondition(
+        model
+    );
+}
+
+
+/* =====================================================
+   ODD
+===================================================== */
+
+function calculateOdd() {
+
+    const model = {
+
+        type:
+            "ODD",
+
+        expected:
+            50,
+
+        display:
+            "ODD",
+
+        title:
+            "ODD",
+
+        condition:
+            tick =>
+                tick.digit % 2 !==
+                0
+    };
+
+
+    return analyzeCondition(
+        model
+    );
+}
+
+
+/* =====================================================
+   APPLY ANALYSIS RESULT
+===================================================== */
+
+function applyAnalysisResult(
+    result
+) {
+
+    if (!result) {
+
+        return;
+    }
+
+
+    const confidence =
+        clamp(
+            Number(
+                result.confidence
+            ) || 0,
+            0,
+            ANALYSIS_CONFIG.MAX_CONFIDENCE
+        );
+
+
+    setText(
+        bestConfidence,
+        confidence.toFixed(1)
+    );
+
+
+    if (confidenceBar) {
+
+        confidenceBar.style.width =
+            `${confidence}%`;
+    }
+
+
+    setText(
+        bestDigit,
+        result.display
+    );
+
+
+    setText(
+        signalTitle,
+        result.title
+    );
+
+
+    setText(
+        signalExplanation,
+        result.explanation
+    );
+
+
+    /*
+    IMPORTANT:
+    Entry is NOT based on confidence alone.
+    All entry filters must pass.
+    */
+
+    if (
+        result.entry
+    ) {
+
+        setText(
+            entryStatus,
+            `🟢 ENTRY CONDITION MET • ${result.quality}`
+        );
+
+
+        entryStatus?.classList.remove(
+            "waiting"
+        );
+
+
+        entryStatus?.classList.add(
+            "ready"
+        );
+
+    } else {
+
+        /*
+        Distinguish between not enough data
+        and a weak signal.
+        */
+
+        if (
+            result.sampleSize <
+            ANALYSIS_CONFIG.MIN_ENTRY_TICKS
+        ) {
+
+            setText(
+                entryStatus,
+                `⏳ WAITING FOR MORE DATA • ${result.sampleSize}/${ANALYSIS_CONFIG.MIN_ENTRY_TICKS} ticks`
+            );
+
+        } else {
+
+            setText(
+                entryStatus,
+                "⛔ NO TRADE — SIGNAL FILTER FAILED"
+            );
+        }
+
+
+        entryStatus?.classList.remove(
+            "ready"
+        );
+
+
+        entryStatus?.classList.add(
+            "waiting"
+        );
+    }
+}
+
+
+/* =====================================================
+   MAIN ANALYZE
 ===================================================== */
 
 function analyze() {
@@ -1679,8 +3422,82 @@ function analyze() {
     }
 
 
+    /*
+    Not enough ticks for the multi-window
+    system.
+    */
+
+    if (
+        ticks.length <
+        ANALYSIS_CONFIG.MIN_ANALYSIS_TICKS
+    ) {
+
+        const remaining =
+            ANALYSIS_CONFIG.MIN_ANALYSIS_TICKS -
+            ticks.length;
+
+
+        setText(
+            bestConfidence,
+            "0.0"
+        );
+
+
+        if (confidenceBar) {
+
+            confidenceBar.style.width =
+                "0%";
+        }
+
+
+        setText(
+            bestDigit,
+            "-"
+        );
+
+
+        setText(
+            signalTitle,
+            "Collecting data..."
+        );
+
+
+        setText(
+            signalExplanation,
+            `${ticks.length} ticks available. Need ${remaining} more tick${remaining === 1 ? "" : "s"} before advanced analysis.`
+        );
+
+
+        setText(
+            entryStatus,
+            "⏳ WAITING FOR DATA"
+        );
+
+
+        entryStatus?.classList.remove(
+            "ready"
+        );
+
+
+        entryStatus?.classList.add(
+            "waiting"
+        );
+
+
+        return;
+    }
+
+
     let result;
 
+
+    /*
+    Special DIFFERS mode.
+
+    Existing UI behavior preserved:
+    if mode = diff and type = MATCH,
+    analyze DIFFERS using barrier.
+    */
 
     if (
         currentMode === "diff" &&
@@ -1750,380 +3567,9 @@ function analyze() {
     }
 
 
-    if (!result) {
-        return;
-    }
-
-
-    const confidence =
-        Math.max(
-            0,
-            Math.min(
-                100,
-                Number(
-                    result.confidence
-                ) || 0
-            )
-        );
-
-
-    setText(
-        bestConfidence,
-        confidence.toFixed(1)
+    applyAnalysisResult(
+        result
     );
-
-
-    if (confidenceBar) {
-
-        confidenceBar.style.width =
-            `${confidence}%`;
-    }
-
-
-    setText(
-        bestDigit,
-        result.display
-    );
-
-
-    setText(
-        signalTitle,
-        result.title
-    );
-
-
-    setText(
-        signalExplanation,
-        result.explanation
-    );
-
-
-    const required =
-        getThreshold();
-
-
-    if (
-        confidence >= required
-    ) {
-
-        setText(
-            entryStatus,
-            "🟢 ENTRY CONDITION MET"
-        );
-
-
-        entryStatus?.classList.remove(
-            "waiting"
-        );
-
-
-        entryStatus?.classList.add(
-            "ready"
-        );
-
-    } else {
-
-        setText(
-            entryStatus,
-            "⏳ WAITING FOR STRONGER SIGNAL"
-        );
-
-
-        entryStatus?.classList.remove(
-            "ready"
-        );
-
-
-        entryStatus?.classList.add(
-            "waiting"
-        );
-    }
-}
-
-
-/* =====================================================
-   MATCH
-===================================================== */
-
-function calculateMatch() {
-
-    const counts =
-        Array(10).fill(0);
-
-
-    ticks.forEach(
-        tick => {
-
-            if (
-                Number.isInteger(
-                    tick.digit
-                )
-            ) {
-
-                counts[
-                    tick.digit
-                ]++;
-            }
-        }
-    );
-
-
-    let bestDigitValue = 0;
-
-
-    for (
-        let digit = 1;
-        digit <= 9;
-        digit++
-    ) {
-
-        if (
-            counts[digit] >
-            counts[bestDigitValue]
-        ) {
-
-            bestDigitValue =
-                digit;
-        }
-    }
-
-
-    const confidence =
-        ticks.length
-            ? (
-                counts[
-                    bestDigitValue
-                ] /
-                ticks.length
-            ) * 100
-            : 0;
-
-
-    return {
-
-        display:
-            String(
-                bestDigitValue
-            ),
-
-        title:
-            `MATCH ${bestDigitValue}`,
-
-        confidence:
-            confidence,
-
-        explanation:
-            `Digit ${bestDigitValue} occurred ${counts[bestDigitValue]} times in the last ${ticks.length} ticks.`
-    };
-}
-
-
-/* =====================================================
-   DIFFERS
-===================================================== */
-
-function calculateDiffers(
-    selectedDigit
-) {
-
-    const matches =
-        ticks.filter(
-            tick =>
-                tick.digit ===
-                selectedDigit
-        ).length;
-
-
-    const differs =
-        ticks.length -
-        matches;
-
-
-    const confidence =
-        ticks.length
-            ? (
-                differs /
-                ticks.length
-            ) * 100
-            : 0;
-
-
-    return {
-
-        display:
-            `≠${selectedDigit}`,
-
-        title:
-            `DIFFERS ${selectedDigit}`,
-
-        confidence:
-            confidence,
-
-        explanation:
-            `Digit ${selectedDigit} was different on ${differs} of the last ${ticks.length} ticks.`
-    };
-}
-
-
-/* =====================================================
-   OVER
-===================================================== */
-
-function calculateOver(
-    selectedBarrier
-) {
-
-    const wins =
-        ticks.filter(
-            tick =>
-                tick.digit >
-                selectedBarrier
-        ).length;
-
-
-    const confidence =
-        ticks.length
-            ? (
-                wins /
-                ticks.length
-            ) * 100
-            : 0;
-
-
-    return {
-
-        display:
-            `>${selectedBarrier}`,
-
-        title:
-            `OVER ${selectedBarrier}`,
-
-        confidence:
-            confidence,
-
-        explanation:
-            `${wins} of ${ticks.length} ticks were above ${selectedBarrier}.`
-    };
-}
-
-
-/* =====================================================
-   UNDER
-===================================================== */
-
-function calculateUnder(
-    selectedBarrier
-) {
-
-    const wins =
-        ticks.filter(
-            tick =>
-                tick.digit <
-                selectedBarrier
-        ).length;
-
-
-    const confidence =
-        ticks.length
-            ? (
-                wins /
-                ticks.length
-            ) * 100
-            : 0;
-
-
-    return {
-
-        display:
-            `<${selectedBarrier}`,
-
-        title:
-            `UNDER ${selectedBarrier}`,
-
-        confidence:
-            confidence,
-
-        explanation:
-            `${wins} of ${ticks.length} ticks were below ${selectedBarrier}.`
-    };
-}
-
-
-/* =====================================================
-   EVEN
-===================================================== */
-
-function calculateEven() {
-
-    const wins =
-        ticks.filter(
-            tick =>
-                tick.digit % 2 === 0
-        ).length;
-
-
-    const confidence =
-        ticks.length
-            ? (
-                wins /
-                ticks.length
-            ) * 100
-            : 0;
-
-
-    return {
-
-        display:
-            "EVEN",
-
-        title:
-            "EVEN",
-
-        confidence:
-            confidence,
-
-        explanation:
-            `${wins} of ${ticks.length} ticks were even.`
-    };
-}
-
-
-/* =====================================================
-   ODD
-===================================================== */
-
-function calculateOdd() {
-
-    const wins =
-        ticks.filter(
-            tick =>
-                tick.digit % 2 !== 0
-        ).length;
-
-
-    const confidence =
-        ticks.length
-            ? (
-                wins /
-                ticks.length
-            ) * 100
-            : 0;
-
-
-    return {
-
-        display:
-            "ODD",
-
-        title:
-            "ODD",
-
-        confidence:
-            confidence,
-
-        explanation:
-            `${wins} of ${ticks.length} ticks were odd.`
-    };
 }
 
 
@@ -2134,29 +3580,15 @@ function calculateOdd() {
 function updateDigitGrid() {
 
     if (!digitGrid) {
+
         return;
     }
 
 
     const counts =
-        Array(10).fill(0);
-
-
-    ticks.forEach(
-        tick => {
-
-            if (
-                Number.isInteger(
-                    tick.digit
-                )
-            ) {
-
-                counts[
-                    tick.digit
-                ]++;
-            }
-        }
-    );
+        getDigitCounts(
+            ticks
+        );
 
 
     const total =
@@ -2191,6 +3623,14 @@ function updateDigitGrid() {
         box.className =
             "digit-item";
 
+
+        /*
+        Hot threshold is now based on
+        expected 10%, rather than arbitrary
+        frequency alone.
+
+        15%+ = noticeably above baseline.
+        */
 
         if (
             percentage >= 15
@@ -2227,6 +3667,7 @@ function updateDigitGrid() {
 function updateRecentDigits() {
 
     if (!recentDigits) {
+
         return;
     }
 
@@ -2271,6 +3712,7 @@ function updateRecentDigits() {
 function updateDisplay() {
 
     if (!ticks.length) {
+
         return;
     }
 
@@ -2310,7 +3752,7 @@ function updateDisplay() {
 
 
 /* =====================================================
-   CLEAR
+   CLEAR SIGNAL
 ===================================================== */
 
 function clearSignalOnly() {
@@ -2334,6 +3776,10 @@ function clearSignalOnly() {
     }
 }
 
+
+/* =====================================================
+   CLEAR ANALYSIS
+===================================================== */
 
 function clearAnalysis() {
 
@@ -2434,7 +3880,9 @@ function stopAutoScan() {
    CLOSE
 ===================================================== */
 
-function handleClose(event) {
+function handleClose(
+    event
+) {
 
     console.warn(
         "Deriv WebSocket closed:",
@@ -2445,6 +3893,7 @@ function handleClose(event) {
 
 
     connected = false;
+
     connecting = false;
 
 
@@ -2466,7 +3915,9 @@ function handleClose(event) {
     resetConnectButton();
 
 
-    if (manualDisconnect) {
+    if (
+        manualDisconnect
+    ) {
 
         setText(
             signalTitle,
@@ -2507,6 +3958,7 @@ function handleClose(event) {
 function scheduleReconnect() {
 
     if (reconnectTimer) {
+
         return;
     }
 
@@ -2538,7 +3990,9 @@ function scheduleReconnect() {
    ERROR
 ===================================================== */
 
-function handleError(error) {
+function handleError(
+    error
+) {
 
     console.error(
         "Deriv WebSocket error:",
@@ -2566,11 +4020,13 @@ function handleError(error) {
 function resetConnectButton() {
 
     if (!connectBtn) {
+
         return;
     }
 
 
-    connectBtn.disabled = false;
+    connectBtn.disabled =
+        false;
 
 
     connectBtn.textContent =
@@ -2590,6 +4046,7 @@ function disconnectDeriv() {
 
 
     stopAutoScan();
+
     stopPing();
 
 
@@ -2646,6 +4103,7 @@ function disconnectDeriv() {
     ws = null;
 
     connected = false;
+
     connecting = false;
 
 
@@ -2834,6 +4292,7 @@ if (threshold) {
         analyze
     );
 
+
     threshold.addEventListener(
         "change",
         analyze
@@ -2847,6 +4306,7 @@ if (barrier) {
         "input",
         analyze
     );
+
 
     barrier.addEventListener(
         "change",
@@ -2883,18 +4343,33 @@ console.log(
     "======================================"
 );
 
-console.log(
-    "MATCHES SIGNAL SCANNER"
-);
 
 console.log(
-    "Analysis only - NO AUTOMATIC TRADING"
+    "DERIV PRO SIGNAL SCANNER"
 );
+
+
+console.log(
+    "Advanced analysis only"
+);
+
+
+console.log(
+    "NO AUTOMATIC TRADING"
+);
+
 
 console.log(
     "Deriv endpoint:",
     DERIV_WS
 );
+
+
+console.log(
+    "Analysis windows:",
+    "30 / 100 / 1000"
+);
+
 
 console.log(
     "======================================"
