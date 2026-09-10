@@ -9,8 +9,13 @@ Uses Deriv public WebSocket market data.
 
 IMPORTANT:
 The confidence value is a statistical/technical
-signal-quality score. It is NOT a guaranteed probability
-of winning the next contract.
+signal-quality score.
+
+It is NOT a guaranteed probability of winning
+the next contract.
+
+The scanner deliberately produces NO TRADE when
+the evidence is not strong enough.
 =========================================================
 */
 
@@ -27,16 +32,14 @@ const MAX_TICK_COUNT = 5000;
 const RECONNECT_DELAY = 5000;
 
 
-/*
-=========================================================
-ANALYSIS ENGINE CONFIGURATION
-=========================================================
-*/
+/* =====================================================
+   ADVANCED ANALYSIS CONFIG
+===================================================== */
 
 const ANALYSIS_CONFIG = {
 
     /*
-    Analysis windows.
+    Analysis windows
     */
 
     LONG_WINDOW: 1000,
@@ -47,7 +50,7 @@ const ANALYSIS_CONFIG = {
 
 
     /*
-    Weight recent data more heavily.
+    Recent data receives more weight.
     */
 
     LONG_WEIGHT: 0.20,
@@ -58,28 +61,30 @@ const ANALYSIS_CONFIG = {
 
 
     /*
-    Minimum data required before analysis.
+    Minimum data before analysis.
     */
 
     MIN_ANALYSIS_TICKS: 30,
 
+
     /*
-    Stronger minimum for an actual entry signal.
+    Minimum data before an entry can
+    ever be approved.
     */
 
     MIN_ENTRY_TICKS: 100,
 
 
     /*
-    Never allow an entry below this score,
-    even if the user UI threshold is lower.
+    Minimum confidence regardless
+    of the user's selected threshold.
     */
 
     MIN_ENTRY_CONFIDENCE: 60,
 
 
     /*
-    Quality requirements.
+    Minimum quality requirements.
     */
 
     MIN_CONSISTENCY: 50,
@@ -97,11 +102,9 @@ const ANALYSIS_CONFIG = {
 };
 
 
-/*
-Fallback markets.
-
-Used only if active_symbols returns no usable markets.
-*/
+/* =====================================================
+   FALLBACK MARKETS
+===================================================== */
 
 const FALLBACK_MARKETS = [
 
@@ -210,97 +213,66 @@ const $ = id =>
     document.getElementById(id);
 
 
-const marketSelect =
-    $("marketSelect");
+const marketSelect = $("marketSelect");
 
-const tickCount =
-    $("tickCount");
+const tickCount = $("tickCount");
 
-const threshold =
-    $("threshold");
+const threshold = $("threshold");
 
-const barrier =
-    $("barrier");
+const barrier = $("barrier");
 
-const connectBtn =
-    $("connectBtn");
+const connectBtn = $("connectBtn");
 
-const scanBtn =
-    $("scanBtn");
+const scanBtn = $("scanBtn");
 
-const autoScan =
-    $("autoScan");
+const autoScan = $("autoScan");
 
-const connectionDot =
-    $("connectionDot");
+const connectionDot = $("connectionDot");
 
-const statusText =
-    $("statusText");
+const statusText = $("statusText");
 
-const liveBadge =
-    $("liveBadge");
+const liveBadge = $("liveBadge");
 
-const signalTitle =
-    $("signalTitle");
+const signalTitle = $("signalTitle");
 
-const bestDigit =
-    $("bestDigit");
+const bestDigit = $("bestDigit");
 
-const bestConfidence =
-    $("bestConfidence");
+const bestConfidence = $("bestConfidence");
 
-const confidenceBar =
-    $("confidenceBar");
+const confidenceBar = $("confidenceBar");
 
-const signalExplanation =
-    $("signalExplanation");
+const signalExplanation = $("signalExplanation");
 
-const entryStatus =
-    $("entryStatus");
+const entryStatus = $("entryStatus");
 
-const tickStatus =
-    $("tickStatus");
+const tickStatus = $("tickStatus");
 
-const livePrice =
-    $("livePrice");
+const livePrice = $("livePrice");
 
-const lastDigit =
-    $("lastDigit");
+const lastDigit = $("lastDigit");
 
-const marketName =
-    $("marketName");
+const marketName = $("marketName");
 
-const digitGrid =
-    $("digitGrid");
+const digitGrid = $("digitGrid");
 
-const recentDigits =
-    $("recentDigits");
+const recentDigits = $("recentDigits");
 
 
 /* =====================================================
    BASIC HELPERS
 ===================================================== */
 
-function setText(
-    element,
-    value
-) {
+function setText(element, value) {
 
     if (element) {
-
-        element.textContent =
-            value;
+        element.textContent = value;
     }
 }
 
 
-function number(
-    value,
-    fallback = 0
-) {
+function number(value, fallback = 0) {
 
-    const n =
-        Number(value);
+    const n = Number(value);
 
     return Number.isFinite(n)
         ? n
@@ -314,18 +286,11 @@ function nextRequestId() {
 }
 
 
-function clamp(
-    value,
-    min,
-    max
-) {
+function clamp(value, min, max) {
 
     return Math.max(
         min,
-        Math.min(
-            max,
-            value
-        )
+        Math.min(max, value)
     );
 }
 
@@ -338,27 +303,18 @@ function mapRange(
     outMax
 ) {
 
-    if (
-        inMax === inMin
-    ) {
-
+    if (inMax === inMin) {
         return outMin;
     }
 
     const ratio =
-        (
-            value - inMin
-        ) /
-        (
-            inMax - inMin
-        );
+        (value - inMin) /
+        (inMax - inMin);
 
     return (
         outMin +
         ratio *
-        (
-            outMax - outMin
-        )
+        (outMax - outMin)
     );
 }
 
@@ -389,7 +345,7 @@ function getThreshold() {
             100,
             number(
                 threshold?.value,
-                60
+                65
             )
         )
     );
@@ -414,30 +370,23 @@ function getBarrier() {
 
 
 /* =====================================================
-   PIP / PRICE
+   PRICE / PIP
 ===================================================== */
 
-function decimalPlacesFromPip(
-    pip
-) {
+function decimalPlacesFromPip(pip) {
 
-    const p =
-        Number(pip);
+    const p = Number(pip);
 
     if (
         !Number.isFinite(p) ||
         p <= 0
     ) {
-
         return 2;
     }
 
-
     if (p >= 1) {
-
         return 0;
     }
-
 
     return Math.max(
         0,
@@ -448,9 +397,7 @@ function decimalPlacesFromPip(
 }
 
 
-function formatPrice(
-    price
-) {
+function formatPrice(price) {
 
     const places =
         decimalPlacesFromPip(
@@ -463,11 +410,9 @@ function formatPrice(
 }
 
 
-/*
-=========================================================
-LAST DIGIT
-=========================================================
-*/
+/* =====================================================
+   LAST DIGIT
+===================================================== */
 
 function getLastDigit(
     price,
@@ -479,24 +424,20 @@ function getLastDigit(
             ? Number(suppliedPip)
             : pipSize;
 
-
     const places =
         decimalPlacesFromPip(
             usablePip
         );
-
 
     const formatted =
         Number(price).toFixed(
             places
         );
 
+    const parts =
+        formatted.split(".");
 
-    const decimal =
-        formatted.split(".")[1];
-
-
-    if (!decimal) {
+    if (parts.length < 2) {
 
         const integer =
             formatted.replace(
@@ -504,16 +445,23 @@ function getLastDigit(
                 ""
             );
 
+        if (!integer) {
+            return null;
+        }
 
-        return integer
-            ? Number(
-                integer[
-                    integer.length - 1
-                ]
-            )
-            : null;
+        return Number(
+            integer[
+                integer.length - 1
+            ]
+        );
     }
 
+    const decimal =
+        parts[1];
+
+    if (!decimal) {
+        return null;
+    }
 
     return Number(
         decimal[
@@ -540,10 +488,7 @@ function updateConnectionUI(
             "connecting"
         );
 
-
-        if (
-            state === "online"
-        ) {
+        if (state === "online") {
 
             connectionDot.classList.add(
                 "online"
@@ -592,15 +537,14 @@ function updateConnectionUI(
 
 
 /* =====================================================
-   SEND MESSAGE
+   SEND
 ===================================================== */
 
 function send(data) {
 
     if (
         !ws ||
-        ws.readyState !==
-            WebSocket.OPEN
+        ws.readyState !== WebSocket.OPEN
     ) {
 
         console.warn(
@@ -610,7 +554,6 @@ function send(data) {
 
         return false;
     }
-
 
     try {
 
@@ -642,49 +585,35 @@ function connectDeriv() {
         connecting ||
         connected
     ) {
-
         return;
     }
-
 
     manualDisconnect = false;
 
     connecting = true;
-
 
     updateConnectionUI(
         "connecting",
         "Connecting to Deriv..."
     );
 
-
     setText(
         signalTitle,
         "Connecting..."
     );
-
 
     setText(
         signalExplanation,
         "Connecting to Deriv public market data..."
     );
 
-
     if (connectBtn) {
 
-        connectBtn.disabled =
-            true;
+        connectBtn.disabled = true;
 
         connectBtn.textContent =
             "⏳ Connecting...";
     }
-
-
-    console.log(
-        "Opening Deriv WebSocket:",
-        DERIV_WS
-    );
-
 
     try {
 
@@ -693,24 +622,20 @@ function connectDeriv() {
                 DERIV_WS
             );
 
-
         ws.addEventListener(
             "open",
             handleOpen
         );
-
 
         ws.addEventListener(
             "message",
             handleMessage
         );
 
-
         ws.addEventListener(
             "error",
             handleError
         );
-
 
         ws.addEventListener(
             "close",
@@ -724,15 +649,12 @@ function connectDeriv() {
             error
         );
 
-
         connecting = false;
-
 
         updateConnectionUI(
             "offline",
             "Connection failed"
         );
-
 
         resetConnectButton();
     }
@@ -745,47 +667,34 @@ function connectDeriv() {
 
 function handleOpen() {
 
-    console.log(
-        "CONNECTED:",
-        DERIV_WS
-    );
-
-
     connected = true;
 
     connecting = false;
-
 
     updateConnectionUI(
         "online",
         "Connected to Deriv"
     );
 
-
     if (connectBtn) {
 
-        connectBtn.disabled =
-            false;
+        connectBtn.disabled = false;
 
         connectBtn.textContent =
             "🔌 Disconnect";
     }
-
 
     setText(
         signalTitle,
         "Loading markets..."
     );
 
-
     setText(
         signalExplanation,
         "Requesting available Deriv markets..."
     );
 
-
     startPing();
-
 
     send({
 
@@ -805,7 +714,6 @@ function handleOpen() {
 function startPing() {
 
     stopPing();
-
 
     pingTimer =
         setInterval(
@@ -845,12 +753,9 @@ function stopPing() {
    MESSAGE
 ===================================================== */
 
-function handleMessage(
-    event
-) {
+function handleMessage(event) {
 
     let data;
-
 
     try {
 
@@ -870,80 +775,46 @@ function handleMessage(
     }
 
 
-    console.log(
-        "Deriv:",
-        data
-    );
-
-
-    /* -----------------------------------------
-       API ERROR
-    ----------------------------------------- */
-
     if (data.error) {
 
-        handleApiError(
-            data
-        );
+        handleApiError(data);
 
         return;
     }
 
-
-    /* -----------------------------------------
-       ACTIVE SYMBOLS
-    ----------------------------------------- */
 
     if (
         data.msg_type ===
         "active_symbols"
     ) {
 
-        handleActiveSymbols(
-            data
-        );
+        handleActiveSymbols(data);
 
         return;
     }
 
-
-    /* -----------------------------------------
-       HISTORY
-    ----------------------------------------- */
 
     if (
         data.msg_type ===
         "history"
     ) {
 
-        processHistory(
-            data
-        );
+        processHistory(data);
 
         return;
     }
 
-
-    /* -----------------------------------------
-       TICK
-    ----------------------------------------- */
 
     if (
         data.msg_type ===
         "tick"
     ) {
 
-        processTick(
-            data
-        );
+        processTick(data);
 
         return;
     }
 
-
-    /* -----------------------------------------
-       PING
-    ----------------------------------------- */
 
     if (
         data.msg_type ===
@@ -954,10 +825,6 @@ function handleMessage(
     }
 
 
-    /*
-    Subscription information.
-    */
-
     if (
         data.subscription &&
         data.subscription.id
@@ -965,12 +832,6 @@ function handleMessage(
 
         currentSubscriptionId =
             data.subscription.id;
-
-
-        console.log(
-            "Subscription ID:",
-            currentSubscriptionId
-        );
     }
 }
 
@@ -979,41 +840,30 @@ function handleMessage(
    API ERROR
 ===================================================== */
 
-function handleApiError(
-    data
-) {
+function handleApiError(data) {
 
     console.error(
         "DERIV API ERROR:",
         data.error
     );
 
-
     const errorCode =
-        data.error.code ||
+        data.error?.code ||
         "API_ERROR";
 
-
     const errorMessage =
-        data.error.message ||
+        data.error?.message ||
         "Deriv API error";
-
 
     setText(
         statusText,
         `${errorCode}: ${errorMessage}`
     );
 
-
     setText(
         signalExplanation,
         `${errorCode}: ${errorMessage}`
     );
-
-
-    /*
-    Use fallback only if market request failed.
-    */
 
     if (
         data.echo_req &&
@@ -1029,9 +879,7 @@ function handleApiError(
    ACTIVE SYMBOLS
 ===================================================== */
 
-function handleActiveSymbols(
-    data
-) {
+function handleActiveSymbols(data) {
 
     const symbols =
         Array.isArray(
@@ -1040,29 +888,14 @@ function handleActiveSymbols(
             ? data.active_symbols
             : [];
 
-
-    console.log(
-        "Markets received:",
-        symbols.length
-    );
-
-
     if (!symbols.length) {
-
-        console.warn(
-            "Deriv returned zero active markets."
-        );
-
 
         loadFallbackMarkets();
 
         return;
     }
 
-
-    loadMarkets(
-        symbols
-    );
+    loadMarkets(symbols);
 }
 
 
@@ -1070,45 +903,35 @@ function handleActiveSymbols(
    NORMALIZE MARKET
 ===================================================== */
 
-function normalizeMarket(
-    item
-) {
+function normalizeMarket(item) {
 
     if (!item) {
-
         return null;
     }
-
 
     const symbol =
         item.underlying_symbol ||
         item.symbol ||
         "";
 
-
     if (!symbol) {
-
         return null;
     }
-
 
     const name =
         item.underlying_symbol_name ||
         item.display_name ||
         symbol;
 
-
     const type =
         item.underlying_symbol_type ||
         item.symbol_type ||
         "";
 
-
     const pip =
         item.pip_size ??
         item.pip ??
         0;
-
 
     return {
 
@@ -1140,22 +963,12 @@ function normalizeMarket(
    LOAD MARKETS
 ===================================================== */
 
-function loadMarkets(
-    symbols
-) {
+function loadMarkets(symbols) {
 
     const normalized =
         symbols
-            .map(
-                normalizeMarket
-            )
+            .map(normalizeMarket)
             .filter(Boolean);
-
-
-    console.log(
-        "Normalized markets:",
-        normalized.length
-    );
 
 
     let markets =
@@ -1165,10 +978,8 @@ function loadMarkets(
                 const symbol =
                     market.symbol.toUpperCase();
 
-
                 const type =
                     market.type.toLowerCase();
-
 
                 return (
 
@@ -1197,7 +1008,7 @@ function loadMarkets(
 
 
     /*
-    If no synthetic markets were detected,
+    If synthetic filtering finds nothing,
     display all returned markets.
     */
 
@@ -1232,15 +1043,10 @@ function loadMarkets(
 
 
 /* =====================================================
-   FALLBACK
+   FALLBACK MARKETS
 ===================================================== */
 
 function loadFallbackMarkets() {
-
-    console.warn(
-        "Using fallback markets."
-    );
-
 
     const markets =
         FALLBACK_MARKETS.map(
@@ -1278,13 +1084,11 @@ function populateMarketSelect(
 ) {
 
     if (!marketSelect) {
-
         return;
     }
 
 
-    marketSelect.innerHTML =
-        "";
+    marketSelect.innerHTML = "";
 
 
     const placeholder =
@@ -1293,8 +1097,7 @@ function populateMarketSelect(
         );
 
 
-    placeholder.value =
-        "";
+    placeholder.value = "";
 
 
     placeholder.textContent =
@@ -1341,14 +1144,7 @@ function populateMarketSelect(
 
 
     const count =
-        marketSelect.options.length -
-        1;
-
-
-    console.log(
-        "Markets loaded:",
-        count
-    );
+        marketSelect.options.length - 1;
 
 
     setText(
@@ -1377,7 +1173,7 @@ function populateMarketSelect(
     setText(
         signalExplanation,
         fallback
-            ? "Deriv returned no market list. Testing fallback synthetic markets."
+            ? "Testing fallback synthetic markets."
             : "Choose a market to begin analysis."
     );
 
@@ -1386,9 +1182,7 @@ function populateMarketSelect(
     Automatically select first market.
     */
 
-    marketSelect.selectedIndex =
-        1;
-
+    marketSelect.selectedIndex = 1;
 
     handleMarketChange();
 }
@@ -1401,7 +1195,6 @@ function populateMarketSelect(
 function handleMarketChange() {
 
     if (!marketSelect) {
-
         return;
     }
 
@@ -1411,7 +1204,6 @@ function handleMarketChange() {
 
 
     if (!symbol) {
-
         return;
     }
 
@@ -1489,9 +1281,7 @@ function handleMarketChange() {
     );
 
 
-    subscribeToMarket(
-        symbol
-    );
+    subscribeToMarket(symbol);
 }
 
 
@@ -1499,9 +1289,7 @@ function handleMarketChange() {
    SUBSCRIBE
 ===================================================== */
 
-function subscribeToMarket(
-    symbol
-) {
+function subscribeToMarket(symbol) {
 
     if (
         !connected ||
@@ -1510,21 +1298,11 @@ function subscribeToMarket(
             WebSocket.OPEN
     ) {
 
-        console.warn(
-            "Cannot subscribe: not connected."
-        );
-
         return;
     }
 
 
-    /*
-    Forget previous subscription.
-    */
-
-    if (
-        currentSubscriptionId
-    ) {
+    if (currentSubscriptionId) {
 
         send({
 
@@ -1536,8 +1314,7 @@ function subscribeToMarket(
         });
 
 
-        currentSubscriptionId =
-            null;
+        currentSubscriptionId = null;
     }
 
 
@@ -1552,7 +1329,7 @@ function subscribeToMarket(
     HISTORY
     */
 
-    const historyRequest = {
+    send({
 
         ticks_history:
             symbol,
@@ -1568,25 +1345,14 @@ function subscribeToMarket(
 
         req_id:
             nextRequestId()
-    };
-
-
-    console.log(
-        "Requesting history:",
-        historyRequest
-    );
-
-
-    send(
-        historyRequest
-    );
+    });
 
 
     /*
-    LIVE SUBSCRIPTION
+    LIVE TICKS
     */
 
-    const tickRequest = {
+    send({
 
         ticks:
             symbol,
@@ -1596,18 +1362,7 @@ function subscribeToMarket(
 
         req_id:
             nextRequestId()
-    };
-
-
-    console.log(
-        "Subscribing to ticks:",
-        tickRequest
-    );
-
-
-    send(
-        tickRequest
-    );
+    });
 
 
     setText(
@@ -1621,24 +1376,12 @@ function subscribeToMarket(
    HISTORY
 ===================================================== */
 
-function processHistory(
-    data
-) {
+function processHistory(data) {
 
     if (!data.history) {
-
-        console.warn(
-            "No history object:",
-            data
-        );
-
         return;
     }
 
-
-    /*
-    Update pip size if Deriv supplies it.
-    */
 
     const historyPip =
         Number(
@@ -1648,9 +1391,7 @@ function processHistory(
 
 
     if (
-        Number.isFinite(
-            historyPip
-        ) &&
+        Number.isFinite(historyPip) &&
         historyPip > 0
     ) {
 
@@ -1675,12 +1416,6 @@ function processHistory(
             : [];
 
 
-    console.log(
-        "History ticks:",
-        prices.length
-    );
-
-
     if (!prices.length) {
 
         setText(
@@ -1688,12 +1423,10 @@ function processHistory(
             "0 ticks"
         );
 
-
         setText(
             signalExplanation,
-            "Deriv returned no tick history for this market."
+            "No tick history returned for this market."
         );
-
 
         return;
     }
@@ -1715,28 +1448,20 @@ function processHistory(
 
 
         if (
-            !Number.isFinite(
-                price
-            )
+            !Number.isFinite(price)
         ) {
-
             continue;
         }
 
 
         const digit =
-            getLastDigit(
-                price
-            );
+            getLastDigit(price);
 
 
         if (
             digit === null ||
-            !Number.isInteger(
-                digit
-            )
+            !Number.isInteger(digit)
         ) {
-
             continue;
         }
 
@@ -1750,16 +1475,13 @@ function processHistory(
                 digit,
 
             epoch:
-                Number(
-                    times[i]
-                ) ||
+                Number(times[i]) ||
                 Date.now() / 1000
         });
     }
 
 
     limitTicks();
-
 
     updateDisplay();
 
@@ -1768,13 +1490,7 @@ function processHistory(
 
     setText(
         statusText,
-        `Live • ${ticks.length} ticks`
-    );
-
-
-    setText(
-        signalExplanation,
-        `${ticks.length} historical ticks loaded. Waiting for live ticks...`
+        `LIVE • ${ticks.length} ticks`
     );
 }
 
@@ -1783,12 +1499,9 @@ function processHistory(
    LIVE TICK
 ===================================================== */
 
-function processTick(
-    data
-) {
+function processTick(data) {
 
     if (!data.tick) {
-
         return;
     }
 
@@ -1800,23 +1513,11 @@ function processTick(
 
 
     if (
-        !Number.isFinite(
-            price
-        )
+        !Number.isFinite(price)
     ) {
-
-        console.warn(
-            "Invalid tick:",
-            data.tick
-        );
-
         return;
     }
 
-
-    /*
-    Update pip size when supplied.
-    */
 
     const tickPip =
         Number(
@@ -1826,9 +1527,7 @@ function processTick(
 
 
     if (
-        Number.isFinite(
-            tickPip
-        ) &&
+        Number.isFinite(tickPip) &&
         tickPip > 0
     ) {
 
@@ -1847,9 +1546,9 @@ function processTick(
 
 
     if (
-        digit === null
+        digit === null ||
+        !Number.isInteger(digit)
     ) {
-
         return;
     }
 
@@ -1918,21 +1617,10 @@ function limitTicks() {
 
 
 /* =====================================================
-   =====================================================
-   ADVANCED ANALYSIS ENGINE
-   =====================================================
+   ANALYSIS WINDOW
 ===================================================== */
 
-
-/*
-=========================================================
-GET ANALYSIS WINDOW
-=========================================================
-*/
-
-function getAnalysisWindow(
-    size
-) {
+function getAnalysisWindow(size) {
 
     if (
         ticks.length <= size
@@ -1948,84 +1636,9 @@ function getAnalysisWindow(
 }
 
 
-/*
-=========================================================
-GET DIGIT COUNTS
-=========================================================
-*/
-
-function getDigitCounts(
-    data
-) {
-
-    const counts =
-        Array(10).fill(0);
-
-
-    data.forEach(
-        tick => {
-
-            const digit =
-                Number(
-                    tick.digit
-                );
-
-
-            if (
-                Number.isInteger(
-                    digit
-                ) &&
-                digit >= 0 &&
-                digit <= 9
-            ) {
-
-                counts[digit]++;
-            }
-        }
-    );
-
-
-    return counts;
-}
-
-
-/*
-=========================================================
-DIGIT FREQUENCY
-=========================================================
-*/
-
-function getDigitFrequency(
-    data,
-    digit
-) {
-
-    if (!data.length) {
-
-        return 0;
-    }
-
-
-    const matches =
-        data.filter(
-            tick =>
-                tick.digit ===
-                digit
-        ).length;
-
-
-    return (
-        matches /
-        data.length
-    ) * 100;
-}
-
-
-/*
-=========================================================
-GET CONDITION RATE
-=========================================================
-*/
+/* =====================================================
+   CONDITION RATE
+===================================================== */
 
 function getConditionRate(
     data,
@@ -2033,33 +1646,28 @@ function getConditionRate(
 ) {
 
     if (!data.length) {
-
         return 0;
     }
 
 
-    const wins =
+    const successful =
         data.filter(
             condition
         ).length;
 
 
     return (
-        wins /
+        successful /
         data.length
     ) * 100;
 }
 
 
-/*
-=========================================================
-STATISTICS
-=========================================================
-*/
+/* =====================================================
+   GET STATISTICS
+===================================================== */
 
-function getStatistics(
-    condition
-) {
+function getStatistics(condition) {
 
     const long =
         getAnalysisWindow(
@@ -2101,6 +1709,7 @@ function getStatistics(
 
 
     const weightedRate =
+
         (
             longRate *
             ANALYSIS_CONFIG.LONG_WEIGHT
@@ -2139,14 +1748,9 @@ function getStatistics(
 }
 
 
-/*
-=========================================================
-BINOMIAL Z SCORE
-
-Measures how far observed frequency is from expected
-frequency relative to normal sampling variation.
-=========================================================
-*/
+/* =====================================================
+   Z SCORE
+===================================================== */
 
 function getZScore(
     observedRate,
@@ -2157,12 +1761,11 @@ function getZScore(
     if (
         sampleSize <= 0
     ) {
-
         return 0;
     }
 
 
-    const p =
+    const expected =
         expectedRate / 100;
 
 
@@ -2171,29 +1774,21 @@ function getZScore(
 
 
     /*
-    Boundary cases.
+    Special cases.
     */
 
-    if (
-        p <= 0
-    ) {
+    if (expected <= 0) {
 
         return observed > 0
-            ? Math.sqrt(
-                sampleSize
-            )
+            ? Math.sqrt(sampleSize)
             : 0;
     }
 
 
-    if (
-        p >= 1
-    ) {
+    if (expected >= 1) {
 
         return observed < 1
-            ? -Math.sqrt(
-                sampleSize
-            )
+            ? -Math.sqrt(sampleSize)
             : 0;
     }
 
@@ -2201,8 +1796,8 @@ function getZScore(
     const standardError =
         Math.sqrt(
             (
-                p *
-                (1 - p)
+                expected *
+                (1 - expected)
             ) /
             sampleSize
         );
@@ -2211,7 +1806,6 @@ function getZScore(
     if (
         standardError <= 0
     ) {
-
         return 0;
     }
 
@@ -2219,41 +1813,28 @@ function getZScore(
     return (
         (
             observed -
-            p
+            expected
         ) /
         standardError
     );
 }
 
 
-/*
-=========================================================
-CONSISTENCY
+/* =====================================================
+   CONSISTENCY
+===================================================== */
 
-100 = windows almost identical
-0 = windows strongly disagree
-=========================================================
-*/
+function calculateConsistency(rates) {
 
-function calculateConsistency(
-    rates
-) {
-
-    if (
-        !rates.length
-    ) {
-
+    if (!rates.length) {
         return 0;
     }
 
 
     const average =
         rates.reduce(
-            (
-                total,
-                value
-            ) =>
-                total + value,
+            (sum, value) =>
+                sum + value,
             0
         ) /
         rates.length;
@@ -2261,11 +1842,8 @@ function calculateConsistency(
 
     const deviation =
         rates.reduce(
-            (
-                total,
-                value
-            ) =>
-                total +
+            (sum, value) =>
+                sum +
                 Math.abs(
                     value -
                     average
@@ -2277,40 +1855,33 @@ function calculateConsistency(
 
     return clamp(
         100 -
-        (
-            deviation *
-            6
-        ),
+        deviation * 6,
         0,
         100
     );
 }
 
 
-/*
-=========================================================
-AGREEMENT
-
-Measures how many windows are above the expected baseline.
-For an actual signal, at least two windows should agree.
-=========================================================
-*/
+/* =====================================================
+   AGREEMENT
+===================================================== */
 
 function calculateAgreement(
     rates,
     expected
 ) {
 
-    if (
-        !rates.length
-    ) {
-
+    if (!rates.length) {
         return 0;
     }
 
 
-    const tolerance =
-        1;
+    /*
+    A window must be at least
+    1 percentage point above baseline.
+    */
+
+    const tolerance = 1;
 
 
     const agreeing =
@@ -2329,18 +1900,19 @@ function calculateAgreement(
 }
 
 
-/*
-=========================================================
-MINIMUM EDGE
+/* =====================================================
+   MINIMUM EDGE
+===================================================== */
 
-The observed condition should be meaningfully above its
-mathematical baseline.
-=========================================================
-*/
+function getMinimumEdge(expected) {
 
-function getMinimumEdge(
-    expected
-) {
+    /*
+    Require an edge of roughly 5% of
+    the mathematical baseline.
+
+    Never less than 2 percentage points.
+    Never more than 5 points.
+    */
 
     return clamp(
         expected * 0.05,
@@ -2350,20 +1922,15 @@ function getMinimumEdge(
 }
 
 
-/*
-=========================================================
-SIGNAL QUALITY
-=========================================================
-*/
+/* =====================================================
+   SIGNAL QUALITY
+===================================================== */
 
-function getSignalQuality(
-    confidence
-) {
+function getSignalQuality(confidence) {
 
     if (
         confidence >= 70
     ) {
-
         return "STRONG";
     }
 
@@ -2371,7 +1938,6 @@ function getSignalQuality(
     if (
         confidence >= 60
     ) {
-
         return "MODERATE";
     }
 
@@ -2379,7 +1945,6 @@ function getSignalQuality(
     if (
         confidence >= 55
     ) {
-
         return "WEAK";
     }
 
@@ -2388,23 +1953,9 @@ function getSignalQuality(
 }
 
 
-/*
-=========================================================
-BUILD CONFIDENCE
-
-This deliberately does NOT treat raw percentage as
-confidence.
-
-It combines:
-
-1. Statistical evidence
-2. Edge above expected probability
-3. Consistency
-4. Window agreement
-5. Sample reliability
-6. Positive momentum
-=========================================================
-*/
+/* =====================================================
+   BUILD CONFIDENCE
+===================================================== */
 
 function buildConfidence(
     stats,
@@ -2426,15 +1977,26 @@ function buildConfidence(
     } = stats;
 
 
+    /*
+    IMPORTANT:
+
+    Confidence is based on the condition
+    being ABOVE its expected baseline.
+
+    Example:
+
+    MATCH = 10%
+    DIFFERS = 90%
+    EVEN = 50%
+    ODD = 50%
+
+    OVER/UNDER depend on barrier.
+    */
+
     const edge =
         weightedRate -
         expected;
 
-
-    /*
-    Only positive edge is considered
-    a trade-supporting signal.
-    */
 
     const positiveEdge =
         Math.max(
@@ -2444,7 +2006,7 @@ function buildConfidence(
 
 
     /*
-    Z scores.
+    Statistical evidence.
     */
 
     const longZ =
@@ -2471,11 +2033,8 @@ function buildConfidence(
         );
 
 
-    /*
-    Weighted statistical evidence.
-    */
-
     const weightedZ =
+
         (
             longZ *
             ANALYSIS_CONFIG.LONG_WEIGHT
@@ -2491,10 +2050,6 @@ function buildConfidence(
             ANALYSIS_CONFIG.SHORT_WEIGHT
         );
 
-
-    /*
-    Only positive evidence helps the signal.
-    */
 
     const positiveZ =
         Math.max(
@@ -2533,8 +2088,8 @@ function buildConfidence(
     /*
     Momentum.
 
-    Positive = condition became more frequent
-    in the recent window.
+    Positive means the condition has
+    become more frequent recently.
     */
 
     const momentum =
@@ -2549,9 +2104,9 @@ function buildConfidence(
         );
 
 
-    /*
-    SCORE COMPONENTS
-    */
+    /* -----------------------------------------
+       SCORE COMPONENTS
+    ----------------------------------------- */
 
     const evidenceScore =
         clamp(
@@ -2575,13 +2130,11 @@ function buildConfidence(
 
 
     const consistencyScore =
-        consistency *
-        0.15;
+        consistency * 0.15;
 
 
     const agreementScore =
-        agreement *
-        0.12;
+        agreement * 0.12;
 
 
     const sampleScore =
@@ -2600,18 +2153,18 @@ function buildConfidence(
 
     const momentumScore =
         clamp(
-            positiveMomentum *
-            0.4,
+            positiveMomentum * 0.4,
             0,
             8
         );
 
 
     /*
-    Start conservative.
+    Conservative starting score.
     */
 
     let confidence =
+
         20 +
 
         evidenceScore +
@@ -2628,7 +2181,9 @@ function buildConfidence(
 
 
     /*
-    No positive edge = no strong signal.
+    If the condition is not above
+    baseline, it cannot be a strong
+    trade-supporting signal.
     */
 
     if (
@@ -2644,41 +2199,38 @@ function buildConfidence(
 
 
     /*
-    Insufficient sample penalty.
+    Small samples are penalized.
     */
 
     if (
         sampleSize < 100
     ) {
 
-        confidence -=
-            10;
+        confidence -= 10;
     }
 
 
     /*
-    Weak agreement penalty.
+    Poor agreement penalty.
     */
 
     if (
         agreement < 66.7
     ) {
 
-        confidence -=
-            8;
+        confidence -= 8;
     }
 
 
     /*
-    Low consistency penalty.
+    Poor consistency penalty.
     */
 
     if (
         consistency < 50
     ) {
 
-        confidence -=
-            8;
+        confidence -= 8;
     }
 
 
@@ -2730,15 +2282,16 @@ function buildConfidence(
 }
 
 
-/*
-=========================================================
-ENTRY DECISION
-=========================================================
-*/
+/* =====================================================
+   ENTRY FILTER
+===================================================== */
 
-function getEntryDecision(
-    result
-) {
+function getEntryDecision(result) {
+
+    /*
+    User selected threshold is respected,
+    but never below 60%.
+    */
 
     const required =
         Math.max(
@@ -2759,25 +2312,31 @@ function getEntryDecision(
             result.sampleSize >=
             ANALYSIS_CONFIG.MIN_ENTRY_TICKS,
 
+
         confidence:
             result.confidence >=
             required,
+
 
         positiveEdge:
             result.edge >=
             minimumEdge,
 
+
         recentAboveBaseline:
             result.shortRate >
             result.expected,
+
 
         agreement:
             result.agreement >=
             ANALYSIS_CONFIG.MIN_AGREEMENT,
 
+
         consistency:
             result.consistency >=
             ANALYSIS_CONFIG.MIN_CONSISTENCY,
+
 
         evidence:
             result.weightedZ >=
@@ -2788,9 +2347,7 @@ function getEntryDecision(
     const entry =
         Object.values(
             conditions
-        ).every(
-            Boolean
-        );
+        ).every(Boolean);
 
 
     return {
@@ -2806,15 +2363,11 @@ function getEntryDecision(
 }
 
 
-/*
-=========================================================
-BUILD EXPLANATION
-=========================================================
-*/
+/* =====================================================
+   EXPLANATION
+===================================================== */
 
-function buildExplanation(
-    result
-) {
+function buildExplanation(result) {
 
     const edgeText =
         result.edge >= 0
@@ -2830,35 +2383,31 @@ function buildExplanation(
 
     return [
 
-        `Expected baseline: ${result.expected.toFixed(1)}%.`,
+        `Expected ${result.expected.toFixed(1)}%.`,
 
-        `Observed weighted rate: ${result.weightedRate.toFixed(1)}% (${edgeText}).`,
+        `Observed ${result.weightedRate.toFixed(1)}% (${edgeText}).`,
 
-        `Long ${result.longRate.toFixed(1)}% • 100-tick ${result.mediumRate.toFixed(1)}% • 30-tick ${result.shortRate.toFixed(1)}%.`,
+        `Long ${result.longRate.toFixed(1)}% • 100T ${result.mediumRate.toFixed(1)}% • 30T ${result.shortRate.toFixed(1)}%.`,
 
-        `Momentum: ${momentumText}.`,
+        `Momentum ${momentumText}.`,
 
-        `Window agreement: ${result.agreement.toFixed(0)}% • Consistency: ${result.consistency.toFixed(0)}%.`,
+        `Agreement ${result.agreement.toFixed(0)}% • Consistency ${result.consistency.toFixed(0)}%.`,
 
-        `Statistical evidence: Z ${result.weightedZ.toFixed(2)}.`,
+        `Evidence Z=${result.weightedZ.toFixed(2)}.`,
 
-        `Sample: ${result.sampleSize} ticks.`,
+        `Sample ${result.sampleSize}.`,
 
-        `Signal quality: ${result.quality}.`
+        `Quality: ${result.quality}.`
 
     ].join(" ");
 }
 
 
-/*
-=========================================================
-ANALYZE CONDITION
-=========================================================
-*/
+/* =====================================================
+   ANALYZE CONDITION
+===================================================== */
 
-function analyzeCondition(
-    model
-) {
+function analyzeCondition(model) {
 
     const stats =
         getStatistics(
@@ -2887,9 +2436,7 @@ function analyzeCondition(
             model.type,
 
         explanation:
-            buildExplanation(
-                result
-            )
+            buildExplanation(result)
     };
 
 
@@ -2923,9 +2470,7 @@ function analyzeCondition(
    MATCH MODEL
 ===================================================== */
 
-function createMatchModel(
-    digit
-) {
+function createMatchModel(digit) {
 
     return {
 
@@ -2943,25 +2488,23 @@ function createMatchModel(
 
         condition:
             tick =>
-                tick.digit ===
-                digit
+                tick.digit === digit
     };
 }
 
 
 /* =====================================================
-   FIND BEST MATCH DIGIT
+   MATCH ANALYSIS
 ===================================================== */
 
 function calculateMatch() {
 
+    const candidates = [];
+
+
     /*
-    Analyze every digit independently.
+    Analyze ALL digits, including 0.
     */
-
-    const candidates =
-        [];
-
 
     for (
         let digit = 0;
@@ -2969,25 +2512,21 @@ function calculateMatch() {
         digit++
     ) {
 
-        const result =
-            analyzeCondition(
-                createMatchModel(
-                    digit
-                )
-            );
-
-
         candidates.push(
-            result
+            analyzeCondition(
+                createMatchModel(digit)
+            )
         );
     }
 
 
     /*
-    Prefer the strongest positive edge.
+    Select the digit with the strongest
+    positive evidence.
 
-    Statistical evidence and recent momentum
-    help break ties.
+    Confidence alone is not used because
+    a digit can receive a high score from
+    a noisy short window.
     */
 
     candidates.sort(
@@ -2999,24 +2538,21 @@ function calculateMatch() {
                     Math.max(
                         0,
                         a.edge
-                    ) *
-                    2
+                    ) * 2
                 ) +
 
                 (
                     Math.max(
                         0,
                         a.weightedZ
-                    ) *
-                    3
+                    ) * 3
                 ) +
 
                 (
                     Math.max(
                         0,
                         a.momentum
-                    ) *
-                    0.4
+                    ) * 0.4
                 );
 
 
@@ -3026,24 +2562,21 @@ function calculateMatch() {
                     Math.max(
                         0,
                         b.edge
-                    ) *
-                    2
+                    ) * 2
                 ) +
 
                 (
                     Math.max(
                         0,
                         b.weightedZ
-                    ) *
-                    3
+                    ) * 3
                 ) +
 
                 (
                     Math.max(
                         0,
                         b.momentum
-                    ) *
-                    0.4
+                    ) * 0.4
                 );
 
 
@@ -3056,11 +2589,6 @@ function calculateMatch() {
         candidates[0];
 
 
-    /*
-    Make sure the display is still the
-    selected digit even if there is no signal.
-    */
-
     return {
 
         ...best,
@@ -3069,7 +2597,7 @@ function calculateMatch() {
             `MATCH ${best.display}`,
 
         explanation:
-            `Digit ${best.display} analysis. ${best.explanation}`
+            `Digit ${best.display}. ${best.explanation}`
     };
 }
 
@@ -3082,7 +2610,7 @@ function calculateDiffers(
     selectedDigit
 ) {
 
-    const model = {
+    return analyzeCondition({
 
         type:
             "DIFFERS",
@@ -3100,12 +2628,7 @@ function calculateDiffers(
             tick =>
                 tick.digit !==
                 selectedDigit
-    };
-
-
-    return analyzeCondition(
-        model
-    );
+    });
 }
 
 
@@ -3118,7 +2641,7 @@ function calculateOver(
 ) {
 
     /*
-    Digits above barrier:
+    OVER X mathematical baselines:
 
     OVER 0 = 90%
     OVER 1 = 80%
@@ -3136,12 +2659,10 @@ function calculateOver(
         (
             9 -
             selectedBarrier
-        ) /
-        10 *
-        100;
+        ) / 10 * 100;
 
 
-    const model = {
+    return analyzeCondition({
 
         type:
             "OVER",
@@ -3159,12 +2680,7 @@ function calculateOver(
             tick =>
                 tick.digit >
                 selectedBarrier
-    };
-
-
-    return analyzeCondition(
-        model
-    );
+    });
 }
 
 
@@ -3177,6 +2693,8 @@ function calculateUnder(
 ) {
 
     /*
+    UNDER X mathematical baselines:
+
     UNDER 0 = 0%
     UNDER 1 = 10%
     UNDER 2 = 20%
@@ -3190,14 +2708,11 @@ function calculateUnder(
     */
 
     const expected =
-        (
-            selectedBarrier
-        ) /
-        10 *
-        100;
+        selectedBarrier /
+        10 * 100;
 
 
-    const model = {
+    return analyzeCondition({
 
         type:
             "UNDER",
@@ -3215,12 +2730,7 @@ function calculateUnder(
             tick =>
                 tick.digit <
                 selectedBarrier
-    };
-
-
-    return analyzeCondition(
-        model
-    );
+    });
 }
 
 
@@ -3230,7 +2740,7 @@ function calculateUnder(
 
 function calculateEven() {
 
-    const model = {
+    return analyzeCondition({
 
         type:
             "EVEN",
@@ -3248,12 +2758,7 @@ function calculateEven() {
             tick =>
                 tick.digit % 2 ===
                 0
-    };
-
-
-    return analyzeCondition(
-        model
-    );
+    });
 }
 
 
@@ -3263,7 +2768,7 @@ function calculateEven() {
 
 function calculateOdd() {
 
-    const model = {
+    return analyzeCondition({
 
         type:
             "ODD",
@@ -3281,25 +2786,17 @@ function calculateOdd() {
             tick =>
                 tick.digit % 2 !==
                 0
-    };
-
-
-    return analyzeCondition(
-        model
-    );
+    });
 }
 
 
 /* =====================================================
-   APPLY ANALYSIS RESULT
+   APPLY RESULT
 ===================================================== */
 
-function applyAnalysisResult(
-    result
-) {
+function applyAnalysisResult(result) {
 
     if (!result) {
-
         return;
     }
 
@@ -3346,14 +2843,10 @@ function applyAnalysisResult(
 
 
     /*
-    IMPORTANT:
-    Entry is NOT based on confidence alone.
-    All entry filters must pass.
+    ENTRY MUST PASS EVERY FILTER.
     */
 
-    if (
-        result.entry
-    ) {
+    if (result.entry) {
 
         setText(
             entryStatus,
@@ -3372,11 +2865,6 @@ function applyAnalysisResult(
 
     } else {
 
-        /*
-        Distinguish between not enough data
-        and a weak signal.
-        */
-
         if (
             result.sampleSize <
             ANALYSIS_CONFIG.MIN_ENTRY_TICKS
@@ -3384,7 +2872,17 @@ function applyAnalysisResult(
 
             setText(
                 entryStatus,
-                `⏳ WAITING FOR MORE DATA • ${result.sampleSize}/${ANALYSIS_CONFIG.MIN_ENTRY_TICKS} ticks`
+                `⏳ WAITING FOR MORE DATA • ${result.sampleSize}/${ANALYSIS_CONFIG.MIN_ENTRY_TICKS}`
+            );
+
+        } else if (
+            result.confidence <
+            result.required
+        ) {
+
+            setText(
+                entryStatus,
+                `⛔ NO TRADE • CONFIDENCE ${result.confidence.toFixed(1)}% < ${result.required}%`
             );
 
         } else {
@@ -3409,7 +2907,7 @@ function applyAnalysisResult(
 
 
 /* =====================================================
-   MAIN ANALYZE
+   MAIN ANALYSIS
 ===================================================== */
 
 function analyze() {
@@ -3423,8 +2921,8 @@ function analyze() {
 
 
     /*
-    Not enough ticks for the multi-window
-    system.
+    Need at least 30 ticks before
+    calculating the advanced system.
     */
 
     if (
@@ -3492,11 +2990,8 @@ function analyze() {
 
 
     /*
-    Special DIFFERS mode.
-
-    Existing UI behavior preserved:
-    if mode = diff and type = MATCH,
-    analyze DIFFERS using barrier.
+    DIFF mode + MATCH button
+    means DIFFERS using the barrier.
     */
 
     if (
@@ -3511,9 +3006,7 @@ function analyze() {
 
     } else {
 
-        switch (
-            currentType
-        ) {
+        switch (currentType) {
 
             case "MATCH":
 
@@ -3567,9 +3060,42 @@ function analyze() {
     }
 
 
-    applyAnalysisResult(
-        result
+    applyAnalysisResult(result);
+}
+
+
+/* =====================================================
+   DIGIT COUNTS
+===================================================== */
+
+function getDigitCounts(data) {
+
+    const counts =
+        Array(10).fill(0);
+
+
+    data.forEach(
+        tick => {
+
+            const digit =
+                Number(
+                    tick.digit
+                );
+
+
+            if (
+                Number.isInteger(digit) &&
+                digit >= 0 &&
+                digit <= 9
+            ) {
+
+                counts[digit]++;
+            }
+        }
     );
+
+
+    return counts;
 }
 
 
@@ -3580,23 +3106,19 @@ function analyze() {
 function updateDigitGrid() {
 
     if (!digitGrid) {
-
         return;
     }
 
 
     const counts =
-        getDigitCounts(
-            ticks
-        );
+        getDigitCounts(ticks);
 
 
     const total =
         ticks.length;
 
 
-    digitGrid.innerHTML =
-        "";
+    digitGrid.innerHTML = "";
 
 
     for (
@@ -3625,11 +3147,8 @@ function updateDigitGrid() {
 
 
         /*
-        Hot threshold is now based on
-        expected 10%, rather than arbitrary
-        frequency alone.
-
-        15%+ = noticeably above baseline.
+        15% or more means the digit is
+        noticeably above the 10% baseline.
         */
 
         if (
@@ -3643,6 +3162,7 @@ function updateDigitGrid() {
 
 
         box.innerHTML = `
+
             <div class="digit-number">
                 ${digit}
             </div>
@@ -3650,6 +3170,7 @@ function updateDigitGrid() {
             <div class="digit-percent">
                 ${percentage.toFixed(1)}%
             </div>
+
         `;
 
 
@@ -3667,13 +3188,11 @@ function updateDigitGrid() {
 function updateRecentDigits() {
 
     if (!recentDigits) {
-
         return;
     }
 
 
-    recentDigits.innerHTML =
-        "";
+    recentDigits.innerHTML = "";
 
 
     ticks
@@ -3712,7 +3231,6 @@ function updateRecentDigits() {
 function updateDisplay() {
 
     if (!ticks.length) {
-
         return;
     }
 
@@ -3821,16 +3339,12 @@ function clearAnalysis() {
 
 
     if (digitGrid) {
-
-        digitGrid.innerHTML =
-            "";
+        digitGrid.innerHTML = "";
     }
 
 
     if (recentDigits) {
-
-        recentDigits.innerHTML =
-            "";
+        recentDigits.innerHTML = "";
     }
 }
 
@@ -3843,6 +3357,14 @@ function startAutoScan() {
 
     stopAutoScan();
 
+
+    /*
+    HTML says every 30 seconds,
+    so use 30 seconds here.
+
+    Live ticks still trigger analysis
+    immediately.
+    */
 
     autoScanTimer =
         setInterval(
@@ -3858,7 +3380,7 @@ function startAutoScan() {
                 }
 
             },
-            3000
+            30000
         );
 }
 
@@ -3880,9 +3402,7 @@ function stopAutoScan() {
    CLOSE
 ===================================================== */
 
-function handleClose(
-    event
-) {
+function handleClose(event) {
 
     console.warn(
         "Deriv WebSocket closed:",
@@ -3915,9 +3435,7 @@ function handleClose(
     resetConnectButton();
 
 
-    if (
-        manualDisconnect
-    ) {
+    if (manualDisconnect) {
 
         setText(
             signalTitle,
@@ -3958,7 +3476,6 @@ function handleClose(
 function scheduleReconnect() {
 
     if (reconnectTimer) {
-
         return;
     }
 
@@ -3990,9 +3507,7 @@ function scheduleReconnect() {
    ERROR
 ===================================================== */
 
-function handleError(
-    error
-) {
+function handleError(error) {
 
     console.error(
         "Deriv WebSocket error:",
@@ -4008,25 +3523,23 @@ function handleError(
 
     setText(
         signalExplanation,
-        "Unable to establish the Deriv WebSocket connection. Check the browser console."
+        "WebSocket connection error. Check the browser console."
     );
 }
 
 
 /* =====================================================
-   RESET BUTTON
+   RESET CONNECT BUTTON
 ===================================================== */
 
 function resetConnectButton() {
 
     if (!connectBtn) {
-
         return;
     }
 
 
-    connectBtn.disabled =
-        false;
+    connectBtn.disabled = false;
 
 
     connectBtn.textContent =
@@ -4078,8 +3591,7 @@ function disconnectDeriv() {
     }
 
 
-    currentSubscriptionId =
-        null;
+    currentSubscriptionId = null;
 
 
     if (ws) {
@@ -4093,9 +3605,7 @@ function disconnectDeriv() {
 
         } catch (error) {
 
-            console.warn(
-                error
-            );
+            console.warn(error);
         }
     }
 
@@ -4118,7 +3628,7 @@ function disconnectDeriv() {
 
 
 /* =====================================================
-   BUTTON EVENTS
+   CONNECT BUTTON
 ===================================================== */
 
 if (connectBtn) {
@@ -4140,6 +3650,10 @@ if (connectBtn) {
 }
 
 
+/* =====================================================
+   MARKET SELECT
+===================================================== */
+
 if (marketSelect) {
 
     marketSelect.addEventListener(
@@ -4148,6 +3662,10 @@ if (marketSelect) {
     );
 }
 
+
+/* =====================================================
+   SCAN BUTTON
+===================================================== */
 
 if (scanBtn) {
 
@@ -4172,6 +3690,10 @@ if (scanBtn) {
 }
 
 
+/* =====================================================
+   AUTO SCAN
+===================================================== */
+
 if (autoScan) {
 
     autoScan.addEventListener(
@@ -4190,6 +3712,17 @@ if (autoScan) {
             }
         }
     );
+
+
+    /*
+    Start automatically because
+    checkbox is checked in HTML.
+    */
+
+    if (autoScan.checked) {
+
+        startAutoScan();
+    }
 }
 
 
@@ -4198,9 +3731,7 @@ if (autoScan) {
 ===================================================== */
 
 document
-    .querySelectorAll(
-        ".mode"
-    )
+    .querySelectorAll(".mode")
     .forEach(
         button => {
 
@@ -4242,9 +3773,7 @@ document
 ===================================================== */
 
 document
-    .querySelectorAll(
-        ".type-button"
-    )
+    .querySelectorAll(".type-button")
     .forEach(
         button => {
 
@@ -4282,7 +3811,7 @@ document
 
 
 /* =====================================================
-   SETTINGS
+   THRESHOLD
 ===================================================== */
 
 if (threshold) {
@@ -4300,6 +3829,10 @@ if (threshold) {
 }
 
 
+/* =====================================================
+   BARRIER
+===================================================== */
+
 if (barrier) {
 
     barrier.addEventListener(
@@ -4314,6 +3847,10 @@ if (barrier) {
     );
 }
 
+
+/* =====================================================
+   TICK COUNT
+===================================================== */
 
 if (tickCount) {
 
@@ -4343,33 +3880,41 @@ console.log(
     "======================================"
 );
 
-
 console.log(
     "DERIV PRO SIGNAL SCANNER"
 );
 
-
 console.log(
-    "Advanced analysis only"
+    "ADVANCED ANALYSIS ONLY"
 );
-
 
 console.log(
     "NO AUTOMATIC TRADING"
 );
 
+console.log(
+    "Analysis windows: 30 / 100 / 1000"
+);
+
+console.log(
+    "Minimum analysis ticks:",
+    ANALYSIS_CONFIG.MIN_ANALYSIS_TICKS
+);
+
+console.log(
+    "Minimum entry ticks:",
+    ANALYSIS_CONFIG.MIN_ENTRY_TICKS
+);
+
+console.log(
+    "Minimum entry confidence:",
+    ANALYSIS_CONFIG.MIN_ENTRY_CONFIDENCE
+);
 
 console.log(
     "Deriv endpoint:",
     DERIV_WS
 );
-
-
-console.log(
-    "Analysis windows:",
-    "30 / 100 / 1000"
-);
-
 
 console.log(
     "======================================"
