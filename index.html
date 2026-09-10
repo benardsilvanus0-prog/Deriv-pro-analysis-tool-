@@ -2,3772 +2,2995 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#07111f">
-<meta name="description" content="Deriv Expert Trader Analysis Tool - Analysis Only">
-<title>Expert Trader Analysis Tool</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#ffffff">
+<title>Expert Trader Analysis</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 :root{
-    --bg:#07111f;
-    --panel:#0d1a2b;
-    --panel2:#101f33;
-    --panel3:#14263d;
-    --border:#203650;
-    --text:#eaf2ff;
-    --muted:#8fa6c2;
-    --green:#22c55e;
-    --green2:#16a34a;
-    --red:#ef4444;
-    --yellow:#f59e0b;
-    --blue:#3b82f6;
-    --cyan:#06b6d4;
-    --purple:#8b5cf6;
-    --shadow:0 12px 35px rgba(0,0,0,.25);
+  --bg:#f7f9ff;
+  --card:#fff;
+  --line:#dfe5ff;
+  --text:#17234a;
+  --muted:#7180a3;
+  --blue:#3d3ce8;
+  --cyan:#19b8ed;
+  --pink:#ed2c91;
+  --purple:#7650e9;
+  --green:#10a66a;
+  --orange:#f59b45;
+  --red:#ff3d5a;
+  --shadow:0 10px 30px rgba(71,82,160,.10)
 }
 
 *{
-    box-sizing:border-box;
-}
-
-html,
-body{
-    margin:0;
-    padding:0;
-    min-height:100%;
-    font-family:Inter,Arial,Helvetica,sans-serif;
-    background:var(--bg);
-    color:var(--text);
+  box-sizing:border-box
 }
 
 body{
-    overflow-x:hidden;
+  margin:0;
+  background:linear-gradient(135deg,#fbfcff,#f6f8ff);
+  font-family:Inter,Arial,sans-serif;
+  color:var(--text)
 }
 
 button,
-select,
-input{
-    font:inherit;
+select{
+  font:inherit
 }
 
 button{
-    cursor:pointer;
+  cursor:pointer
+}
+
+.app{
+  width:min(1180px,96%);
+  margin:10px auto 35px;
+  background:rgba(255,255,255,.72);
+  border:1px solid #e1e6fb;
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  padding:14px
 }
 
 .top{
-    position:sticky;
-    top:0;
-    z-index:100;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:20px;
-    padding:14px 22px;
-    background:rgba(7,17,31,.94);
-    border-bottom:1px solid var(--border);
-    backdrop-filter:blur(14px);
-}
-
-.brand{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    min-width:240px;
+  display:flex;
+  align-items:center;
+  gap:18px;
+  padding:8px 12px 18px;
+  border-bottom:1px solid var(--line)
 }
 
 .logo{
-    width:40px;
-    height:40px;
-    display:grid;
-    place-items:center;
-    border-radius:12px;
-    background:linear-gradient(135deg,var(--blue),var(--purple));
-    font-weight:900;
+  font-size:29px;
+  font-weight:900;
+  color:#e51d8a;
+  text-shadow:0 5px 20px #eab1db
 }
 
-.brand-title{
-    font-weight:800;
-    font-size:15px;
+.logo-line{
+  width:145px;
+  height:3px;
+  background:linear-gradient(90deg,#ed2c91,#6d2be8);
+  border-radius:8px;
+  margin-top:4px
 }
 
-.brand-sub{
-    color:var(--muted);
-    font-size:11px;
-    margin-top:3px;
-}
-
-.toolbar{
-    display:flex;
-    align-items:center;
-    justify-content:flex-end;
-    gap:8px;
-    flex-wrap:wrap;
-}
-
-select,
-input{
-    background:var(--panel2);
-    color:var(--text);
-    border:1px solid var(--border);
-    border-radius:9px;
-    padding:9px 11px;
-    outline:none;
-}
-
-select:focus,
-input:focus{
-    border-color:var(--blue);
-}
-
-.btn{
-    border:1px solid var(--border);
-    background:var(--panel2);
-    color:var(--text);
-    padding:9px 13px;
-    border-radius:9px;
-    font-weight:700;
-}
-
-.btn:hover{
-    background:var(--panel3);
-}
-
-.btn.primary{
-    background:var(--blue);
-    border-color:var(--blue);
-}
-
-.btn.primary:hover{
-    background:#2563eb;
-}
-
-.btn.danger{
-    background:rgba(239,68,68,.12);
-    border-color:rgba(239,68,68,.35);
-    color:#fecaca;
-}
-
-.page{
-    width:min(1500px,96%);
-    margin:0 auto;
-    padding:22px 0 40px;
-}
-
-.hero{
-    display:grid;
-    grid-template-columns:1.4fr .7fr .7fr;
-    gap:14px;
-    margin-bottom:14px;
-}
-
-.card{
-    background:linear-gradient(145deg,var(--panel),var(--panel2));
-    border:1px solid var(--border);
-    border-radius:15px;
-    box-shadow:var(--shadow);
-}
-
-.hero-card{
-    padding:18px;
-}
-
-.hero-label{
-    color:var(--muted);
-    font-size:11px;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-}
-
-.hero-value{
-    font-size:27px;
-    font-weight:900;
-    margin-top:6px;
-}
-
-.hero-small{
-    color:var(--muted);
-    font-size:12px;
-    margin-top:4px;
-}
-
-.status-dot{
-    display:inline-block;
-    width:9px;
-    height:9px;
-    border-radius:50%;
-    background:var(--red);
-    margin-right:7px;
-}
-
-.status-dot.online{
-    background:var(--green);
-    box-shadow:0 0 12px rgba(34,197,94,.7);
+.sub{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:5px
 }
 
 .controls{
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    gap:10px;
-    margin-bottom:14px;
+  display:flex;
+  align-items:end;
+  gap:8px;
+  margin-left:auto;
+  flex-wrap:wrap
 }
 
-.control{
-    padding:12px;
+.field label{
+  display:block;
+  font-size:10px;
+  font-weight:800;
+  color:#607099;
+  margin:0 0 5px 2px
 }
 
-.control label{
-    display:block;
-    color:var(--muted);
-    font-size:10px;
-    text-transform:uppercase;
-    margin-bottom:7px;
-    letter-spacing:.07em;
+select{
+  height:38px;
+  border:1px solid #cfd7ff;
+  border-radius:8px;
+  background:#fff;
+  color:#26314f;
+  padding:0 28px 0 12px;
+  min-width:120px;
+  box-shadow:0 2px 7px rgba(60,60,180,.06)
 }
 
-.control select,
-.control input{
-    width:100%;
+.smallselect{
+  min-width:92px
 }
 
-.typebar{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    padding:10px;
-    margin-bottom:14px;
+.btn{
+  height:38px;
+  border:0;
+  border-radius:9px;
+  padding:0 16px;
+  font-weight:800;
+  color:#fff;
+  background:linear-gradient(135deg,#4037df,#6834d7);
+  box-shadow:0 6px 14px rgba(67,55,220,.20)
 }
 
-.type-btn{
-    border:1px solid var(--border);
-    background:var(--panel2);
-    color:var(--muted);
-    border-radius:9px;
-    padding:10px 15px;
-    font-weight:800;
+.btn.red{
+  background:linear-gradient(135deg,#ff6b55,#ff0755)
 }
 
-.type-btn.active{
-    color:white;
-    background:linear-gradient(135deg,#2563eb,#7c3aed);
-    border-color:#5b6ee1;
+.btn.green{
+  background:linear-gradient(135deg,#10ae70,#00955d)
 }
 
-.progress-card{
-    padding:14px;
-    margin-bottom:14px;
+.btn.gray{
+  background:#6f6f7e
 }
 
-.progress-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-    font-size:12px;
-    margin-bottom:8px;
+.btn.light{
+  background:#fff;
+  color:#33405f;
+  border:1px solid #d6ddfb;
+  box-shadow:none
 }
 
-.progress{
-    height:9px;
-    background:#07101d;
-    border-radius:99px;
-    overflow:hidden;
+.statusbar{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:-45px;
+  margin-bottom:18px;
+  pointer-events:none
 }
 
-.progress-bar{
-    width:0%;
-    height:100%;
-    background:linear-gradient(90deg,var(--blue),var(--cyan));
-    transition:width .25s ease;
+.pill{
+  padding:9px 13px;
+  border-radius:9px;
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  box-shadow:var(--shadow)
 }
 
-.grid{
-    display:grid;
-    grid-template-columns:1.1fr .9fr;
-    gap:14px;
+.connector{
+  background:#0aa66b
 }
 
-.matches{
-    padding:16px;
+.risk{
+  background:#0b9e66
 }
 
-.section-title{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-    margin-bottom:13px;
+.logout{
+  background:#ff4050
 }
 
-.section-title h2{
-    margin:0;
-    font-size:15px;
+.market-card{
+  margin:24px 0 20px;
+  padding:15px;
+  text-align:center;
+  background:#fff;
+  border:1px solid #e6eaff;
+  border-radius:13px;
+  box-shadow:var(--shadow)
 }
 
-.section-title span{
-    color:var(--muted);
-    font-size:11px;
+.market-name{
+  font-size:15px;
+  font-weight:800
 }
 
-.match-grid{
-    display:grid;
-    grid-template-columns:repeat(10,1fr);
-    gap:8px;
+.price{
+  font-size:22px;
+  font-weight:900;
+  color:#3e40e6;
+  margin-top:8px
+}
+
+.market-meta{
+  font-size:10px;
+  color:var(--muted);
+  margin-top:3px
+}
+
+.start-wrap{
+  text-align:center;
+  margin:16px
+}
+
+.start{
+  width:180px;
+  height:44px;
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(135deg,#ff9e24,#ff0753);
+  color:#fff;
+  font-weight:900;
+  font-size:14px;
+  box-shadow:0 8px 20px rgba(255,65,65,.22)
+}
+
+.digit-panel{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  padding:18px 35px;
+  background:linear-gradient(110deg,#effcff,#eef0ff);
+  border-radius:13px;
+  border:1px solid #e1e7ff
+}
+
+.digit-group{
+  text-align:center
+}
+
+.digit-title{
+  font-weight:900;
+  color:#11b9ef;
+  margin-bottom:13px
+}
+
+.digits{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px
 }
 
 .digit{
-    position:relative;
-    min-height:82px;
-    padding:10px 6px;
-    background:#091625;
-    border:1px solid var(--border);
-    border-radius:11px;
-    text-align:center;
-    overflow:hidden;
+  height:34px;
+  background:#fff;
+  border:1px solid #cfd8ff;
+  border-radius:7px;
+  color:#25304d;
+  font-weight:800;
+  box-shadow:0 3px 8px rgba(69,78,170,.08)
 }
 
-.digit.best{
-    border-color:var(--green);
-    box-shadow:0 0 18px rgba(34,197,94,.15);
+.digit.active{
+  border-color:#4e36e5;
+  background:#eeeaff;
+  color:#402be2;
+  box-shadow:0 0 0 2px #6d54ec55
 }
 
-.digit-number{
-    font-size:21px;
-    font-weight:900;
+.actionbar{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  margin:18px 0;
+  padding:18px;
+  background:linear-gradient(90deg,#fff0f8,#f0edff);
+  border-radius:12px
 }
 
-.digit-prob{
-    font-size:12px;
-    color:var(--muted);
-    margin-top:4px;
+.action{
+  border:0;
+  border-radius:10px;
+  padding:11px 26px;
+  color:#fff;
+  font-weight:900;
+  box-shadow:0 5px 12px rgba(55,50,180,.18)
 }
 
-.digit-bar{
-    position:absolute;
-    bottom:0;
-    left:0;
-    width:100%;
-    height:3px;
-    background:var(--blue);
-    transform-origin:left;
+.over{
+  background:#a778e9
 }
 
-.summary-grid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:10px;
+.even{
+  background:#ff9b90
+}
+
+.start2{
+  background:#4038df
+}
+
+.odd{
+  background:#6fc8e8
+}
+
+.under{
+  background:#f29a61
+}
+
+.progress{
+  padding:15px 14px;
+  background:linear-gradient(90deg,#fff8ef,#fff0f8);
+  border-radius:12px;
+  border:1px solid #f3e6e8
+}
+
+.prow{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:7px 0
+}
+
+.prow strong{
+  width:100px;
+  font-size:11px
+}
+
+.bar{
+  height:10px;
+  flex:1;
+  background:#f0e9f2;
+  border-radius:20px;
+  overflow:hidden
+}
+
+.fill{
+  height:100%;
+  width:0;
+  border-radius:20px;
+  background:linear-gradient(90deg,#208bf1,#7352ec)
+}
+
+.fill.data{
+  background:linear-gradient(90deg,#17b6a4,#16b9c8)
+}
+
+.pct{
+  width:38px;
+  text-align:right;
+  font-size:11px;
+  font-weight:800
+}
+
+.matches{
+  margin:16px 0;
+  padding:16px;
+  text-align:center;
+  background:linear-gradient(90deg,#effbf9,#eefdfb);
+  border-radius:12px;
+  border:1px solid #e0f0ed
+}
+
+.matchrow{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px
+}
+
+.matchbtn{
+  border:0;
+  background:#3d31d5;
+  color:#fff;
+  border-radius:7px;
+  padding:8px 17px;
+  font-weight:900
+}
+
+.center-digit{
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  font-size:22px;
+  font-weight:900;
+  color:#fff;
+  background:linear-gradient(135deg,#7c42d9,#20b4d5);
+  box-shadow:
+    0 0 0 5px #d9dcff,
+    0 8px 20px #7e75d955
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e2e7fb;
+  border-radius:12px;
+  padding:16px;
+  box-shadow:var(--shadow)
+}
+
+.title{
+  font-size:14px;
+  font-weight:900;
+  color:#20aee8;
+  margin-bottom:12px
+}
+
+.chartbox{
+  height:245px;
+  position:relative
+}
+
+.last{
+  text-align:center;
+  color:#4055e8;
+  font-size:20px;
+  font-weight:900;
+  margin-top:3px
+}
+
+.status-card{
+  margin-top:16px
+}
+
+.status-grid{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:8px
 }
 
 .metric{
-    padding:14px;
-    border-radius:12px;
-    background:#091625;
-    border:1px solid var(--border);
+  background:#fafbff;
+  border:1px solid #e8ecfb;
+  border-radius:8px;
+  padding:10px
 }
 
-.metric-label{
-    color:var(--muted);
-    font-size:10px;
-    text-transform:uppercase;
-    letter-spacing:.06em;
+.metric small{
+  display:block;
+  color:#8390ae;
+  font-size:9px
 }
 
-.metric-value{
-    font-size:21px;
-    font-weight:900;
-    margin-top:6px;
-}
-
-.metric-note{
-    color:var(--muted);
-    font-size:10px;
-    margin-top:4px;
-}
-
-.analysis-status{
-    margin-top:12px;
-    padding:14px;
-    border-radius:12px;
-    border:1px solid var(--border);
-    background:#091625;
+.metric b{
+  display:block;
+  margin-top:5px;
+  font-size:14px
 }
 
 .signal{
-    font-size:20px;
-    font-weight:900;
+  margin-top:12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px
 }
 
-.signal.green{
-    color:var(--green);
+.signalbar{
+  height:9px;
+  flex:1;
+  background:#eceafa;
+  border-radius:20px;
+  overflow:hidden
 }
 
-.signal.red{
-    color:var(--red);
+.signalfill{
+  height:100%;
+  width:0;
+  background:linear-gradient(90deg,#1e8df2,#7752ea);
+  border-radius:20px
 }
 
-.signal.yellow{
-    color:var(--yellow);
+.signaltext{
+  font-size:12px;
+  font-weight:900;
+  padding:9px 12px;
+  border-radius:8px;
+  background:#eafff5;
+  color:#07935d;
+  white-space:nowrap
 }
 
-.status-message{
-    color:var(--muted);
-    font-size:12px;
-    margin-top:6px;
-    line-height:1.5;
+.settings{
+  margin-top:16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap
 }
 
-.chart-card{
-    padding:16px;
-    margin-top:14px;
+.settings .field select{
+  height:35px
 }
 
-.chart-wrap{
-    height:310px;
-    position:relative;
-}
-
-.bottom-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-    margin-top:14px;
-}
-
-.table-card{
-    padding:16px;
-    overflow:auto;
-}
-
-table{
-    width:100%;
-    border-collapse:collapse;
-    font-size:12px;
-}
-
-th,
-td{
-    padding:9px 7px;
-    border-bottom:1px solid var(--border);
-    text-align:left;
-}
-
-th{
-    color:var(--muted);
-    font-size:10px;
-    text-transform:uppercase;
-}
-
-.good{
-    color:var(--green);
-}
-
-.bad{
-    color:var(--red);
-}
-
-.warn{
-    color:var(--yellow);
+.check{
+  margin-left:auto;
+  font-size:11px;
+  font-weight:800
 }
 
 .log{
-    height:200px;
-    overflow:auto;
-    background:#050d17;
-    border-radius:10px;
-    padding:10px;
-    font-family:monospace;
-    font-size:11px;
-    color:#a9bfd9;
+  margin-top:16px;
+  background:#10162b;
+  color:#dce6ff;
+  border-radius:10px;
+  padding:10px;
+  font:11px/1.5 monospace;
+  max-height:150px;
+  overflow:auto
 }
 
-.log-line{
-    margin-bottom:5px;
+.log .err{
+  color:#ff8997
+}
+
+.log .ok{
+  color:#6ce7ac
 }
 
 .footer{
-    margin-top:20px;
-    text-align:center;
-    color:var(--muted);
-    font-size:11px;
-    line-height:1.6;
+  text-align:center;
+  color:#8994b2;
+  font-size:10px;
+  margin:18px 0 4px
 }
 
-.modal{
-    display:none;
-    position:fixed;
-    inset:0;
-    z-index:300;
-    background:rgba(0,0,0,.7);
-    align-items:center;
-    justify-content:center;
-    padding:20px;
-}
+@media(max-width:900px){
 
-.modal.show{
-    display:flex;
-}
+  .top{
+    align-items:flex-start;
+    flex-direction:column
+  }
 
-.modal-box{
-    width:min(650px,100%);
-    max-height:85vh;
-    overflow:auto;
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:16px;
-    padding:20px;
-    box-shadow:var(--shadow);
-}
+  .controls{
+    margin-left:0
+  }
 
-.modal-head{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-}
-
-.modal-head h3{
+  .statusbar{
     margin:0;
+    justify-content:flex-start
+  }
+
+  .status-grid{
+    grid-template-columns:repeat(3,1fr)
+  }
+
 }
 
-.close{
-    border:0;
-    background:transparent;
-    color:var(--muted);
-    font-size:25px;
-    cursor:pointer;
-}
+@media(max-width:650px){
 
-.modal-body{
-    color:#c4d2e5;
-    font-size:13px;
-    line-height:1.7;
-}
+  .grid,
+  .digit-panel{
+    grid-template-columns:1fr
+  }
 
-.toast{
-    position:fixed;
-    right:18px;
-    bottom:18px;
-    z-index:500;
-    background:#102238;
-    border:1px solid var(--border);
-    color:white;
-    padding:12px 15px;
-    border-radius:10px;
-    box-shadow:var(--shadow);
-    transform:translateY(100px);
-    opacity:0;
-    transition:.25s;
-    max-width:360px;
-    font-size:12px;
-}
+  .status-grid{
+    grid-template-columns:repeat(2,1fr)
+  }
 
-.toast.show{
-    transform:translateY(0);
-    opacity:1;
-}
+  .actionbar{
+    flex-wrap:wrap
+  }
 
-.small{
-    font-size:11px;
-    color:var(--muted);
-}
+  .digits{
+    gap:6px
+  }
 
-@media(max-width:1100px){
-    .controls{
-        grid-template-columns:repeat(4,1fr);
-    }
+  .digit-panel{
+    padding:14px
+  }
 
-    .hero{
-        grid-template-columns:1fr 1fr;
-    }
+  .app{
+    width:98%;
+    padding:8px
+  }
 
-    .hero-card:first-child{
-        grid-column:1/-1;
-    }
-}
-
-@media(max-width:800px){
-    .top{
-        position:relative;
-        align-items:flex-start;
-        flex-direction:column;
-    }
-
-    .toolbar{
-        width:100%;
-        justify-content:flex-start;
-    }
-
-    .controls{
-        grid-template-columns:repeat(2,1fr);
-    }
-
-    .grid,
-    .bottom-grid{
-        grid-template-columns:1fr;
-    }
-
-    .match-grid{
-        grid-template-columns:repeat(5,1fr);
-    }
-}
-
-@media(max-width:500px){
-    .page{
-        width:94%;
-    }
-
-    .hero{
-        grid-template-columns:1fr;
-    }
-
-    .hero-card:first-child{
-        grid-column:auto;
-    }
-
-    .controls{
-        grid-template-columns:1fr;
-    }
-
-    .match-grid{
-        grid-template-columns:repeat(5,1fr);
-    }
-
-    .type-btn{
-        flex:1;
-    }
 }
 </style>
 </head>
 
 <body>
 
+<div class="app">
+
 <header class="top">
-    <div class="brand">
-        <div class="logo">ET</div>
-        <div>
-            <div class="brand-title">Expert Trader Analysis Tool</div>
-            <div class="brand-sub">Deriv digit market intelligence • Analysis only</div>
-        </div>
+
+  <div>
+    <div class="logo">Expert Trader</div>
+    <div class="logo-line"></div>
+    <div class="sub">
+      Deriv digit market intelligence • Analysis only
+    </div>
+  </div>
+
+  <div class="controls">
+
+    <div class="field">
+      <label>Market</label>
+      <select id="market"></select>
     </div>
 
-    <div class="toolbar">
-        <button class="btn primary" id="connectBtn">Connect</button>
-        <button class="btn" id="refreshBtn">Refresh</button>
-        <button class="btn" id="themeBtn">Theme</button>
-        <button class="btn" id="helpBtn">Help</button>
+    <div class="field">
+      <label>Contract Type</label>
+      <select id="contract">
+        <option value="OVER">OVER</option>
+        <option value="UNDER">UNDER</option>
+        <option value="MATCH">MATCH</option>
+        <option value="DIFF">DIFFERS</option>
+        <option value="EVEN">EVEN</option>
+        <option value="ODD">ODD</option>
+      </select>
     </div>
+
+    <div class="field">
+      <label>Duration</label>
+      <select id="duration">
+        <option value="10">10 Ticks</option>
+        <option value="25">25 Ticks</option>
+        <option value="50">50 Ticks</option>
+        <option value="100" selected>100 Ticks</option>
+        <option value="300">300 Ticks</option>
+        <option value="500">500 Ticks</option>
+        <option value="1000">1000 Ticks</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Analysis</label>
+      <select id="sample">
+        <option value="100">100</option>
+        <option value="300">300</option>
+        <option value="500" selected>500</option>
+        <option value="1000">1000</option>
+        <option value="2000">2000</option>
+      </select>
+    </div>
+
+    <button class="btn" id="mode">
+      Analysis ▼
+    </button>
+
+    <button class="btn red" id="logout">
+      Logout
+    </button>
+
+  </div>
+
 </header>
 
-<main class="page">
-
-    <section class="hero">
-
-        <div class="card hero-card">
-            <div class="hero-label">Selected market</div>
-            <div class="hero-value" id="heroMarket">Loading...</div>
-            <div class="hero-small" id="marketSub">Waiting for Deriv market data</div>
-        </div>
-
-        <div class="card hero-card">
-            <div class="hero-label">Current price</div>
-            <div class="hero-value" id="price">—</div>
-            <div class="hero-small" id="lastDigitText">Last digit: —</div>
-        </div>
-
-        <div class="card hero-card">
-            <div class="hero-label">Connection</div>
-            <div class="hero-value" style="font-size:18px">
-                <span class="status-dot" id="connectionDot"></span>
-                <span id="connection">Disconnected</span>
-            </div>
-            <div class="hero-small" id="tickStatus">No ticks</div>
-        </div>
-
-    </section>
-
-    <section class="controls">
-
-        <div class="card control">
-            <label>Market</label>
-            <select id="market">
-                <option value="">Loading markets...</option>
-            </select>
-        </div>
-
-        <div class="card control">
-            <label>Contract</label>
-            <select id="contract">
-                <option value="OVER">OVER</option>
-                <option value="UNDER">UNDER</option>
-                <option value="MATCH">MATCH</option>
-                <option value="DIFF">DIFFERS</option>
-                <option value="EVEN">EVEN</option>
-                <option value="ODD">ODD</option>
-            </select>
-        </div>
-
-        <div class="card control">
-            <label>Duration</label>
-            <select id="duration">
-                <option value="10">10 ticks</option>
-                <option value="25">25 ticks</option>
-                <option value="50">50 ticks</option>
-                <option value="100" selected>100 ticks</option>
-                <option value="300">300 ticks</option>
-                <option value="500">500 ticks</option>
-                <option value="1000">1000 ticks</option>
-            </select>
-        </div>
-
-        <div class="card control">
-            <label>Analysis sample</label>
-            <select id="analysisTicks">
-                <option value="100">100 ticks</option>
-                <option value="300">300 ticks</option>
-                <option value="500" selected>500 ticks</option>
-                <option value="1000">1000 ticks</option>
-                <option value="2000">2000 ticks</option>
-            </select>
-        </div>
-
-        <div class="card control">
-            <label>Barrier</label>
-            <select id="barrier">
-                <option value="0">0</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4" selected>4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-            </select>
-        </div>
-
-        <div class="card control">
-            <label>Minimum confidence</label>
-            <select id="threshold">
-                <option value="55">55%</option>
-                <option value="60">60%</option>
-                <option value="65" selected>65%</option>
-                <option value="70">70%</option>
-                <option value="75">75%</option>
-                <option value="80">80%</option>
-            </select>
-        </div>
-
-        <div class="card control">
-            <label>Auto analysis</label>
-            <select id="auto">
-                <option value="off" selected>OFF</option>
-                <option value="on">Every 30 sec</option>
-            </select>
-        </div>
-
-    </section>
-
-    <section class="card typebar">
-        <button class="type-btn active" data-type="OVER">OVER</button>
-        <button class="type-btn" data-type="UNDER">UNDER</button>
-        <button class="type-btn" data-type="MATCH">MATCH</button>
-        <button class="type-btn" data-type="DIFF">DIFFERS</button>
-        <button class="type-btn" data-type="EVEN">EVEN</button>
-        <button class="type-btn" data-type="ODD">ODD</button>
-    </section>
-
-    <section class="card progress-card">
-
-        <div class="progress-row">
-            <span>Historical data</span>
-            <strong id="dataBarText">0 / 500</strong>
-        </div>
-
-        <div class="progress">
-            <div class="progress-bar" id="dataBar"></div>
-        </div>
-
-        <div style="height:10px"></div>
-
-        <div class="progress-row">
-            <span>Analysis confidence</span>
-            <strong id="confidenceText">0%</strong>
-        </div>
-
-        <div class="progress">
-            <div class="progress-bar" id="confidenceBar"></div>
-        </div>
-
-    </section>
-
-    <section class="grid">
-
-        <div class="card matches">
-
-            <div class="section-title">
-                <h2>Digit probability matrix</h2>
-                <span id="sampleText">0 samples</span>
-            </div>
-
-            <div class="match-grid" id="matches"></div>
-
-        </div>
-
-        <div class="card matches">
-
-            <div class="section-title">
-                <h2>Analysis result</h2>
-                <span id="modeStatus">Analysis only</span>
-            </div>
-
-            <div class="summary-grid">
-
-                <div class="metric">
-                    <div class="metric-label">Best digit</div>
-                    <div class="metric-value" id="bestDigit">—</div>
-                    <div class="metric-note" id="bestDigitNote">Waiting for data</div>
-                </div>
-
-                <div class="metric">
-                    <div class="metric-label">Probability</div>
-                    <div class="metric-value" id="bestProbability">—</div>
-                    <div class="metric-note">Estimated historical frequency</div>
-                </div>
-
-                <div class="metric">
-                    <div class="metric-label">Edge</div>
-                    <div class="metric-value" id="edge">—</div>
-                    <div class="metric-note">Against theoretical baseline</div>
-                </div>
-
-                <div class="metric">
-                    <div class="metric-label">Z-score</div>
-                    <div class="metric-value" id="zscore">—</div>
-                    <div class="metric-note">Statistical deviation</div>
-                </div>
-
-                <div class="metric">
-                    <div class="metric-label">Consistency</div>
-                    <div class="metric-value" id="consistency">—</div>
-                    <div class="metric-note">Agreement across windows</div>
-                </div>
-
-                <div class="metric">
-                    <div class="metric-label">Entropy</div>
-                    <div class="metric-value" id="entropy">—</div>
-                    <div class="metric-note">Lower can mean concentration</div>
-                </div>
-
-            </div>
-
-            <div class="analysis-status">
-                <div class="signal yellow" id="analysisStatus">
-                    WAITING FOR DATA
-                </div>
-
-                <div class="status-message" id="message">
-                    Connect to Deriv and load historical ticks.
-                </div>
-
-                <div class="status-message">
-                    Entry point:
-                    <strong id="entry">—</strong>
-                </div>
-            </div>
-
-        </div>
-
-    </section>
-
-    <section class="card chart-card">
-
-        <div class="section-title">
-            <h2>Digit distribution</h2>
-            <span>0–9 probability</span>
-        </div>
-
-        <div class="chart-wrap">
-            <canvas id="frequency"></canvas>
-        </div>
-
-    </section>
-
-    <section class="bottom-grid">
-
-        <div class="card table-card">
-
-            <div class="section-title">
-                <h2>Statistical windows</h2>
-                <span>Multi-window confirmation</span>
-            </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Window</th>
-                        <th>Probability</th>
-                        <th>Edge</th>
-                        <th>Z</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-
-                <tbody id="windowTable">
-                    <tr>
-                        <td colspan="5" class="small">Waiting for analysis...</td>
-                    </tr>
-                </tbody>
-            </table>
-
-        </div>
-
-        <div class="card table-card">
-
-            <div class="section-title">
-                <h2>System log</h2>
-                <span>Diagnostics</span>
-            </div>
-
-            <div class="log" id="log"></div>
-
-        </div>
-
-    </section>
-
-    <div class="footer">
-        <strong>Analysis only.</strong>
-        This tool does not place trades or guarantee profits.
-        Statistical results describe historical tick behavior and can fail in future markets.
-    </div>
-
-</main>
-
-<div class="modal" id="modal">
-    <div class="modal-box">
-        <div class="modal-head">
-            <h3 id="modalTitle">Help</h3>
-            <button class="close" id="close">&times;</button>
-        </div>
-
-        <div class="modal-body" id="modalBody">
-            <p>
-                This application is an analysis tool only. It connects to public
-                Deriv market data, downloads historical ticks and monitors live ticks.
-            </p>
-
-            <p>
-                For a 100-tick duration, the analyzer checks the digit approximately
-                100 ticks after each historical entry point. This is different from
-                simply counting the most recent digits.
-            </p>
-
-            <p>
-                <strong>NO SIGNAL</strong> means the statistical evidence does not
-                meet the configured requirements.
-            </p>
-
-            <p>
-                No statistical model can guarantee a winning result.
-            </p>
-        </div>
-    </div>
+<div class="statusbar">
+  <span class="pill connector" id="connector">
+    ● Connecting
+  </span>
+
+  <span class="pill risk">
+    🛡 Risk Management
+  </span>
 </div>
 
-<div class="toast" id="toast"></div>
+<section class="market-card">
+
+  <div class="market-name" id="marketName">
+    Loading Deriv markets…
+  </div>
+
+  <div class="market-meta" id="marketMeta">
+    Public market data
+  </div>
+
+  <div class="price" id="price">
+    0.0000
+  </div>
+
+  <div class="market-meta">
+    Last digit:
+    <b id="lastDigit">—</b>
+  </div>
+
+</section>
+
+<div class="start-wrap">
+
+  <button class="start" id="start">
+    ▶ Start Analysis
+  </button>
+
+</div>
+
+<section class="digit-panel">
+
+  <div class="digit-group">
+
+    <div class="digit-title">
+      Over
+    </div>
+
+    <div class="digits" id="overDigits"></div>
+
+  </div>
+
+  <div class="digit-group">
+
+    <div class="digit-title">
+      Under
+    </div>
+
+    <div class="digits" id="underDigits"></div>
+
+  </div>
+
+</section>
+
+<section class="actionbar">
+
+  <button class="action over" data-contract="OVER">
+    Over
+  </button>
+
+  <button class="action even" data-contract="EVEN">
+    Even
+  </button>
+
+  <button class="action start2" id="start2">
+    Start
+  </button>
+
+  <button class="action odd" data-contract="ODD">
+    Odd
+  </button>
+
+  <button class="action under" data-contract="UNDER">
+    Under
+  </button>
+
+</section>
+
+<section class="progress">
+
+  <div class="prow">
+    <strong>Confidence</strong>
+    <div class="bar">
+      <div class="fill" id="confidenceFill"></div>
+    </div>
+    <div class="pct" id="confidencePct">
+      0%
+    </div>
+  </div>
+
+  <div class="prow">
+    <strong>Data Progress</strong>
+    <div class="bar">
+      <div class="fill data" id="dataFill"></div>
+    </div>
+    <div class="pct" id="dataPct">
+      0%
+    </div>
+  </div>
+
+</section>
+
+<section class="matches">
+
+  <div class="matchrow">
+
+    <button class="matchbtn">
+      Matches
+    </button>
+
+    <div class="center-digit" id="centerDigit">
+      —
+    </div>
+
+    <button class="matchbtn">
+      Differs
+    </button>
+
+  </div>
+
+</section>
+
+<section class="grid">
+
+  <div class="card">
+
+    <div class="title">
+      Frequency Distribution
+    </div>
+
+    <div class="chartbox">
+      <canvas id="frequencyChart"></canvas>
+    </div>
+
+    <div class="last">
+      Last Digit:
+      <span id="lastDigitBig">-</span>
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="title">
+      Trading Pattern (Live Data)
+    </div>
+
+    <div class="chartbox">
+      <canvas id="patternChart"></canvas>
+    </div>
+
+  </div>
+
+</section>
+
+<section class="card status-card">
+
+  <div class="title">
+    Analysis Status
+  </div>
+
+  <div class="status-grid">
+
+    <div class="metric">
+      <small>Status</small>
+      <b id="status">Waiting</b>
+    </div>
+
+    <div class="metric">
+      <small>Tick Data</small>
+      <b id="tickCount">0</b>
+    </div>
+
+    <div class="metric">
+      <small>Mode</small>
+      <b id="modeText">ANALYSIS</b>
+    </div>
+
+    <div class="metric">
+      <small>Pattern</small>
+      <b id="pattern">—</b>
+    </div>
+
+    <div class="metric">
+      <small>Best Digit</small>
+      <b id="bestDigit">—</b>
+    </div>
+
+    <div class="metric">
+      <small>Signal Confidence</small>
+      <b id="signalConfidence">0%</b>
+    </div>
+
+  </div>
+
+  <div class="signal">
+
+    <div class="signalbar">
+      <div class="signalfill" id="signalFill"></div>
+    </div>
+
+    <div class="signaltext" id="signalText">
+      No signal
+    </div>
+
+  </div>
+
+  <div class="sub" id="message" style="margin-top:8px">
+    Connect to Deriv and collect historical ticks.
+  </div>
+
+</section>
+
+<section class="card settings">
+
+  <div class="field">
+
+    <label>Analysis Ticks</label>
+
+    <select id="analysisTicks">
+      <option>100</option>
+      <option>300</option>
+      <option selected>500</option>
+      <option>1000</option>
+      <option>2000</option>
+    </select>
+
+  </div>
+
+  <div class="field">
+
+    <label>Minimum Confidence</label>
+
+    <select id="threshold">
+      <option>55%</option>
+      <option>60%</option>
+      <option selected>65%</option>
+      <option>70%</option>
+      <option>75%</option>
+    </select>
+
+  </div>
+
+  <div class="field">
+
+    <label>Barrier</label>
+
+    <select id="barrier">
+      <option>0</option>
+      <option>1</option>
+      <option>2</option>
+      <option>3</option>
+      <option selected>4</option>
+      <option>5</option>
+      <option>6</option>
+      <option>7</option>
+      <option>8</option>
+      <option>9</option>
+    </select>
+
+  </div>
+
+  <label class="check">
+    <input type="checkbox" id="auto">
+    Auto analysis every 30 seconds
+  </label>
+
+</section>
+
+<div class="log" id="log"></div>
+
+<div class="footer">
+  Expert Trader Analysis • Statistical analysis only.
+  No automatic trading. No guaranteed results.
+</div>
+
+</div>
 
 <script>
 "use strict";
 
-/* ============================================================
-   DERIV EXPERT TRADER ANALYSIS TOOL
-   ANALYSIS ONLY
-   ============================================================ */
+/*
+  ============================================================
+  DERIV CONNECTION
+  ============================================================
+*/
 
-const CONFIG = {
-    currentEndpoint: "wss://api.derivws.com/trading/v1/options/ws/public",
+const WS_URL =
+  "wss://api.derivws.com/trading/v1/options/ws/public";
 
-    legacyEndpoint: "wss://ws.binaryws.com/websockets/v3",
+const $ = id => document.getElementById(id);
 
-    maxTicks: 5000,
-
-    minimumTicks: 100,
-
-    reconnectDelay: 4000,
-
-    analysisInterval: 30000,
-
-    windows: [30, 100, 300, 1000],
-
-    validationSamples: 150,
-
-    minEdge: 1.5,
-
-    minZ: 1.25,
-
-    minConsistency: 55,
-
-    minAgreement: 66
+const S = {
+  ws:null,
+  connected:false,
+  manual:false,
+  symbol:"",
+  pip:null,
+  markets:[],
+  ticks:[],
+  request:1,
+  timer:null,
+  polling:false,
+  chart:null,
+  patternChart:null,
+  contract:"OVER",
+  barrier:4,
+  lastAnalysis:0
 };
 
-const state = {
-    ws: null,
 
-    endpoint: CONFIG.currentEndpoint,
+/*
+  ============================================================
+  HELPERS
+  ============================================================
+*/
 
-    connected: false,
+function log(msg,type=""){
 
-    connecting: false,
+  const d=document.createElement("div");
 
-    manuallyClosed: false,
+  d.className=type;
 
-    reconnectTimer: null,
+  d.textContent =
+    new Date().toLocaleTimeString() +
+    "  " +
+    msg;
 
-    autoTimer: null,
+  $("log").appendChild(d);
 
-    requestId: 1,
+  $("log").scrollTop =
+    $("log").scrollHeight;
 
-    markets: [],
-
-    marketMap: new Map(),
-
-    symbol: "",
-
-    marketName: "",
-
-    pipSize: null,
-
-    ticks: [],
-
-    lastQuote: null,
-
-    lastEpoch: null,
-
-    lastDigit: null,
-
-    analysis: null,
-
-    chart: null,
-
-    selectedType: "OVER",
-
-    dark: true
-};
-
-/* ============================================================
-   DOM
-   ============================================================ */
-
-function $(id) {
-    return document.getElementById(id);
+  console.log(msg);
 }
 
-const DOM = {
-    market: $("market"),
-    contract: $("contract"),
-    duration: $("duration"),
-    analysisTicks: $("analysisTicks"),
-    barrier: $("barrier"),
-    threshold: $("threshold"),
-    auto: $("auto"),
-
-    heroMarket: $("heroMarket"),
-    marketSub: $("marketSub"),
-    price: $("price"),
-    lastDigitText: $("lastDigitText"),
-
-    connection: $("connection"),
-    connectionDot: $("connectionDot"),
-    tickStatus: $("tickStatus"),
-
-    dataBar: $("dataBar"),
-    dataBarText: $("dataBarText"),
-
-    confidenceBar: $("confidenceBar"),
-    confidenceText: $("confidenceText"),
-
-    matches: $("matches"),
-    sampleText: $("sampleText"),
-
-    bestDigit: $("bestDigit"),
-    bestDigitNote: $("bestDigitNote"),
-    bestProbability: $("bestProbability"),
-    edge: $("edge"),
-    zscore: $("zscore"),
-    consistency: $("consistency"),
-    entropy: $("entropy"),
-
-    analysisStatus: $("analysisStatus"),
-    message: $("message"),
-    entry: $("entry"),
-
-    windowTable: $("windowTable"),
-    log: $("log"),
-
-    connectBtn: $("connectBtn"),
-    refreshBtn: $("refreshBtn"),
-    themeBtn: $("themeBtn"),
-    helpBtn: $("helpBtn"),
-
-    modal: $("modal"),
-    modalTitle: $("modalTitle"),
-    modalBody: $("modalBody"),
-    close: $("close"),
-
-    toast: $("toast")
-};
-
-/* ============================================================
-   UTILITIES
-   ============================================================ */
-
-function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
+function req(){
+  return ++S.request;
 }
 
-function round(value, decimals = 2) {
-    if (!Number.isFinite(value)) {
-        return 0;
-    }
-
-    const p = Math.pow(10, decimals);
-
-    return Math.round(value * p) / p;
+function clamp(x,a,b){
+  return Math.max(a,Math.min(b,x));
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+function symbolOf(x){
+  return x.underlying_symbol ||
+         x.symbol ||
+         "";
 }
 
-function showToast(message) {
-    DOM.toast.textContent = message;
-
-    DOM.toast.classList.add("show");
-
-    clearTimeout(showToast.timer);
-
-    showToast.timer = setTimeout(() => {
-        DOM.toast.classList.remove("show");
-    }, 3500);
+function nameOf(x){
+  return x.underlying_symbol_name ||
+         x.display_name ||
+         symbolOf(x);
 }
 
-function log(message, type = "info") {
-    const time = new Date().toLocaleTimeString();
+function pipOf(x){
 
-    const line = document.createElement("div");
-
-    line.className = "log-line";
-
-    let prefix = "[INFO]";
-
-    if (type === "error") {
-        prefix = "[ERROR]";
-    }
-
-    if (type === "warn") {
-        prefix = "[WARN]";
-    }
-
-    line.textContent = `${time} ${prefix} ${message}`;
-
-    DOM.log.appendChild(line);
-
-    while (DOM.log.children.length > 200) {
-        DOM.log.removeChild(DOM.log.firstChild);
-    }
-
-    DOM.log.scrollTop = DOM.log.scrollHeight;
-
-    console.log(prefix, message);
-}
-
-function setConnection(status, online = false) {
-    DOM.connection.textContent = status;
-
-    DOM.connectionDot.classList.toggle("online", online);
-}
-
-function nextRequestId() {
-    state.requestId += 1;
-
-    return state.requestId;
-}
-
-/* ============================================================
-   MARKET HELPERS
-   ============================================================ */
-
-function getSymbol(item) {
-    return item.underlying_symbol || item.symbol || "";
-}
-
-function getMarketName(item) {
-    return item.underlying_symbol_name ||
-           item.display_name ||
-           item.symbol ||
-           item.underlying_symbol ||
-           "Unknown";
-}
-
-function getSymbolType(item) {
-    return item.underlying_symbol_type ||
-           item.symbol_type ||
-           "";
-}
-
-function getPipSize(item) {
-    const pip = Number(item.pip_size ?? item.pip);
-
-    if (Number.isFinite(pip) && pip > 0) {
-        return pip;
-    }
-
-    return null;
-}
-
-function marketScore(item) {
-    const symbol = getSymbol(item).toUpperCase();
-
-    let score = 0;
-
-    if (
-        symbol.startsWith("R_") ||
-        symbol.startsWith("1HZ") ||
-        symbol.startsWith("CRASH") ||
-        symbol.startsWith("BOOM") ||
-        symbol.startsWith("JD") ||
-        symbol.startsWith("RDB")
-    ) {
-        score += 100;
-    }
-
-    const type = getSymbolType(item).toLowerCase();
-
-    if (
-        type.includes("synthetic") ||
-        type.includes("index")
-    ) {
-        score += 50;
-    }
-
-    if (item.exchange_is_open) {
-        score += 10;
-    }
-
-    if (!item.is_trading_suspended) {
-        score += 5;
-    }
-
-    return score;
-}
-
-/* ============================================================
-   DIGIT EXTRACTION
-   ============================================================ */
-
-function decimalsFromPipSize(pipSize) {
-    if (!Number.isFinite(pipSize) || pipSize <= 0) {
-        return null;
-    }
-
-    const decimals = Math.round(
-        -Math.log10(pipSize)
+  const p =
+    Number(
+      x.pip_size ??
+      x.pip
     );
 
-    if (!Number.isFinite(decimals)) {
-        return null;
-    }
-
-    return clamp(decimals, 0, 10);
+  return Number.isFinite(p) ? p : null;
 }
 
-function extractLastDigit(quote, pipSize = null) {
-    const value = Number(quote);
 
-    if (!Number.isFinite(value)) {
-        return null;
-    }
+/*
+  ============================================================
+  LAST DIGIT
+  ============================================================
+*/
 
-    let decimals = decimalsFromPipSize(pipSize);
+function digitOf(quote,pip){
 
-    if (decimals === null) {
-        const text = String(value);
+  if(!Number.isFinite(Number(quote))){
+    return null;
+  }
 
-        if (text.includes(".")) {
-            decimals = text.split(".")[1].length;
-        } else {
-            decimals = 0;
-        }
-    }
+  const n=Number(quote);
 
-    const fixed = value.toFixed(decimals);
+  let decimals=null;
 
-    const digits = fixed.replace(/\D/g, "");
+  if(Number.isFinite(pip) && pip>0){
 
-    if (!digits.length) {
-        return null;
-    }
+    if(pip<1){
 
-    return Number(digits[digits.length - 1]);
-}
-
-/* ============================================================
-   WEBSOCKET
-   ============================================================ */
-
-function connect() {
-    state.manuallyClosed = false;
-
-    if (
-        state.ws &&
-        (
-            state.ws.readyState === WebSocket.OPEN ||
-            state.ws.readyState === WebSocket.CONNECTING
-        )
-    ) {
-        log("WebSocket is already connected/connecting.");
-
-        return;
-    }
-
-    clearTimeout(state.reconnectTimer);
-
-    state.connecting = true;
-
-    setConnection("Connecting...", false);
-
-    log(`Connecting to ${state.endpoint}`);
-
-    let ws;
-
-    try {
-        ws = new WebSocket(state.endpoint);
-    } catch (error) {
-        state.connecting = false;
-
-        log(`WebSocket creation failed: ${error.message}`, "error");
-
-        fallbackEndpoint();
-
-        return;
-    }
-
-    state.ws = ws;
-
-    ws.onopen = () => {
-        state.connected = true;
-        state.connecting = false;
-
-        setConnection("Connected", true);
-
-        DOM.connectBtn.textContent = "Connected";
-
-        log("WebSocket connected.");
-
-        requestActiveSymbols();
-    };
-
-    ws.onmessage = event => {
-        handleMessage(event.data);
-    };
-
-    ws.onerror = () => {
-        log("WebSocket error received.", "error");
-
-        setConnection("Connection error", false);
-    };
-
-    ws.onclose = event => {
-        state.connected = false;
-        state.connecting = false;
-
-        DOM.connectBtn.textContent = "Connect";
-
-        setConnection("Disconnected", false);
-
-        log(
-            `WebSocket closed. Code ${event.code}.`,
-            "warn"
+      decimals =
+        Math.max(
+          0,
+          Math.round(-Math.log10(pip))
         );
 
-        if (!state.manuallyClosed) {
-            scheduleReconnect();
-        }
-    };
-}
+    }else if(pip>=1 && pip<=10){
 
-function disconnect() {
-    state.manuallyClosed = true;
-
-    clearTimeout(state.reconnectTimer);
-
-    if (state.ws) {
-        try {
-            state.ws.close();
-        } catch (error) {
-            console.warn(error);
-        }
+      decimals =
+        Math.max(
+          0,
+          Math.round(pip)
+        );
     }
+  }
 
-    state.ws = null;
+  if(decimals===null){
 
-    state.connected = false;
+    const t=String(quote);
 
-    DOM.connectBtn.textContent = "Connect";
+    decimals =
+      t.includes(".")
+      ? t.split(".")[1].length
+      : 0;
+  }
 
-    setConnection("Disconnected", false);
+  const fixed =
+    n.toFixed(decimals);
 
-    log("Disconnected manually.");
+  const digits =
+    fixed.replace(/\D/g,"");
+
+  return digits
+    ? Number(digits.at(-1))
+    : null;
 }
 
-function scheduleReconnect() {
-    clearTimeout(state.reconnectTimer);
 
-    state.reconnectTimer = setTimeout(() => {
-        if (!state.manuallyClosed) {
-            connect();
-        }
-    }, CONFIG.reconnectDelay);
-}
+/*
+  ============================================================
+  CONNECT
+  ============================================================
+*/
 
-function fallbackEndpoint() {
-    if (state.endpoint === CONFIG.currentEndpoint) {
-        log("Trying compatibility WebSocket endpoint...", "warn");
+function connect(){
 
-        state.endpoint = CONFIG.legacyEndpoint;
+  if(
+    S.ws &&
+    (
+      S.ws.readyState===0 ||
+      S.ws.readyState===1
+    )
+  ){
+    return;
+  }
 
-        setTimeout(() => {
-            if (!state.manuallyClosed) {
-                connect();
-            }
-        }, 1000);
+  S.manual=false;
 
-        return;
-    }
+  $("connector").textContent =
+    "● Connecting";
 
-    scheduleReconnect();
-}
+  log(
+    "Connecting to Deriv public market data..."
+  );
 
-function send(data) {
-    if (
-        !state.ws ||
-        state.ws.readyState !== WebSocket.OPEN
-    ) {
-        log("Cannot send request: WebSocket is not open.", "error");
+  try{
 
-        return false;
-    }
+    S.ws =
+      new WebSocket(WS_URL);
 
-    try {
-        state.ws.send(JSON.stringify(data));
-
-        return true;
-    } catch (error) {
-        log(`Send error: ${error.message}`, "error");
-
-        return false;
-    }
-}
-
-/* ============================================================
-   DERIV REQUESTS
-   ============================================================ */
-
-function requestActiveSymbols() {
-    log("Requesting active markets...");
-
-    const request = {
-        active_symbols: "brief",
-        req_id: nextRequestId()
-    };
-
-    send(request);
-}
-
-function requestHistory() {
-    if (!state.symbol) {
-        log("No market selected.", "warn");
-
-        return;
-    }
-
-    const analysisCount =
-        Number(DOM.analysisTicks.value) || 500;
-
-    const duration =
-        Number(DOM.duration.value) || 100;
-
-    const count = clamp(
-        analysisCount + duration + 100,
-        150,
-        CONFIG.maxTicks
-    );
-
-    state.ticks = [];
-
-    updateDataProgress();
-
-    DOM.tickStatus.textContent =
-        `Downloading ${count} ticks...`;
+  }catch(e){
 
     log(
-        `Requesting ${count} historical ticks for ${state.symbol}.`
+      "WebSocket creation failed: "+
+      e.message,
+      "err"
     );
 
-    const request = {
-        ticks_history: state.symbol,
-        end: "latest",
-        count: count,
-        style: "ticks",
-        subscribe: 0,
-        req_id: nextRequestId()
-    };
+    return;
+  }
 
-    send(request);
-}
+  S.ws.onopen=()=>{
 
-function subscribeTicks() {
-    if (!state.symbol) {
-        return;
-    }
+    S.connected=true;
 
-    log(`Subscribing to live ticks: ${state.symbol}`);
+    $("connector").textContent =
+      "● Connected";
+
+    $("connector").style.background =
+      "#0aa66b";
+
+    log(
+      "Connected.",
+      "ok"
+    );
 
     send({
-        ticks: state.symbol,
-        subscribe: 1,
-        req_id: nextRequestId()
+      active_symbols:"brief",
+      req_id:req()
     });
+  };
+
+  S.ws.onmessage=e=>{
+    handle(e.data);
+  };
+
+  S.ws.onerror=()=>{
+
+    log(
+      "WebSocket error",
+      "err"
+    );
+
+    $("connector").textContent =
+      "● Error";
+  };
+
+  S.ws.onclose=e=>{
+
+    S.connected=false;
+
+    $("connector").textContent =
+      "● Disconnected";
+
+    log(
+      "WebSocket closed: "+
+      e.code,
+      "err"
+    );
+
+    if(!S.manual){
+
+      setTimeout(
+        connect,
+        3000
+      );
+    }
+  };
 }
 
-/* ============================================================
-   MESSAGE HANDLER
-   ============================================================ */
+function send(x){
 
-function handleMessage(raw) {
-    let data;
+  if(
+    !S.ws ||
+    S.ws.readyState!==1
+  ){
+    return false;
+  }
 
-    try {
-        data = JSON.parse(raw);
-    } catch (error) {
-        log("Received invalid JSON from server.", "error");
+  S.ws.send(
+    JSON.stringify(x)
+  );
 
-        return;
-    }
+  return true;
+}
 
-    if (data.error) {
-        const errorCode =
-            data.error.code ||
-            "API_ERROR";
 
-        const errorMessage =
-            data.error.message ||
-            "Unknown Deriv API error";
+/*
+  ============================================================
+  MESSAGE HANDLER
+  ============================================================
+*/
 
-        log(
-            `${errorCode}: ${errorMessage}`,
-            "error"
+function handle(raw){
+
+  let d;
+
+  try{
+
+    d=JSON.parse(raw);
+
+  }catch(e){
+
+    return;
+  }
+
+  if(d.error){
+
+    log(
+      "API: "+
+      (d.error.code || "ERROR")+
+      " — "+
+      (d.error.message || "Unknown"),
+      "err"
+    );
+
+    $("message").textContent =
+      d.error.message ||
+      "API error";
+
+    return;
+  }
+
+  if(
+    d.msg_type==="active_symbols"
+  ){
+    return activeSymbols(d);
+  }
+
+  if(
+    d.msg_type==="history"
+  ){
+    return history(d);
+  }
+
+  if(
+    d.msg_type==="tick"
+  ){
+    return tick(d);
+  }
+}
+
+
+/*
+  ============================================================
+  ACTIVE MARKETS
+  ============================================================
+*/
+
+function activeSymbols(d){
+
+  const list =
+    (d.active_symbols || [])
+    .filter(x=>symbolOf(x));
+
+  S.markets =
+    list.sort(
+      (a,b)=>{
+
+        const sa =
+          scoreMarket(a);
+
+        const sb =
+          scoreMarket(b);
+
+        return (
+          sb-sa ||
+          nameOf(a)
+            .localeCompare(nameOf(b))
         );
-
-        DOM.message.textContent =
-            `${errorCode}: ${errorMessage}`;
-
-        if (
-            errorCode === "InvalidRequest" ||
-            errorMessage.toLowerCase().includes("invalid request")
-        ) {
-            if (state.endpoint === CONFIG.currentEndpoint) {
-                fallbackEndpoint();
-            }
-        }
-
-        return;
-    }
-
-    if (data.errors && Array.isArray(data.errors)) {
-        const message = data.errors
-            .map(error => error.message || "Unknown error")
-            .join("; ");
-
-        log(message, "error");
-
-        DOM.message.textContent = message;
-
-        return;
-    }
-
-    if (data.msg_type === "active_symbols") {
-        handleActiveSymbols(data);
-
-        return;
-    }
-
-    if (data.msg_type === "history") {
-        handleHistory(data);
-
-        return;
-    }
-
-    if (data.msg_type === "tick") {
-        handleTick(data);
-
-        return;
-    }
-}
-
-/* ============================================================
-   ACTIVE MARKETS
-   ============================================================ */
-
-function handleActiveSymbols(data) {
-    const rawMarkets = Array.isArray(data.active_symbols)
-        ? data.active_symbols
-        : [];
-
-    if (!rawMarkets.length) {
-        log("Deriv returned an empty market list.", "error");
-
-        return;
-    }
-
-    state.markets = rawMarkets
-        .filter(item => getSymbol(item))
-        .sort((a, b) => {
-            const scoreDifference =
-                marketScore(b) - marketScore(a);
-
-            if (scoreDifference !== 0) {
-                return scoreDifference;
-            }
-
-            return getMarketName(a).localeCompare(
-                getMarketName(b)
-            );
-        });
-
-    state.marketMap.clear();
-
-    DOM.market.innerHTML = "";
-
-    for (const market of state.markets) {
-        const symbol = getSymbol(market);
-
-        if (!symbol) {
-            continue;
-        }
-
-        state.marketMap.set(symbol, market);
-
-        const option = document.createElement("option");
-
-        option.value = symbol;
-
-        option.textContent =
-            `${getMarketName(market)} (${symbol})`;
-
-        DOM.market.appendChild(option);
-    }
-
-    log(
-        `Loaded ${state.markets.length} active markets.`
+      }
     );
 
-    if (!state.markets.length) {
-        DOM.market.innerHTML =
-            `<option value="">No markets found</option>`;
+  const sel =
+    $("market");
 
-        return;
-    }
+  sel.innerHTML="";
 
-    const preferred =
-        state.markets.find(item => marketScore(item) >= 100) ||
-        state.markets[0];
+  S.markets.forEach(m=>{
 
-    DOM.market.value = getSymbol(preferred);
+    const o =
+      document.createElement("option");
 
-    selectMarket(DOM.market.value);
-}
+    o.value =
+      symbolOf(m);
 
-/* ============================================================
-   MARKET SELECTION
-   ============================================================ */
+    o.textContent =
+      nameOf(m)+
+      " ("+
+      symbolOf(m)+
+      ")";
 
-function selectMarket(symbol) {
-    if (!symbol) {
-        return;
-    }
+    sel.appendChild(o);
+  });
 
-    const market = state.marketMap.get(symbol);
+  if(!S.markets.length){
 
-    if (!market) {
-        return;
-    }
-
-    state.symbol = symbol;
-
-    state.marketName = getMarketName(market);
-
-    state.pipSize = getPipSize(market);
-
-    state.ticks = [];
-
-    DOM.heroMarket.textContent =
-        state.marketName;
-
-    DOM.marketSub.textContent =
-        `${state.symbol} • ${getSymbolType(market) || "market"}`;
-
-    DOM.price.textContent = "—";
-
-    DOM.lastDigitText.textContent =
-        "Last digit: —";
-
-    DOM.tickStatus.textContent =
-        "Loading historical ticks...";
-
-    clearAnalysisDisplay();
-
-    if (state.connected) {
-        requestHistory();
-
-        setTimeout(() => {
-            if (
-                state.connected &&
-                state.symbol === symbol
-            ) {
-                subscribeTicks();
-            }
-        }, 400);
-    }
-}
-
-/* ============================================================
-   HISTORY
-   ============================================================ */
-
-function handleHistory(data) {
-    if (!data.history) {
-        log("History response contained no history object.", "error");
-
-        return;
-    }
-
-    const prices = Array.isArray(data.history.prices)
-        ? data.history.prices
-        : [];
-
-    const times = Array.isArray(data.history.times)
-        ? data.history.times
-        : [];
-
-    if (!prices.length) {
-        log("No historical prices returned.", "error");
-
-        DOM.tickStatus.textContent =
-            "No historical ticks";
-
-        return;
-    }
-
-    if (Number.isFinite(Number(data.pip_size))) {
-        state.pipSize = Number(data.pip_size);
-    }
-
-    state.ticks = [];
-
-    for (let i = 0; i < prices.length; i++) {
-        const quote = Number(prices[i]);
-
-        if (!Number.isFinite(quote)) {
-            continue;
-        }
-
-        const epoch =
-            Number(times[i]) || null;
-
-        const digit =
-            extractLastDigit(
-                quote,
-                state.pipSize
-            );
-
-        if (digit === null) {
-            continue;
-        }
-
-        state.ticks.push({
-            quote,
-            epoch,
-            digit
-        });
-    }
-
-    if (state.ticks.length > CONFIG.maxTicks) {
-        state.ticks =
-            state.ticks.slice(-CONFIG.maxTicks);
-    }
+    sel.innerHTML =
+      "<option>No markets</option>";
 
     log(
-        `Received ${state.ticks.length} usable historical ticks.`
+      "No active markets returned.",
+      "err"
     );
 
-    DOM.tickStatus.textContent =
-        `${state.ticks.length} historical ticks loaded`;
+    return;
+  }
 
-    updateCurrentDisplay();
+  const preferred =
+    S.markets[0];
 
-    updateDataProgress();
+  sel.value =
+    symbolOf(preferred);
+
+  chooseMarket(
+    sel.value
+  );
+
+  log(
+    "Loaded "+
+    S.markets.length+
+    " active markets.",
+    "ok"
+  );
+}
+
+function scoreMarket(m){
+
+  const s =
+    symbolOf(m)
+      .toUpperCase();
+
+  const t =
+    (
+      m.underlying_symbol_type ||
+      m.symbol_type ||
+      ""
+    ).toLowerCase();
+
+  let n=0;
+
+  if(
+    s.includes("1HZ") ||
+    s.startsWith("R_") ||
+    s.includes("CRASH") ||
+    s.includes("BOOM")
+  ){
+    n+=100;
+  }
+
+  if(
+    t.includes("synthetic") ||
+    t.includes("index")
+  ){
+    n+=30;
+  }
+
+  return n;
+}
+
+
+/*
+  ============================================================
+  MARKET SELECTION
+  ============================================================
+*/
+
+function chooseMarket(sym){
+
+  const m =
+    S.markets.find(
+      x=>symbolOf(x)===sym
+    );
+
+  if(!m)return;
+
+  S.symbol=sym;
+
+  S.pip=pipOf(m);
+
+  S.ticks=[];
+
+  $("marketName").textContent =
+    nameOf(m);
+
+  $("marketMeta").textContent =
+    sym+
+    " • "+
+    (
+      m.underlying_symbol_type ||
+      m.symbol_type ||
+      "market"
+    );
+
+  $("price").textContent =
+    "0.0000";
+
+  $("lastDigit").textContent =
+    "—";
+
+  $("lastDigitBig").textContent =
+    "-";
+
+  loadHistory();
+}
+
+
+/*
+  ============================================================
+  HISTORICAL DATA
+  ============================================================
+*/
+
+function loadHistory(){
+
+  if(
+    !S.connected ||
+    !S.symbol
+  ){
+    return;
+  }
+
+  const sample =
+    Number(
+      $("analysisTicks").value
+    );
+
+  const duration =
+    Number(
+      $("duration").value
+    );
+
+  const count =
+    Math.min(
+      5000,
+      sample+
+      duration+
+      150
+    );
+
+  S.ticks=[];
+
+  $("status").textContent =
+    "Loading";
+
+  $("message").textContent =
+    "Downloading "+
+    count+
+    " historical ticks…";
+
+  updateProgress();
+
+  log(
+    "Requesting "+
+    count+
+    " historical ticks for "+
+    S.symbol+
+    "..."
+  );
+
+  send({
+    ticks_history:S.symbol,
+    end:"latest",
+    count:count,
+    style:"ticks",
+    subscribe:0,
+    req_id:req()
+  });
+}
+
+function history(d){
+
+  if(
+    !d.history ||
+    !Array.isArray(
+      d.history.prices
+    )
+  ){
+
+    log(
+      "History response contained no prices.",
+      "err"
+    );
+
+    return;
+  }
+
+  if(
+    Number.isFinite(
+      Number(d.pip_size)
+    )
+  ){
+    S.pip =
+      Number(d.pip_size);
+  }
+
+  const p =
+    d.history.prices;
+
+  const t =
+    d.history.times || [];
+
+  S.ticks =
+    p.map(
+      (q,i)=>({
+
+        quote:Number(q),
+
+        epoch:Number(
+          t[i] || 0
+        ),
+
+        digit:
+          digitOf(
+            Number(q),
+            S.pip
+          )
+
+      })
+    )
+    .filter(
+      x=>
+        Number.isFinite(x.quote) &&
+        x.digit!==null
+    );
+
+  $("tickCount").textContent =
+    S.ticks.length;
+
+  $("message").textContent =
+    "Historical data loaded. Starting live analysis…";
+
+  log(
+    "Received "+
+    S.ticks.length+
+    " usable historical ticks.",
+    "ok"
+  );
+
+  analyze();
+
+  updateProgress();
+
+  startPolling();
+}
+
+
+/*
+  ============================================================
+  LIVE DATA
+  ============================================================
+*/
+
+function startPolling(){
+
+  if(S.polling)return;
+
+  S.polling=true;
+
+  clearInterval(
+    S.timer
+  );
+
+  pollTick();
+
+  S.timer =
+    setInterval(
+      pollTick,
+      1000
+    );
+}
+
+function stopPolling(){
+
+  S.polling=false;
+
+  clearInterval(
+    S.timer
+  );
+
+  S.timer=null;
+}
+
+function pollTick(){
+
+  if(
+    !S.connected ||
+    !S.symbol
+  ){
+    return;
+  }
+
+  /*
+    Use one-shot ticks rather than
+    subscribe:1. This prevents the
+    subscribe validation problem on
+    public endpoint implementations.
+  */
+
+  send({
+    ticks:S.symbol,
+    subscribe:0,
+    req_id:req()
+  });
+}
+
+function tick(d){
+
+  const t=d.tick;
+
+  if(!t)return;
+
+  const q =
+    Number(t.quote);
+
+  if(
+    !Number.isFinite(q)
+  ){
+    return;
+  }
+
+  if(
+    Number.isFinite(
+      Number(t.pip_size)
+    )
+  ){
+
+    S.pip =
+      Number(t.pip_size);
+  }
+
+  const digit =
+    digitOf(
+      q,
+      S.pip
+    );
+
+  if(digit===null)return;
+
+  const item={
+    quote:q,
+    epoch:Number(
+      t.epoch ||
+      Date.now()/1000
+    ),
+    digit:digit
+  };
+
+  if(
+    S.ticks.length &&
+    S.ticks[
+      S.ticks.length-1
+    ].epoch===item.epoch
+  ){
+    return;
+  }
+
+  S.ticks.push(item);
+
+  if(
+    S.ticks.length>5000
+  ){
+    S.ticks.shift();
+  }
+
+  $("price").textContent =
+    formatPrice(q);
+
+  $("lastDigit").textContent =
+    digit;
+
+  $("lastDigitBig").textContent =
+    digit;
+
+  $("tickCount").textContent =
+    S.ticks.length;
+
+  updateProgress();
+
+  updatePatternChart();
+
+  if(
+    Date.now()-
+    S.lastAnalysis>2000
+  ){
+
+    S.lastAnalysis=
+      Date.now();
 
     analyze();
+  }
 }
 
-/* ============================================================
-   LIVE TICK
-   ============================================================ */
+function formatPrice(q){
 
-function handleTick(data) {
-    if (!data.tick) {
-        return;
-    }
+  if(
+    Number.isFinite(S.pip) &&
+    S.pip>0 &&
+    S.pip<1
+  ){
 
-    const tick = data.tick;
+    const d =
+      Math.max(
+        0,
+        Math.round(
+          -Math.log10(S.pip)
+        )
+      );
 
-    const symbol =
-        tick.symbol ||
-        state.symbol;
+    return q.toFixed(d);
+  }
 
-    if (
-        state.symbol &&
-        symbol &&
-        symbol !== state.symbol
-    ) {
-        return;
-    }
-
-    const quote = Number(tick.quote);
-
-    if (!Number.isFinite(quote)) {
-        return;
-    }
-
-    if (Number.isFinite(Number(tick.pip_size))) {
-        state.pipSize = Number(tick.pip_size);
-    }
-
-    const digit =
-        extractLastDigit(
-            quote,
-            state.pipSize
-        );
-
-    if (digit === null) {
-        return;
-    }
-
-    const epoch =
-        Number(tick.epoch) || Math.floor(Date.now() / 1000);
-
-    state.lastQuote = quote;
-
-    state.lastEpoch = epoch;
-
-    state.lastDigit = digit;
-
-    state.ticks.push({
-        quote,
-        epoch,
-        digit
-    });
-
-    if (state.ticks.length > CONFIG.maxTicks) {
-        state.ticks.shift();
-    }
-
-    DOM.tickStatus.textContent =
-        `Live • ${state.ticks.length} ticks`;
-
-    updateCurrentDisplay();
-
-    updateDataProgress();
-
-    /*
-      Re-run analysis periodically rather than on every tick.
-      This prevents expensive calculations on very fast streams.
-    */
-
-    if (!state.lastAnalysisTime) {
-        state.lastAnalysisTime = 0;
-    }
-
-    const now = Date.now();
-
-    if (now - state.lastAnalysisTime >= 2500) {
-        state.lastAnalysisTime = now;
-
-        analyze();
-    }
+  return String(q);
 }
 
-/* ============================================================
-   CURRENT DISPLAY
-   ============================================================ */
 
-function updateCurrentDisplay() {
-    if (state.ticks.length === 0) {
-        return;
+/*
+  ============================================================
+  HORIZON ANALYSIS
+  ============================================================
+*/
+
+function horizonDigits(
+  windowSize,
+  duration
+){
+
+  const out=[];
+
+  const end =
+    S.ticks.length-
+    duration;
+
+  if(end<=0){
+    return out;
+  }
+
+  const start =
+    Math.max(
+      0,
+      end-windowSize
+    );
+
+  for(
+    let i=start;
+    i<end;
+    i++
+  ){
+
+    if(
+      S.ticks[
+        i+duration
+      ]
+    ){
+
+      out.push(
+        S.ticks[
+          i+duration
+        ].digit
+      );
     }
+  }
 
-    const latest =
-        state.ticks[state.ticks.length - 1];
-
-    DOM.price.textContent =
-        formatQuote(latest.quote);
-
-    DOM.lastDigitText.textContent =
-        `Last digit: ${latest.digit}`;
+  return out;
 }
 
-function formatQuote(value) {
-    if (!Number.isFinite(value)) {
-        return "—";
+
+/*
+  ============================================================
+  STATISTICS
+  ============================================================
+*/
+
+function counts(a){
+
+  const c=
+    Array(10).fill(0);
+
+  a.forEach(x=>{
+
+    if(
+      x>=0 &&
+      x<=9
+    ){
+      c[x]++;
     }
 
-    if (state.pipSize) {
-        const decimals =
-            decimalsFromPipSize(state.pipSize);
+  });
 
-        if (decimals !== null) {
-            return value.toFixed(decimals);
-        }
-    }
-
-    return String(value);
+  return c;
 }
 
-/* ============================================================
-   PROBABILITY FUNCTIONS
-   ============================================================ */
+function probs(c){
 
-function emptyCounts() {
-    return Array(10).fill(0);
+  const total =
+    c.reduce(
+      (a,b)=>a+b,
+      0
+    )+10;
+
+  return c.map(
+    x=>(x+1)/total
+  );
 }
 
-function countDigits(digits) {
-    const counts = emptyCounts();
+function baseline(
+  type,
+  b
+){
 
-    for (const digit of digits) {
-        if (
-            Number.isInteger(digit) &&
-            digit >= 0 &&
-            digit <= 9
-        ) {
-            counts[digit]++;
-        }
-    }
+  if(type==="OVER"){
+    return (9-b)/10;
+  }
 
-    return counts;
+  if(type==="UNDER"){
+    return b/10;
+  }
+
+  if(type==="MATCH"){
+    return .1;
+  }
+
+  if(type==="DIFF"){
+    return .9;
+  }
+
+  return .5;
 }
 
-function smoothedProbabilities(counts, alpha = 1) {
-    const total =
-        counts.reduce(
-            (sum, value) => sum + value,
-            0
-        );
+function event(
+  d,
+  type,
+  b
+){
 
-    const denominator =
-        total + alpha * 10;
+  if(type==="OVER"){
+    return d>b;
+  }
 
-    return counts.map(
-        count => (count + alpha) / denominator
+  if(type==="UNDER"){
+    return d<b;
+  }
+
+  if(type==="MATCH"){
+    return d===b;
+  }
+
+  if(type==="DIFF"){
+    return d!==b;
+  }
+
+  if(type==="EVEN"){
+    return d%2===0;
+  }
+
+  return d%2===1;
+}
+
+function contractProb(
+  p,
+  type,
+  b
+){
+
+  if(type==="OVER"){
+
+    return p
+      .slice(b+1)
+      .reduce(
+        (a,x)=>a+x,
+        0
+      );
+  }
+
+  if(type==="UNDER"){
+
+    return p
+      .slice(0,b)
+      .reduce(
+        (a,x)=>a+x,
+        0
+      );
+  }
+
+  if(type==="MATCH"){
+    return p[b];
+  }
+
+  if(type==="DIFF"){
+    return 1-p[b];
+  }
+
+  if(type==="EVEN"){
+
+    return p
+      .filter(
+        (_,i)=>i%2===0
+      )
+      .reduce(
+        (a,x)=>a+x,
+        0
+      );
+  }
+
+  return p
+    .filter(
+      (_,i)=>i%2===1
+    )
+    .reduce(
+      (a,x)=>a+x,
+      0
     );
 }
 
-function normalizeProbabilities(values) {
-    const total =
-        values.reduce(
-            (sum, value) => sum + value,
-            0
-        );
+function bestDigit(
+  p,
+  type,
+  b
+){
 
-    if (total <= 0) {
-        return Array(10).fill(.1);
+  if(type==="MATCH"){
+    return b;
+  }
+
+  const allowed=[];
+
+  for(
+    let i=0;
+    i<10;
+    i++
+  ){
+
+    if(
+      type==="OVER" &&
+      i>b
+    ){
+      allowed.push(i);
     }
 
-    return values.map(value => value / total);
+    if(
+      type==="UNDER" &&
+      i<b
+    ){
+      allowed.push(i);
+    }
+
+    if(
+      type==="DIFF" &&
+      i!==b
+    ){
+      allowed.push(i);
+    }
+
+    if(
+      type==="EVEN" &&
+      i%2===0
+    ){
+      allowed.push(i);
+    }
+
+    if(
+      type==="ODD" &&
+      i%2===1
+    ){
+      allowed.push(i);
+    }
+  }
+
+  return allowed.sort(
+    (a,c)=>p[c]-p[a]
+  )[0] ?? b;
 }
 
-/* ============================================================
-   CONTRACT PROBABILITY
-   ============================================================ */
+function entropy(p){
 
-function contractProbabilityFromDigits(
-    probabilities,
-    type,
-    barrier
-) {
-    const b = Number(barrier);
-
-    if (type === "OVER") {
-        return probabilities
-            .slice(b + 1)
-            .reduce((a, c) => a + c, 0);
-    }
-
-    if (type === "UNDER") {
-        return probabilities
-            .slice(0, b)
-            .reduce((a, c) => a + c, 0);
-    }
-
-    if (type === "MATCH") {
-        return probabilities[b] || 0;
-    }
-
-    if (type === "DIFF") {
-        return 1 - (probabilities[b] || 0);
-    }
-
-    if (type === "EVEN") {
-        return probabilities
-            .filter((_, index) => index % 2 === 0)
-            .reduce((a, c) => a + c, 0);
-    }
-
-    if (type === "ODD") {
-        return probabilities
-            .filter((_, index) => index % 2 === 1)
-            .reduce((a, c) => a + c, 0);
-    }
-
-    return 0;
+  return -p.reduce(
+    (s,x)=>
+      s+
+      (
+        x>0
+        ?x*Math.log2(x)
+        :0
+      ),
+    0
+  );
 }
 
-function theoreticalProbability(type, barrier) {
-    const b = Number(barrier);
+function zscore(
+  p,
+  base,
+  n
+){
 
-    if (type === "OVER") {
-        return (9 - b) / 10;
-    }
+  const v =
+    n*
+    base*
+    (1-base);
 
-    if (type === "UNDER") {
-        return b / 10;
-    }
-
-    if (type === "MATCH") {
-        return 0.10;
-    }
-
-    if (type === "DIFF") {
-        return 0.90;
-    }
-
-    if (type === "EVEN") {
-        return 0.50;
-    }
-
-    if (type === "ODD") {
-        return 0.50;
-    }
-
-    return 0.10;
+  return v>0
+    ?(
+      (p-base)*n/
+      Math.sqrt(v)
+    )
+    :0;
 }
 
-/* ============================================================
-   HORIZON OUTCOME
-   ============================================================ */
+function wilson(
+  success,
+  n
+){
 
-function buildHorizonDigits(
-    ticks,
-    windowSize,
-    duration
-) {
-    const result = [];
+  if(!n)return 0;
 
-    if (!Array.isArray(ticks)) {
-        return result;
-    }
+  const z=1.96;
 
-    if (ticks.length < duration + 2) {
-        return result;
-    }
+  const p=
+    success/n;
 
-    const end =
-        ticks.length - duration;
+  const d=
+    1+
+    z*z/n;
 
-    const start =
-        Math.max(
-            0,
-            end - windowSize
-        );
-
-    for (let i = start; i < end; i++) {
-        const target =
-            ticks[i + duration];
-
-        if (
-            target &&
-            Number.isInteger(target.digit)
-        ) {
-            result.push(target.digit);
-        }
-    }
-
-    return result;
+  return (
+    p+
+    z*z/(2*n)-
+    z*
+    Math.sqrt(
+      (
+        p*(1-p)+
+        z*z/(4*n)
+      )/n
+    )
+  )/d;
 }
 
-function outcomeForDigit(
-    digit,
-    type,
-    barrier
-) {
-    const b = Number(barrier);
 
-    if (type === "OVER") {
-        return digit > b;
-    }
+/*
+  ============================================================
+  WALK-FORWARD VALIDATION
+  ============================================================
+*/
 
-    if (type === "UNDER") {
-        return digit < b;
-    }
+function validation(
+  type,
+  b,
+  duration
+){
 
-    if (type === "MATCH") {
-        return digit === b;
-    }
-
-    if (type === "DIFF") {
-        return digit !== b;
-    }
-
-    if (type === "EVEN") {
-        return digit % 2 === 0;
-    }
-
-    if (type === "ODD") {
-        return digit % 2 === 1;
-    }
-
-    return false;
-}
-
-/* ============================================================
-   BEST DIGIT
-   ============================================================ */
-
-function findBestDigit(
-    probabilities,
-    type,
-    barrier
-) {
-    const b = Number(barrier);
-
-    if (type === "MATCH") {
-        return {
-            digit: b,
-            probability: probabilities[b] || 0
-        };
-    }
-
-    if (type === "DIFF") {
-        let bestDigit = 0;
-
-        let bestProbability = Infinity;
-
-        for (let digit = 0; digit <= 9; digit++) {
-            if (digit === b) {
-                continue;
-            }
-
-            if (probabilities[digit] < bestProbability) {
-                bestProbability =
-                    probabilities[digit];
-
-                bestDigit = digit;
-            }
-        }
-
-        return {
-            digit: bestDigit,
-            probability: bestProbability
-        };
-    }
-
-    if (type === "OVER") {
-        let bestDigit = b + 1;
-
-        for (let digit = b + 1; digit <= 9; digit++) {
-            if (
-                probabilities[digit] >
-                probabilities[bestDigit]
-            ) {
-                bestDigit = digit;
-            }
-        }
-
-        return {
-            digit: bestDigit,
-            probability: probabilities[bestDigit] || 0
-        };
-    }
-
-    if (type === "UNDER") {
-        let bestDigit = Math.max(0, b - 1);
-
-        for (let digit = 0; digit < b; digit++) {
-            if (
-                probabilities[digit] >
-                probabilities[bestDigit]
-            ) {
-                bestDigit = digit;
-            }
-        }
-
-        return {
-            digit: bestDigit,
-            probability: probabilities[bestDigit] || 0
-        };
-    }
-
-    if (type === "EVEN") {
-        let bestDigit = 0;
-
-        let bestProbability = -Infinity;
-
-        for (let digit = 0; digit <= 9; digit += 2) {
-            if (probabilities[digit] > bestProbability) {
-                bestProbability = probabilities[digit];
-
-                bestDigit = digit;
-            }
-        }
-
-        return {
-            digit: bestDigit,
-            probability: bestProbability
-        };
-    }
-
-    if (type === "ODD") {
-        let bestDigit = 1;
-
-        let bestProbability = -Infinity;
-
-        for (let digit = 1; digit <= 9; digit += 2) {
-            if (probabilities[digit] > bestProbability) {
-                bestProbability = probabilities[digit];
-
-                bestDigit = digit;
-            }
-        }
-
-        return {
-            digit: bestDigit,
-            probability: bestProbability
-        };
-    }
-
-    return {
-        digit: 0,
-        probability: probabilities[0]
-    };
-}
-
-/* ============================================================
-   BINOMIAL Z SCORE
-   ============================================================ */
-
-function zScore(
-    probability,
-    baseline,
-    samples
-) {
-    if (
-        samples <= 0 ||
-        baseline <= 0 ||
-        baseline >= 1
-    ) {
-        return 0;
-    }
-
-    const variance =
-        samples *
-        baseline *
-        (1 - baseline);
-
-    if (variance <= 0) {
-        return 0;
-    }
-
-    return (
-        (probability * samples -
-            baseline * samples) /
-        Math.sqrt(variance)
-    );
-}
-
-/* ============================================================
-   WILSON LOWER BOUND
-   ============================================================ */
-
-function wilsonLower(
-    successes,
-    total,
-    z = 1.96
-) {
-    if (total <= 0) {
-        return 0;
-    }
-
-    const p = successes / total;
-
-    const denominator =
-        1 + (z * z) / total;
-
-    const centre =
-        p +
-        (z * z) / (2 * total);
-
-    const adjustment =
-        z *
-        Math.sqrt(
-            (
-                p * (1 - p) +
-                (z * z) / (4 * total)
-            ) /
-            total
-        );
-
-    return (
-        centre - adjustment
-    ) / denominator;
-}
-
-/* ============================================================
-   ENTROPY
-   ============================================================ */
-
-function entropy(probabilities) {
-    let value = 0;
-
-    for (const p of probabilities) {
-        if (p > 0) {
-            value -= p * Math.log2(p);
-        }
-    }
-
-    return value;
-}
-
-/* ============================================================
-   TRANSITION ANALYSIS
-   ============================================================ */
-
-function transitionScore(
-    ticks,
-    duration,
-    type,
-    barrier
-) {
-    if (ticks.length < duration + 10) {
-        return 0;
-    }
-
-    const recentCount = Math.min(
-        250,
-        ticks.length - duration
+  const n =
+    Math.min(
+      120,
+      S.ticks.length-
+      duration-
+      80
     );
 
-    const start =
-        ticks.length -
-        duration -
-        recentCount;
+  if(n<30){
+    return null;
+  }
 
-    let sameDirection = 0;
+  let tested=0;
+  let correct=0;
 
-    let total = 0;
+  const begin =
+    Math.max(
+      50,
+      S.ticks.length-
+      duration-
+      n
+    );
 
-    for (
-        let i = Math.max(0, start);
-        i < ticks.length - duration - 1;
-        i++
-    ) {
-        const current =
-            ticks[i + duration].digit;
+  for(
+    let i=begin;
+    i<
+    S.ticks.length-duration;
+    i++
+  ){
 
-        const next =
-            ticks[i + duration + 1].digit;
+    const train =
+      S.ticks.slice(
+        Math.max(0,i-300),
+        i
+      );
 
-        const currentOutcome =
-            outcomeForDigit(
-                current,
-                type,
-                barrier
-            );
-
-        const nextOutcome =
-            outcomeForDigit(
-                next,
-                type,
-                barrier
-            );
-
-        if (currentOutcome === nextOutcome) {
-            sameDirection++;
-        }
-
-        total++;
+    if(
+      train.length<50
+    ){
+      continue;
     }
 
-    if (total === 0) {
-        return 0;
+    const p =
+      probs(
+        counts(
+          train.map(
+            x=>x.digit
+          )
+        )
+      );
+
+    if(
+      contractProb(
+        p,
+        type,
+        b
+      )<=baseline(
+        type,
+        b
+      )
+    ){
+      continue;
     }
 
-    return sameDirection / total;
+    const actual =
+      S.ticks[
+        i+duration
+      ]?.digit;
+
+    if(actual==null){
+      continue;
+    }
+
+    tested++;
+
+    if(
+      event(
+        actual,
+        type,
+        b
+      )
+    ){
+      correct++;
+    }
+  }
+
+  return tested
+    ?{
+      accuracy:
+        correct/tested,
+      samples:tested
+    }
+    :null;
 }
 
-/* ============================================================
-   WALK FORWARD VALIDATION
-   ============================================================ */
 
-function walkForwardValidation(
-    ticks,
-    duration,
-    type,
-    barrier,
-    maxSamples = 150
-) {
-    const available =
-        ticks.length - duration;
+/*
+  ============================================================
+  MAIN ANALYSIS
+  ============================================================
+*/
 
-    if (available < 100) {
-        return {
-            accuracy: 0,
-            samples: 0
-        };
-    }
+function analyze(){
 
-    const samples =
-        Math.min(
-            maxSamples,
-            available - 20
-        );
+  const duration =
+    Number(
+      $("duration").value
+    );
 
-    let correct = 0;
+  const sample =
+    Number(
+      $("sample").value
+    );
 
-    let tested = 0;
+  const type =
+    S.contract =
+    $("contract").value;
 
-    /*
-      For each historical point, calculate a simple
-      probability using data BEFORE that point and then
-      test the actual future horizon result.
+  const b =
+    Number(
+      $("barrier").value
+    );
 
-      This prevents using future ticks to predict an
-      earlier tick.
-    */
+  if(
+    S.ticks.length<
+    duration+30
+  ){
 
-    const first =
-        Math.max(
-            50,
-            available - samples
-        );
+    $("status").textContent =
+      "Waiting";
 
-    for (
-        let i = first;
-        i < available;
-        i++
-    ) {
-        const historyStart =
-            Math.max(
-                0,
-                i - 300
-            );
+    $("message").textContent =
+      "Need more tick data ("+
+      S.ticks.length+
+      " / "+
+      (duration+30)+
+      ").";
 
-        const training = ticks.slice(
-            historyStart,
-            i + 1
-        );
+    return;
+  }
 
-        if (training.length < 50) {
-            continue;
-        }
+  const windows =
+    [30,100,300,1000]
+      .filter(
+        w=>
+          w+duration<
+          S.ticks.length
+      );
 
-        const digitCounts =
-            countDigits(
-                training.map(t => t.digit)
-            );
+  if(
+    sample &&
+    !windows.includes(sample) &&
+    sample+duration<
+    S.ticks.length
+  ){
 
-        const probabilities =
-            smoothedProbabilities(
-                digitCounts
-            );
+    windows.push(sample);
+  }
 
-        const estimated =
-            contractProbabilityFromDigits(
-                probabilities,
-                type,
-                barrier
-            );
+  if(!windows.length){
+    return;
+  }
 
-        const baseline =
-            theoreticalProbability(
-                type,
-                barrier
-            );
+  const results =
+    windows.map(
+      w=>{
 
-        /*
-          Validation only counts a directional call when
-          historical probability is actually above baseline.
-        */
-
-        if (estimated <= baseline) {
-            continue;
-        }
-
-        const actualDigit =
-            ticks[i + duration]?.digit;
-
-        if (
-            !Number.isInteger(actualDigit)
-        ) {
-            continue;
-        }
-
-        const actual =
-            outcomeForDigit(
-                actualDigit,
-                type,
-                barrier
-            );
-
-        if (actual) {
-            correct++;
-        }
-
-        tested++;
-    }
-
-    return {
-        accuracy:
-            tested > 0
-                ? correct / tested
-                : 0,
-
-        samples: tested
-    };
-}
-
-/* ============================================================
-   WINDOW ANALYSIS
-   ============================================================ */
-
-function analyzeWindow(
-    ticks,
-    windowSize,
-    duration,
-    type,
-    barrier
-) {
-    const targetDigits =
-        buildHorizonDigits(
-            ticks,
-            windowSize,
+        const ds =
+          horizonDigits(
+            w,
             duration
-        );
+          );
 
-    if (targetDigits.length < 20) {
+        const p =
+          probs(
+            counts(ds)
+          );
+
+        const cp =
+          contractProb(
+            p,
+            type,
+            b
+          );
+
+        const base =
+          baseline(
+            type,
+            b
+          );
+
+        const wins =
+          ds.filter(
+            d=>
+              event(
+                d,
+                type,
+                b
+              )
+          ).length;
+
         return {
-            window: windowSize,
-            samples: targetDigits.length,
-            probabilities: Array(10).fill(.1),
-            contractProbability: 0,
-            baseline: theoreticalProbability(type, barrier),
-            edge: 0,
-            z: 0,
-            lowerBound: 0,
-            bestDigit: null,
-            bestProbability: 0,
-            entropy: 0,
-            transition: 0
-        };
-    }
-
-    const counts =
-        countDigits(targetDigits);
-
-    const probabilities =
-        smoothedProbabilities(counts);
-
-    const contractProbability =
-        contractProbabilityFromDigits(
-            probabilities,
-            type,
-            barrier
-        );
-
-    const baseline =
-        theoreticalProbability(
-            type,
-            barrier
-        );
-
-    const edge =
-        (contractProbability -
-            baseline) * 100;
-
-    const z =
-        zScore(
-            contractProbability,
-            baseline,
-            targetDigits.length
-        );
-
-    const successes =
-        targetDigits.filter(
-            digit =>
-                outcomeForDigit(
-                    digit,
-                    type,
-                    barrier
-                )
-        ).length;
-
-    const lowerBound =
-        wilsonLower(
-            successes,
-            targetDigits.length
-        );
-
-    const best =
-        findBestDigit(
-            probabilities,
-            type,
-            barrier
-        );
-
-    const transition =
-        transitionScore(
-            ticks,
-            duration,
-            type,
-            barrier
-        );
-
-    return {
-        window: windowSize,
-        samples: targetDigits.length,
-        counts,
-        probabilities,
-        contractProbability,
-        baseline,
-        edge,
-        z,
-        lowerBound,
-        bestDigit: best.digit,
-        bestProbability: best.probability,
-        entropy: entropy(probabilities),
-        transition
-    };
-}
-
-/* ============================================================
-   MAIN ANALYSIS
-   ============================================================ */
-
-function analyze() {
-    const duration =
-        Number(DOM.duration.value);
-
-    const type =
-        DOM.contract.value;
-
-    const barrier =
-        Number(DOM.barrier.value);
-
-    const minimumConfidence =
-        Number(DOM.threshold.value);
-
-    const requiredTicks =
-        duration + 50;
-
-    if (state.ticks.length < requiredTicks) {
-        setAnalysisStatus(
-            "WAITING FOR DATA",
-            "yellow"
-        );
-
-        DOM.message.textContent =
-            `Need at least ${requiredTicks} ticks. Currently ${state.ticks.length}.`;
-
-        DOM.confidenceText.textContent =
-            "0%";
-
-        DOM.confidenceBar.style.width =
-            "0%";
-
-        return;
-    }
-
-    const windows =
-        CONFIG.windows
-            .filter(windowSize =>
-                windowSize + duration <=
-                state.ticks.length
-            );
-
-    if (!windows.length) {
-        return;
-    }
-
-    const results =
-        windows.map(
-            windowSize =>
-                analyzeWindow(
-                    state.ticks,
-                    windowSize,
-                    duration,
-                    type,
-                    barrier
-                )
-        );
-
-    const primary =
-        results.find(
-            result =>
-                result.window ===
-                Number(DOM.analysisTicks.value)
-        ) ||
-        results[results.length - 1];
-
-    const best =
-        findBestDigit(
-            primary.probabilities,
-            type,
-            barrier
-        );
-
-    const probabilities =
-        primary.probabilities;
-
-    const baseline =
-        primary.baseline;
-
-    const edge =
-        primary.edge;
-
-    const z =
-        primary.z;
-
-    /*
-      Multi-window agreement
-    */
-
-    const bestDigits =
-        results
-            .map(result => result.bestDigit)
-            .filter(
-                digit =>
-                    Number.isInteger(digit)
-            );
-
-    let agreement = 0;
-
-    if (bestDigits.length) {
-        const frequency = {};
-
-        for (const digit of bestDigits) {
-            frequency[digit] =
-                (frequency[digit] || 0) + 1;
-        }
-
-        const max =
-            Math.max(
-                ...Object.values(frequency)
-            );
-
-        agreement =
-            (max / bestDigits.length) * 100;
-    }
-
-    /*
-      Consistency of probability edge
-    */
-
-    const positiveResults =
-        results.filter(
-            result =>
-                result.edge > 0
-        ).length;
-
-    const consistency =
-        results.length
-            ? (positiveResults /
-                results.length) * 100
-            : 0;
-
-    /*
-      Validation
-    */
-
-    const validation =
-        walkForwardValidation(
-            state.ticks,
-            duration,
-            type,
-            barrier,
-            CONFIG.validationSamples
-        );
-
-    /*
-      Confidence model.
-      This is NOT a guaranteed probability of winning.
-    */
-
-    const sampleFactor =
-        clamp(
-            primary.samples / 500,
-            0,
-            1
-        );
-
-    const edgeFactor =
-        clamp(
-            Math.abs(edge) / 10,
-            0,
-            1
-        );
-
-    const zFactor =
-        clamp(
-            Math.abs(z) / 3,
-            0,
-            1
-        );
-
-    const agreementFactor =
-        clamp(
-            agreement / 100,
-            0,
-            1
-        );
-
-    const consistencyFactor =
-        clamp(
-            consistency / 100,
-            0,
-            1
-        );
-
-    const validationFactor =
-        validation.samples >= 30
-            ? clamp(
-                validation.accuracy,
-                0,
-                1
+          w,
+          ds,
+          p,
+          cp,
+          base,
+          edge:
+            (cp-base)*100,
+          z:
+            zscore(
+              cp,
+              base,
+              ds.length
+            ),
+          lower:
+            wilson(
+              wins,
+              ds.length
+            ),
+          best:
+            bestDigit(
+              p,
+              type,
+              b
             )
-            : 0.5;
+        };
+      }
+    );
 
-    let confidence =
-        (
-            sampleFactor * 0.15 +
-            edgeFactor * 0.20 +
-            zFactor * 0.20 +
-            agreementFactor * 0.15 +
-            consistencyFactor * 0.15 +
-            validationFactor * 0.15
-        ) * 100;
+  const primary =
+    results.find(
+      x=>x.w===sample
+    ) ||
+    results.at(-1);
 
-    confidence =
+  const agrees =
+    results.filter(
+      x=>
+        x.best===
+        primary.best
+    ).length /
+    results.length *
+    100;
+
+  const positives =
+    results.filter(
+      x=>
+        x.edge>=1.5 &&
+        x.z>=1.25
+    ).length /
+    results.length *
+    100;
+
+  const val =
+    validation(
+      type,
+      b,
+      duration
+    );
+
+  const sampleFactor =
+    clamp(
+      primary.ds.length/500,
+      0,
+      1
+    );
+
+  const confidence =
+    clamp(
+      (
+        sampleFactor*.15+
         clamp(
-            confidence,
-            0,
-            95
-        );
+          primary.edge/10,
+          0,
+          1
+        )*.2+
+        clamp(
+          primary.z/3,
+          0,
+          1
+        )*.2+
+        agrees/100*.2+
+        positives/100*.15+
+        (
+          val
+          ?clamp(
+             val.accuracy,
+             0,
+             1
+           )
+          :.5
+        )*.1
+      )*100,
+      0,
+      95
+    );
 
-    /*
-      Signal filters
-    */
+  const min =
+    Number(
+      $("threshold")
+        .value
+        .replace("%","")
+    );
 
-    const enoughSample =
-        primary.samples >= 50;
+  const signal =
+    confidence>=min &&
+    primary.edge>=1.5 &&
+    primary.z>=1.25 &&
+    agrees>=66 &&
+    positives>=50;
 
-    const edgePass =
-        edge >= CONFIG.minEdge;
+  renderAnalysis({
 
-    const zPass =
-        z >= CONFIG.minZ;
+    type,
+    b,
+    duration,
+    primary,
+    results,
+    agrees,
+    positives,
+    val,
+    confidence,
+    signal
 
-    const consistencyPass =
-        consistency >= CONFIG.minConsistency;
-
-    const agreementPass =
-        agreement >= CONFIG.minAgreement;
-
-    const confidencePass =
-        confidence >= minimumConfidence;
-
-    const validationPass =
-        validation.samples < 30 ||
-        validation.accuracy >= 0.52;
-
-    const signal =
-        enoughSample &&
-        edgePass &&
-        zPass &&
-        consistencyPass &&
-        agreementPass &&
-        confidencePass &&
-        validationPass;
-
-    state.analysis = {
-        type,
-        barrier,
-        duration,
-        primary,
-        results,
-        best,
-        edge,
-        z,
-        agreement,
-        consistency,
-        confidence,
-        validation,
-        signal,
-        probabilities,
-        entropy: primary.entropy
-    };
-
-    renderAnalysis();
+  });
 }
 
-/* ============================================================
-   RENDER ANALYSIS
-   ============================================================ */
 
-function renderAnalysis() {
-    const analysis =
-        state.analysis;
+/*
+  ============================================================
+  RENDER ANALYSIS
+  ============================================================
+*/
 
-    if (!analysis) {
-        return;
-    }
+function renderAnalysis(a){
 
-    const {
-        type,
-        barrier,
-        duration,
-        primary,
-        best,
-        edge,
-        z,
-        agreement,
-        consistency,
-        confidence,
-        validation,
-        signal,
-        probabilities
-    } = analysis;
+  const {
+    primary,
+    confidence,
+    signal,
+    type,
+    b,
+    agrees,
+    positives
+  }=a;
 
-    DOM.bestDigit.textContent =
-        Number.isInteger(best.digit)
-            ? best.digit
-            : "—";
+  const bd =
+    primary.best;
 
-    DOM.bestDigitNote.textContent =
-        `${type} • ${duration} ticks`;
+  $("bestDigit").textContent =
+    bd;
 
-    DOM.bestProbability.textContent =
-        `${round(
-            best.probability * 100,
-            2
-        )}%`;
+  $("centerDigit").textContent =
+    bd;
 
-    DOM.edge.textContent =
-        `${edge >= 0 ? "+" : ""}${round(edge, 2)}%`;
+  $("confidencePct").textContent =
+    confidence.toFixed(0)+
+    "%";
 
-    DOM.zscore.textContent =
-        round(z, 2);
+  $("signalConfidence").textContent =
+    confidence.toFixed(0)+
+    "%";
 
-    DOM.consistency.textContent =
-        `${round(consistency, 1)}%`;
+  $("confidenceFill").style.width =
+    confidence+"%";
 
-    DOM.entropy.textContent =
-        round(primary.entropy, 3);
+  $("signalFill").style.width =
+    confidence+"%";
 
-    DOM.confidenceText.textContent =
-        `${round(confidence, 1)}%`;
+  $("status").textContent =
+    signal
+    ? "Signal Detected"
+    : "Analyzing";
 
-    DOM.confidenceBar.style.width =
-        `${clamp(confidence, 0, 100)}%`;
+  $("status").style.color =
+    signal
+    ? "#07935d"
+    : "#6654d9";
 
-    DOM.entry.textContent =
-        signal
-            ? `${type} ${barrier} • ${duration} ticks`
-            : "NO ENTRY";
+  $("pattern").textContent =
+    primary.edge>0
+    ? "Bias Detected"
+    : "Balanced";
 
-    DOM.sampleText.textContent =
-        `${primary.samples} samples`;
+  $("message").textContent =
+    signal
+    ?
+    `Statistical filters passed for ${type} ${b}. Agreement ${agrees.toFixed(0)}%, multi-window support ${positives.toFixed(0)}%.`
+    :
+    `No strong signal. Edge ${primary.edge.toFixed(2)}%, z-score ${primary.z.toFixed(2)}, agreement ${agrees.toFixed(0)}%.`;
 
-    if (signal) {
-        setAnalysisStatus(
-            "ENTRY SIGNAL",
-            "green"
-        );
+  $("signalText").textContent =
+    signal
+    ?
+    `${type} ${b} • ${confidence.toFixed(0)}%`
+    :
+    "No signal";
 
-        DOM.message.textContent =
-            `Evidence passed the configured filters. Confidence ${round(confidence, 1)}%, edge ${round(edge, 2)}%, z-score ${round(z, 2)}%, agreement ${round(agreement, 1)}%.`;
-    } else {
-        setAnalysisStatus(
-            "NO SIGNAL",
-            "yellow"
-        );
+  $("signalText").style.background =
+    signal
+    ? "#eafff5"
+    : "#fff6e8";
 
-        const reasons = [];
+  $("signalText").style.color =
+    signal
+    ? "#07935d"
+    : "#b06a10";
 
-        if (!edgePassForDisplay(edge)) {
-            reasons.push(
-                `edge below ${CONFIG.minEdge}%`
-            );
-        }
+  renderDigits(
+    primary.p
+  );
 
-        if (z < CONFIG.minZ) {
-            reasons.push(
-                `z-score below ${CONFIG.minZ}`
-            );
-        }
+  renderFrequency(
+    primary.p
+  );
 
-        if (consistency < CONFIG.minConsistency) {
-            reasons.push(
-                `consistency below ${CONFIG.minConsistency}%`
-            );
-        }
+  updatePatternChart();
 
-        if (agreement < CONFIG.minAgreement) {
-            reasons.push(
-                `window agreement below ${CONFIG.minAgreement}%`
-            );
-        }
-
-        if (confidence < Number(DOM.threshold.value)) {
-            reasons.push(
-                `confidence below ${DOM.threshold.value}%`
-            );
-        }
-
-        if (
-            validation.samples >= 30 &&
-            validation.accuracy < 0.52
-        ) {
-            reasons.push(
-                "walk-forward validation weak"
-            );
-        }
-
-        DOM.message.textContent =
-            reasons.length
-                ? `No entry: ${reasons.join(", ")}.`
-                : "Statistical evidence is not strong enough.";
-    }
-
-    renderDigitMatrix(probabilities);
-
-    renderWindowTable();
-
-    updateChart(probabilities);
+  log(
+    `Analysis ${signal?"SIGNAL":"NO SIGNAL"} • ${type} • best digit ${bd} • confidence ${confidence.toFixed(1)}%`,
+    signal ? "ok" : ""
+  );
 }
 
-function edgePassForDisplay(edge) {
-    return edge >= CONFIG.minEdge;
+
+/*
+  ============================================================
+  DIGIT BUTTONS
+  ============================================================
+*/
+
+function renderDigits(p){
+
+  const over =
+    $("overDigits");
+
+  const under =
+    $("underDigits");
+
+  const b =
+    Number(
+      $("barrier").value
+    );
+
+  over.innerHTML="";
+  under.innerHTML="";
+
+  for(
+    let i=0;
+    i<10;
+    i++
+  ){
+
+    const make =
+      (
+        parent,
+        active
+      )=>{
+
+        const x =
+          document.createElement(
+            "button"
+          );
+
+        x.className =
+          "digit"+
+          (
+            active
+            ? " active"
+            : ""
+          );
+
+        x.textContent=i;
+
+        x.onclick=()=>{
+
+          $("barrier").value=i;
+
+          analyze();
+        };
+
+        parent.appendChild(x);
+      };
+
+    make(
+      over,
+      i>b
+    );
+
+    make(
+      under,
+      i<b
+    );
+  }
 }
 
-function setAnalysisStatus(text, color) {
-    DOM.analysisStatus.textContent = text;
 
-    DOM.analysisStatus.className =
-        "signal " + color;
-}
+/*
+  ============================================================
+  FREQUENCY CHART
+  ============================================================
+*/
 
-/* ============================================================
-   DIGIT MATRIX
-   ============================================================ */
+function makeFrequencyChart(){
 
-function renderDigitMatrix(probabilities) {
-    DOM.matches.innerHTML = "";
+  S.chart =
+    new Chart(
+      $("frequencyChart"),
+      {
+        type:"bar",
 
-    let bestDigit = null;
+        data:{
+          labels:[
+            0,1,2,3,4,
+            5,6,7,8,9
+          ],
 
-    if (state.analysis) {
-        bestDigit =
-            state.analysis.best.digit;
-    }
+          datasets:[
+            {
+              data:
+                Array(10).fill(10),
 
-    for (let digit = 0; digit <= 9; digit++) {
-        const probability =
-            probabilities[digit] || 0;
+              backgroundColor:[
+                "#62cbe7",
+                "#3dbedc",
+                "#4bbdd9",
+                "#4baed8",
+                "#5f8eea",
+                "#7669e8",
+                "#7b5ee2",
+                "#7458dc",
+                "#7a50d4",
+                "#8b4fd0"
+              ],
 
-        const box =
-            document.createElement("div");
+              borderRadius:5
+            }
+          ]
+        },
 
-        box.className =
-            "digit" +
-            (
-                digit === bestDigit
-                    ? " best"
-                    : ""
-            );
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
 
-        const number =
-            document.createElement("div");
+          plugins:{
+            legend:{
+              display:false
+            }
+          },
 
-        number.className =
-            "digit-number";
+          scales:{
+            y:{
+              beginAtZero:true,
+              max:30,
 
-        number.textContent =
-            digit;
+              ticks:{
+                callback:
+                  v=>v+"%"
+              },
 
-        const prob =
-            document.createElement("div");
-
-        prob.className =
-            "digit-prob";
-
-        prob.textContent =
-            `${round(
-                probability * 100,
-                2
-            )}%`;
-
-        const bar =
-            document.createElement("div");
-
-        bar.className =
-            "digit-bar";
-
-        bar.style.transform =
-            `scaleX(${clamp(
-                probability * 10,
-                0,
-                1
-            )})`;
-
-        box.appendChild(number);
-
-        box.appendChild(prob);
-
-        box.appendChild(bar);
-
-        DOM.matches.appendChild(box);
-    }
-}
-
-/* ============================================================
-   WINDOW TABLE
-   ============================================================ */
-
-function renderWindowTable() {
-    if (!state.analysis) {
-        return;
-    }
-
-    DOM.windowTable.innerHTML = "";
-
-    for (const result of state.analysis.results) {
-        const row =
-            document.createElement("tr");
-
-        const edgeClass =
-            result.edge >= CONFIG.minEdge
-                ? "good"
-                : "warn";
-
-        const zClass =
-            result.z >= CONFIG.minZ
-                ? "good"
-                : "warn";
-
-        const status =
-            result.edge >= CONFIG.minEdge &&
-            result.z >= CONFIG.minZ
-                ? "PASS"
-                : "WEAK";
-
-        row.innerHTML = `
-            <td>${result.window}</td>
-            <td>${round(
-                result.contractProbability * 100,
-                2
-            )}%</td>
-            <td class="${edgeClass}">
-                ${result.edge >= 0 ? "+" : ""}
-                ${round(result.edge, 2)}%
-            </td>
-            <td class="${zClass}">
-                ${round(result.z, 2)}
-            </td>
-            <td class="${
-                status === "PASS"
-                    ? "good"
-                    : "warn"
-            }">
-                ${status}
-            </td>
-        `;
-
-        DOM.windowTable.appendChild(row);
-    }
-}
-
-/* ============================================================
-   CHART
-   ============================================================ */
-
-function createChart() {
-    const canvas =
-        document.getElementById("frequency");
-
-    if (!canvas) {
-        return;
-    }
-
-    if (state.chart) {
-        state.chart.destroy();
-    }
-
-    state.chart =
-        new Chart(canvas, {
-            type: "bar",
-
-            data: {
-                labels: [
-                    "0","1","2","3","4",
-                    "5","6","7","8","9"
-                ],
-
-                datasets: [
-                    {
-                        label: "Probability %",
-                        data: Array(10).fill(0),
-                        borderWidth: 1
-                    }
-                ]
+              grid:{
+                color:"#e5e9f6"
+              }
             },
 
-            options: {
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-
-                    tooltip: {
-                        callbacks: {
-                            label: context =>
-                                `${round(
-                                    context.raw,
-                                    2
-                                )}%`
-                        }
-                    }
-                },
-
-                scales: {
-                    y: {
-                        beginAtZero: true,
-
-                        max: 100,
-
-                        ticks: {
-                            callback: value =>
-                                `${value}%`
-                        },
-
-                        grid: {
-                            color:
-                                "rgba(140,160,190,.10)"
-                        }
-                    },
-
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
+            x:{
+              grid:{
+                display:false
+              }
             }
-        });
-}
-
-function updateChart(probabilities) {
-    if (!state.chart) {
-        createChart();
-    }
-
-    if (!state.chart) {
-        return;
-    }
-
-    state.chart.data.datasets[0].data =
-        probabilities.map(
-            probability =>
-                probability * 100
-        );
-
-    state.chart.update("none");
-}
-
-/* ============================================================
-   PROGRESS
-   ============================================================ */
-
-function updateDataProgress() {
-    const target =
-        Number(DOM.analysisTicks.value) || 500;
-
-    const current =
-        Math.min(
-            state.ticks.length,
-            target
-        );
-
-    const percent =
-        target > 0
-            ? (current / target) * 100
-            : 0;
-
-    DOM.dataBar.style.width =
-        `${clamp(percent, 0, 100)}%`;
-
-    DOM.dataBarText.textContent =
-        `${current} / ${target}`;
-}
-
-/* ============================================================
-   CLEAR ANALYSIS
-   ============================================================ */
-
-function clearAnalysisDisplay() {
-    state.analysis = null;
-
-    DOM.bestDigit.textContent = "—";
-
-    DOM.bestDigitNote.textContent =
-        "Waiting for data";
-
-    DOM.bestProbability.textContent =
-        "—";
-
-    DOM.edge.textContent =
-        "—";
-
-    DOM.zscore.textContent =
-        "—";
-
-    DOM.consistency.textContent =
-        "—";
-
-    DOM.entropy.textContent =
-        "—";
-
-    DOM.confidenceText.textContent =
-        "0%";
-
-    DOM.confidenceBar.style.width =
-        "0%";
-
-    DOM.entry.textContent =
-        "—";
-
-    DOM.sampleText.textContent =
-        "0 samples";
-
-    DOM.windowTable.innerHTML = `
-        <tr>
-            <td colspan="5" class="small">
-                Waiting for analysis...
-            </td>
-        </tr>
-    `;
-
-    setAnalysisStatus(
-        "WAITING FOR DATA",
-        "yellow"
+          }
+        }
+      }
     );
-
-    DOM.message.textContent =
-        "Connect to Deriv and load historical ticks.";
-
-    renderDigitMatrix(
-        Array(10).fill(.1)
-    );
-
-    if (state.chart) {
-        updateChart(
-            Array(10).fill(.1)
-        );
-    }
 }
 
-/* ============================================================
-   CONTROLS
-   ============================================================ */
+function renderFrequency(p){
 
-function setContract(type) {
-    DOM.contract.value = type;
+  if(!S.chart){
+    makeFrequencyChart();
+  }
 
-    state.selectedType = type;
+  S.chart
+    .data
+    .datasets[0]
+    .data =
+      p.map(
+        x=>x*100
+      );
 
-    document
-        .querySelectorAll(".type-btn")
-        .forEach(button => {
-            button.classList.toggle(
-                "active",
-                button.dataset.type === type
-            );
-        });
-
-    analyze();
+  S.chart.update("none");
 }
 
-function refreshAnalysis() {
-    if (!state.connected) {
-        connect();
 
-        return;
-    }
+/*
+  ============================================================
+  LIVE PATTERN CHART
+  ============================================================
+*/
 
-    requestHistory();
-}
+function makePatternChart(){
 
-function setupEvents() {
-    DOM.connectBtn.addEventListener(
-        "click",
-        () => {
-            if (state.connected) {
-                disconnect();
-            } else {
-                connect();
+  S.patternChart =
+    new Chart(
+      $("patternChart"),
+      {
+        type:"line",
+
+        data:{
+          labels:[],
+
+          datasets:[
+            {
+              data:[],
+
+              borderColor:"#6757e8",
+
+              backgroundColor:
+                "rgba(103,87,232,.10)",
+
+              fill:true,
+
+              tension:.3,
+
+              pointRadius:3,
+
+              pointBackgroundColor:
+                "#20b7dd"
             }
-        }
-    );
+          ]
+        },
 
-    DOM.refreshBtn.addEventListener(
-        "click",
-        refreshAnalysis
-    );
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
 
-    DOM.market.addEventListener(
-        "change",
-        event => {
-            selectMarket(
-                event.target.value
-            );
-        }
-    );
-
-    DOM.contract.addEventListener(
-        "change",
-        event => {
-            setContract(
-                event.target.value
-            );
-        }
-    );
-
-    DOM.duration.addEventListener(
-        "change",
-        () => {
-            requestHistoryIfConnected();
-        }
-    );
-
-    DOM.analysisTicks.addEventListener(
-        "change",
-        () => {
-            updateDataProgress();
-
-            requestHistoryIfConnected();
-        }
-    );
-
-    DOM.barrier.addEventListener(
-        "change",
-        analyze
-    );
-
-    DOM.threshold.addEventListener(
-        "change",
-        analyze
-    );
-
-    DOM.auto.addEventListener(
-        "change",
-        setupAutoAnalysis
-    );
-
-    document
-        .querySelectorAll(".type-btn")
-        .forEach(button => {
-            button.addEventListener(
-                "click",
-                () => {
-                    setContract(
-                        button.dataset.type
-                    );
-                }
-            );
-        });
-
-    DOM.themeBtn.addEventListener(
-        "click",
-        toggleTheme
-    );
-
-    DOM.helpBtn.addEventListener(
-        "click",
-        openHelp
-    );
-
-    DOM.close.addEventListener(
-        "click",
-        closeHelp
-    );
-
-    DOM.modal.addEventListener(
-        "click",
-        event => {
-            if (event.target === DOM.modal) {
-                closeHelp();
+          plugins:{
+            legend:{
+              display:false
             }
-        }
-    );
-}
+          },
 
-function requestHistoryIfConnected() {
-    if (!state.connected) {
-        clearAnalysisDisplay();
+          scales:{
+            y:{
+              min:0,
+              max:9,
 
-        return;
-    }
+              ticks:{
+                stepSize:1
+              },
 
-    requestHistory();
-}
+              grid:{
+                color:"#e6e9f6"
+              }
+            },
 
-/* ============================================================
-   AUTO ANALYSIS
-   ============================================================ */
-
-function setupAutoAnalysis() {
-    clearInterval(state.autoTimer);
-
-    state.autoTimer = null;
-
-    if (DOM.auto.value !== "on") {
-        log("Automatic analysis disabled.");
-
-        return;
-    }
-
-    log("Automatic analysis enabled.");
-
-    state.autoTimer =
-        setInterval(() => {
-            if (state.connected) {
-                requestHistory();
+            x:{
+              grid:{
+                color:"#edf0f8"
+              }
             }
-        }, CONFIG.analysisInterval);
+          }
+        }
+      }
+    );
 }
 
-/* ============================================================
-   THEME
-   ============================================================ */
+function updatePatternChart(){
 
-function toggleTheme() {
-    state.dark = !state.dark;
+  if(!S.patternChart){
+    makePatternChart();
+  }
 
-    if (!state.dark) {
-        document.documentElement.style.setProperty(
-            "--bg",
-            "#f4f7fb"
-        );
+  const last =
+    S.ticks.slice(-35);
 
-        document.documentElement.style.setProperty(
-            "--panel",
-            "#ffffff"
-        );
-
-        document.documentElement.style.setProperty(
-            "--panel2",
-            "#f1f5f9"
-        );
-
-        document.documentElement.style.setProperty(
-            "--panel3",
-            "#e7eef7"
-        );
-
-        document.documentElement.style.setProperty(
-            "--border",
-            "#d4deea"
-        );
-
-        document.documentElement.style.setProperty(
-            "--text",
-            "#102033"
-        );
-
-        document.documentElement.style.setProperty(
-            "--muted",
-            "#63758a"
-        );
-
-        document.body.style.color =
-            "#102033";
-
-        DOM.themeBtn.textContent =
-            "Dark";
-    } else {
-        document.documentElement.style.setProperty(
-            "--bg",
-            "#07111f"
-        );
-
-        document.documentElement.style.setProperty(
-            "--panel",
-            "#0d1a2b"
-        );
-
-        document.documentElement.style.setProperty(
-            "--panel2",
-            "#101f33"
-        );
-
-        document.documentElement.style.setProperty(
-            "--panel3",
-            "#14263d"
-        );
-
-        document.documentElement.style.setProperty(
-            "--border",
-            "#203650"
-        );
-
-        document.documentElement.style.setProperty(
-            "--text",
-            "#eaf2ff"
-        );
-
-        document.documentElement.style.setProperty(
-            "--muted",
-            "#8fa6c2"
-        );
-
-        document.body.style.color =
-            "#eaf2ff";
-
-        DOM.themeBtn.textContent =
-            "Light";
-    }
-}
-
-/* ============================================================
-   HELP
-   ============================================================ */
-
-function openHelp() {
-    DOM.modalTitle.textContent =
-        "Expert Trader Analysis Tool";
-
-    DOM.modalBody.innerHTML = `
-        <p>
-            <strong>Analysis only:</strong>
-            this application reads public Deriv market data.
-            It does not place trades.
-        </p>
-
-        <p>
-            <strong>Duration-aware analysis:</strong>
-            if the selected duration is 100 ticks, the analyzer
-            studies what happened approximately 100 ticks after
-            historical entry points.
-        </p>
-
-        <p>
-            <strong>OVER:</strong>
-            checks whether the future digit is above the barrier.
-        </p>
-
-        <p>
-            <strong>UNDER:</strong>
-            checks whether the future digit is below the barrier.
-        </p>
-
-        <p>
-            <strong>MATCH:</strong>
-            checks whether the future digit equals the selected barrier.
-        </p>
-
-        <p>
-            <strong>DIFFERS:</strong>
-            checks whether the future digit is different from
-            the selected barrier.
-        </p>
-
-        <p>
-            <strong>EVEN / ODD:</strong>
-            checks the parity of the future digit.
-        </p>
-
-        <p>
-            The tool combines multiple historical windows,
-            probability, edge, z-score, consistency,
-            window agreement and walk-forward validation.
-        </p>
-
-        <p>
-            <strong>Important:</strong>
-            a high confidence score is not a guarantee of profit.
-            Financial markets can change and historical patterns
-            can disappear.
-        </p>
-    `;
-
-    DOM.modal.classList.add("show");
-}
-
-function closeHelp() {
-    DOM.modal.classList.remove("show");
-}
-
-/* ============================================================
-   STARTUP
-   ============================================================ */
-
-function initialize() {
-    log("Initializing Expert Trader Analysis Tool...");
-
-    createChart();
-
-    setupEvents();
-
-    renderDigitMatrix(
-        Array(10).fill(.1)
+  const labels =
+    last.map(
+      (_,i)=>i+1
     );
 
-    setConnection(
-        "Disconnected",
-        false
+  const data =
+    last.map(
+      x=>x.digit
     );
 
-    DOM.message.textContent =
-        "Connecting to Deriv public market data...";
+  S.patternChart
+    .data
+    .labels=labels;
+
+  S.patternChart
+    .data
+    .datasets[0]
+    .data=data;
+
+  S.patternChart.update("none");
+}
+
+
+/*
+  ============================================================
+  PROGRESS
+  ============================================================
+*/
+
+function updateProgress(){
+
+  const target =
+    Number(
+      $("analysisTicks").value
+    );
+
+  const n =
+    Math.min(
+      S.ticks.length,
+      target
+    );
+
+  const p =
+    target
+    ? Math.round(
+        n/target*100
+      )
+    : 0;
+
+  $("dataFill").style.width =
+    p+"%";
+
+  $("dataPct").textContent =
+    p+"%";
+}
+
+
+/*
+  ============================================================
+  CONTRACT SELECTION
+  ============================================================
+*/
+
+function setContract(c){
+
+  $("contract").value=c;
+
+  S.contract=c;
+
+  document
+    .querySelectorAll(
+      "[data-contract]"
+    )
+    .forEach(
+      b=>{
+        b.style.transform =
+          b.dataset.contract===c
+          ? "translateY(-2px)"
+          : "";
+      }
+    );
+
+  analyze();
+}
+
+
+/*
+  ============================================================
+  START / STOP
+  ============================================================
+*/
+
+function start(){
+
+  if(!S.connected){
 
     connect();
+
+    return;
+  }
+
+  loadHistory();
+
+  $("start").textContent =
+    "■ Stop Analysis";
+
+  $("start2").textContent =
+    "Stop";
 }
 
-initialize();
+function stop(){
+
+  stopPolling();
+
+  $("start").textContent =
+    "▶ Start Analysis";
+
+  $("start2").textContent =
+    "Start";
+
+  $("status").textContent =
+    "Stopped";
+
+  log(
+    "Analysis stopped."
+  );
+}
+
+function toggleStart(){
+
+  if(S.polling){
+    stop();
+  }else{
+    start();
+  }
+}
+
+
+/*
+  ============================================================
+  EVENTS
+  ============================================================
+*/
+
+$("market").onchange =
+  e=>chooseMarket(
+    e.target.value
+  );
+
+$("contract").onchange =
+  e=>setContract(
+    e.target.value
+  );
+
+$("duration").onchange =
+  loadHistory;
+
+$("sample").onchange =
+  loadHistory;
+
+$("analysisTicks").onchange =
+  loadHistory;
+
+$("barrier").onchange =
+  analyze;
+
+$("threshold").onchange =
+  analyze;
+
+$("start").onclick =
+  toggleStart;
+
+$("start2").onclick =
+  toggleStart;
+
+document
+  .querySelectorAll(
+    "[data-contract]"
+  )
+  .forEach(
+    b=>{
+      b.onclick=()=>
+        setContract(
+          b.dataset.contract
+        );
+    }
+  );
+
+$("mode").onclick=()=>{
+
+  alert(
+    "Analysis mode only. No automatic trading is enabled."
+  );
+};
+
+$("logout").onclick=()=>{
+
+  S.manual=true;
+
+  stop();
+
+  if(S.ws){
+    S.ws.close();
+  }
+
+  $("connector").textContent =
+    "● Disconnected";
+
+  log(
+    "Disconnected by user."
+  );
+};
+
+$("auto").onchange=e=>{
+
+  clearInterval(
+    window.autoTimer
+  );
+
+  if(e.target.checked){
+
+    window.autoTimer =
+      setInterval(
+        ()=>{
+          if(S.connected){
+            loadHistory();
+          }
+        },
+        30000
+      );
+  }
+};
+
+
+/*
+  ============================================================
+  INITIALIZE
+  ============================================================
+*/
+
+renderDigits(
+  Array(10).fill(.1)
+);
+
+makeFrequencyChart();
+
+makePatternChart();
+
+connect();
 
 </script>
 
