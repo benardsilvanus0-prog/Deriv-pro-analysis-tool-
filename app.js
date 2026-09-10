@@ -1,132 +1,86 @@
-```javascript
 "use strict";
 
 /*
 =========================================================
-DERIV MATCHES / OVER / UNDER SIGNAL SCANNER
-ANALYSIS ONLY — NO AUTOMATIC TRADING
+DERIV MATCHES SIGNAL SCANNER
+ANALYSIS ONLY - NO AUTOMATIC TRADING
 
-Public market data only.
-No account token/login is required.
-
-Features:
-- Live Deriv markets
-- Historical ticks
-- Live tick stream
-- MATCH
-- DIFFERS
-- OVER
-- UNDER
-- EVEN
-- ODD
-- Digit statistics
-- Recent digits
-- Confidence calculation
-- Entry threshold
-- Automatic reconnect
-- Safe subscription handling
-
-IMPORTANT:
-This is an analysis/statistics tool.
-It does NOT guarantee profitable trades.
+Uses Deriv's current public WebSocket API.
+No account login/token is required for public market data.
 =========================================================
 */
 
 
 /* =====================================================
-   CONFIGURATION
+   CONFIG
 ===================================================== */
 
-/*
-Current public Deriv market-data WebSocket.
-No authentication is required for market data.
-*/
 const DERIV_WS =
     "wss://api.derivws.com/trading/v1/options/ws/public";
 
-/*
-Legacy public endpoint used only as a fallback if the
-new public endpoint cannot establish/use the connection.
-*/
-const LEGACY_DERIV_WS =
-    "wss://ws.binaryws.com/websockets/v3";
-
-
 const DEFAULT_TICK_COUNT = 1000;
 const MAX_TICK_COUNT = 5000;
-
 const RECONNECT_DELAY = 5000;
-const CONNECTION_TIMEOUT = 10000;
-
-const PING_INTERVAL = 12000;
 
 
-/* =====================================================
-   FALLBACK MARKETS
-===================================================== */
+/*
+Fallback markets.
 
+These are only used if Deriv returns no symbols.
+The application will still attempt to request live
+data from Deriv.
+*/
 const FALLBACK_MARKETS = [
-
     {
         symbol: "1HZ10V",
         name: "Volatility 10 (1s)",
         pip: 2
     },
-
     {
         symbol: "1HZ25V",
         name: "Volatility 25 (1s)",
         pip: 2
     },
-
     {
         symbol: "1HZ50V",
         name: "Volatility 50 (1s)",
         pip: 2
     },
-
     {
         symbol: "1HZ75V",
         name: "Volatility 75 (1s)",
         pip: 2
     },
-
     {
         symbol: "1HZ100V",
         name: "Volatility 100 (1s)",
         pip: 2
     },
-
     {
         symbol: "R_10",
         name: "Volatility 10",
         pip: 3
     },
-
     {
         symbol: "R_25",
         name: "Volatility 25",
         pip: 3
     },
-
     {
         symbol: "R_50",
         name: "Volatility 50",
         pip: 4
     },
-
     {
         symbol: "R_75",
         name: "Volatility 75",
         pip: 4
     },
-
     {
         symbol: "R_100",
         name: "Volatility 100",
         pip: 2
     }
-
 ];
 
 
@@ -138,12 +92,10 @@ let ws = null;
 
 let connected = false;
 let connecting = false;
-
 let manualDisconnect = false;
 
 let reconnectTimer = null;
 let pingTimer = null;
-let connectionTimer = null;
 let autoScanTimer = null;
 
 let requestId = 1;
@@ -160,129 +112,61 @@ let ticks = [];
 let currentMode = "match";
 let currentType = "MATCH";
 
-let websocketEndpoint =
-    DERIV_WS;
-
-let usingFallbackEndpoint = false;
-
-let activeRequestId = null;
-let historyRequestId = null;
-let tickRequestId = null;
-
 
 /* =====================================================
-   DOM HELPERS
+   DOM
 ===================================================== */
 
-const $ = id =>
-    document.getElementById(id);
+const $ = id => document.getElementById(id);
 
+const marketSelect = $("marketSelect");
+const tickCount = $("tickCount");
+const threshold = $("threshold");
+const barrier = $("barrier");
 
-/* Main controls */
+const connectBtn = $("connectBtn");
+const scanBtn = $("scanBtn");
+const autoScan = $("autoScan");
 
-const marketSelect =
-    $("marketSelect");
+const connectionDot = $("connectionDot");
+const statusText = $("statusText");
 
-const tickCount =
-    $("tickCount");
+const liveBadge = $("liveBadge");
 
-const threshold =
-    $("threshold");
+const signalTitle = $("signalTitle");
+const bestDigit = $("bestDigit");
+const bestConfidence = $("bestConfidence");
+const confidenceBar = $("confidenceBar");
 
-const barrier =
-    $("barrier");
+const signalExplanation = $("signalExplanation");
+const entryStatus = $("entryStatus");
 
-const connectBtn =
-    $("connectBtn");
+const tickStatus = $("tickStatus");
 
-const scanBtn =
-    $("scanBtn");
+const livePrice = $("livePrice");
+const lastDigit = $("lastDigit");
 
-const autoScan =
-    $("autoScan");
+const marketName = $("marketName");
 
-
-/* Connection */
-
-const connectionDot =
-    $("connectionDot");
-
-const statusText =
-    $("statusText");
-
-const liveBadge =
-    $("liveBadge");
-
-
-/* Signal */
-
-const signalTitle =
-    $("signalTitle");
-
-const bestDigit =
-    $("bestDigit");
-
-const bestConfidence =
-    $("bestConfidence");
-
-const confidenceBar =
-    $("confidenceBar");
-
-const signalExplanation =
-    $("signalExplanation");
-
-const entryStatus =
-    $("entryStatus");
-
-
-/* Tick */
-
-const tickStatus =
-    $("tickStatus");
-
-const livePrice =
-    $("livePrice");
-
-const lastDigit =
-    $("lastDigit");
-
-const marketName =
-    $("marketName");
-
-
-/* Digit UI */
-
-const digitGrid =
-    $("digitGrid");
-
-const recentDigits =
-    $("recentDigits");
+const digitGrid = $("digitGrid");
+const recentDigits = $("recentDigits");
 
 
 /* =====================================================
    BASIC HELPERS
 ===================================================== */
 
-function setText(
-    element,
-    value
-) {
+function setText(element, value) {
 
     if (element) {
-
-        element.textContent =
-            value;
+        element.textContent = value;
     }
 }
 
 
-function number(
-    value,
-    fallback = 0
-) {
+function number(value, fallback = 0) {
 
-    const n =
-        Number(value);
+    const n = Number(value);
 
     return Number.isFinite(n)
         ? n
@@ -347,34 +231,21 @@ function getBarrier() {
 
 
 /* =====================================================
-   PRICE / PIP FUNCTIONS
+   PIP / PRICE
 ===================================================== */
 
-function decimalPlacesFromPip(
-    pip
-) {
+function decimalPlacesFromPip(pip) {
 
-    const p =
-        Number(pip);
+    const p = Number(pip);
 
     if (
         !Number.isFinite(p) ||
         p <= 0
     ) {
-
         return 2;
     }
 
-    /*
-    pip_size can be supplied as:
-    0.01
-    0.001
-    0.0001
-    etc.
-    */
-
     if (p >= 1) {
-
         return 0;
     }
 
@@ -387,9 +258,7 @@ function decimalPlacesFromPip(
 }
 
 
-function formatPrice(
-    price
-) {
+function formatPrice(price) {
 
     const places =
         decimalPlacesFromPip(
@@ -403,82 +272,43 @@ function formatPrice(
 
 
 /*
-Extract the final digit from the displayed
-price according to the market's pip size.
+Get last digit using the market's pip size.
 */
-function getLastDigit(
-    price
-) {
-
-    const numericPrice =
-        Number(price);
-
-    if (
-        !Number.isFinite(
-            numericPrice
-        )
-    ) {
-
-        return null;
-    }
-
+function getLastDigit(price) {
 
     const places =
         decimalPlacesFromPip(
             pipSize
         );
 
-
     const formatted =
-        numericPrice.toFixed(
+        Number(price).toFixed(
             places
         );
 
+    const decimal =
+        formatted.split(".")[1];
 
-    /*
-    If there is a decimal part,
-    use the last decimal digit.
-    */
-    if (
-        formatted.includes(".")
-    ) {
+    if (!decimal) {
 
-        const parts =
-            formatted.split(".");
-
-        const decimals =
-            parts[1] || "";
-
-        if (decimals.length) {
-
-            return Number(
-                decimals[
-                    decimals.length - 1
-                ]
+        const integer =
+            formatted.replace(
+                /\D/g,
+                ""
             );
-        }
+
+        return integer
+            ? Number(
+                integer[
+                    integer.length - 1
+                ]
+            )
+            : null;
     }
-
-
-    /*
-    Fallback for integer prices.
-    */
-    const digits =
-        formatted.replace(
-            /\D/g,
-            ""
-        );
-
-
-    if (!digits.length) {
-
-        return null;
-    }
-
 
     return Number(
-        digits[
-            digits.length - 1
+        decimal[
+            decimal.length - 1
         ]
     );
 }
@@ -501,10 +331,7 @@ function updateConnectionUI(
             "connecting"
         );
 
-
-        if (
-            state === "online"
-        ) {
+        if (state === "online") {
 
             connectionDot.classList.add(
                 "online"
@@ -553,12 +380,10 @@ function updateConnectionUI(
 
 
 /* =====================================================
-   WEBSOCKET SEND
+   SEND MESSAGE
 ===================================================== */
 
-function send(
-    data
-) {
+function send(data) {
 
     if (
         !ws ||
@@ -567,7 +392,7 @@ function send(
     ) {
 
         console.warn(
-            "WebSocket is not open.",
+            "WebSocket not open:",
             data
         );
 
@@ -581,17 +406,12 @@ function send(
             JSON.stringify(data)
         );
 
-        console.log(
-            "Deriv SEND:",
-            data
-        );
-
         return true;
 
     } catch (error) {
 
         console.error(
-            "WebSocket send error:",
+            "Send error:",
             error
         );
 
@@ -610,13 +430,11 @@ function connectDeriv() {
         connecting ||
         connected
     ) {
-
         return;
     }
 
 
     manualDisconnect = false;
-
     connecting = true;
 
 
@@ -640,8 +458,7 @@ function connectDeriv() {
 
     if (connectBtn) {
 
-        connectBtn.disabled =
-            true;
+        connectBtn.disabled = true;
 
         connectBtn.textContent =
             "⏳ Connecting...";
@@ -649,8 +466,8 @@ function connectDeriv() {
 
 
     console.log(
-        "Opening WebSocket:",
-        websocketEndpoint
+        "Opening Deriv WebSocket:",
+        DERIV_WS
     );
 
 
@@ -658,7 +475,7 @@ function connectDeriv() {
 
         ws =
             new WebSocket(
-                websocketEndpoint
+                DERIV_WS
             );
 
 
@@ -685,44 +502,6 @@ function connectDeriv() {
             handleClose
         );
 
-
-        /*
-        Protect against a connection that hangs
-        without producing open/error/close.
-        */
-        clearConnectionTimer();
-
-
-        connectionTimer =
-            setTimeout(
-                () => {
-
-                    if (
-                        connecting &&
-                        !connected
-                    ) {
-
-                        console.warn(
-                            "Connection timeout."
-                        );
-
-
-                        try {
-
-                            ws?.close();
-
-                        } catch (error) {
-
-                            console.warn(
-                                error
-                            );
-                        }
-                    }
-
-                },
-                CONNECTION_TIMEOUT
-            );
-
     } catch (error) {
 
         console.error(
@@ -730,15 +509,12 @@ function connectDeriv() {
             error
         );
 
-
         connecting = false;
-
 
         updateConnectionUI(
             "offline",
             "Connection failed"
         );
-
 
         resetConnectButton();
     }
@@ -751,7 +527,10 @@ function connectDeriv() {
 
 function handleOpen() {
 
-    clearConnectionTimer();
+    console.log(
+        "CONNECTED:",
+        DERIV_WS
+    );
 
 
     connected = true;
@@ -766,8 +545,7 @@ function handleOpen() {
 
     if (connectBtn) {
 
-        connectBtn.disabled =
-            false;
+        connectBtn.disabled = false;
 
         connectBtn.textContent =
             "🔌 Disconnect";
@@ -790,15 +568,10 @@ function handleOpen() {
 
 
     /*
-    Current public market-data API.
-
-    Important:
-    Do NOT send product_type here when using
-    the newer API endpoint.
+    Current Deriv API:
+    active_symbols does not need
+    product_type.
     */
-    activeRequestId =
-        nextRequestId();
-
 
     send({
 
@@ -806,7 +579,7 @@ function handleOpen() {
             "brief",
 
         req_id:
-            activeRequestId
+            nextRequestId()
     });
 }
 
@@ -836,7 +609,7 @@ function startPing() {
                 }
 
             },
-            PING_INTERVAL
+            12000
         );
 }
 
@@ -855,12 +628,10 @@ function stopPing() {
 
 
 /* =====================================================
-   MESSAGE HANDLER
+   MESSAGE
 ===================================================== */
 
-function handleMessage(
-    event
-) {
+function handleMessage(event) {
 
     let data;
 
@@ -875,7 +646,7 @@ function handleMessage(
     } catch (error) {
 
         console.error(
-            "Invalid JSON from Deriv:",
+            "Invalid JSON:",
             event.data
         );
 
@@ -884,16 +655,14 @@ function handleMessage(
 
 
     console.log(
-        "Deriv RECEIVE:",
+        "Deriv:",
         data
     );
 
 
-    /*
-    -----------------------------------------
-    API ERROR
-    -----------------------------------------
-    */
+    /* -----------------------------------------
+       API ERROR
+    ----------------------------------------- */
 
     if (data.error) {
 
@@ -905,11 +674,9 @@ function handleMessage(
     }
 
 
-    /*
-    -----------------------------------------
-    ACTIVE SYMBOLS
-    -----------------------------------------
-    */
+    /* -----------------------------------------
+       ACTIVE SYMBOLS
+    ----------------------------------------- */
 
     if (
         data.msg_type ===
@@ -924,11 +691,9 @@ function handleMessage(
     }
 
 
-    /*
-    -----------------------------------------
-    HISTORY
-    -----------------------------------------
-    */
+    /* -----------------------------------------
+       HISTORY
+    ----------------------------------------- */
 
     if (
         data.msg_type ===
@@ -943,11 +708,9 @@ function handleMessage(
     }
 
 
-    /*
-    -----------------------------------------
-    TICK
-    -----------------------------------------
-    */
+    /* -----------------------------------------
+       TICK
+    ----------------------------------------- */
 
     if (
         data.msg_type ===
@@ -962,11 +725,9 @@ function handleMessage(
     }
 
 
-    /*
-    -----------------------------------------
-    PING
-    -----------------------------------------
-    */
+    /* -----------------------------------------
+       PING
+    ----------------------------------------- */
 
     if (
         data.msg_type ===
@@ -978,9 +739,8 @@ function handleMessage(
 
 
     /*
-    -----------------------------------------
-    SUBSCRIPTION
-    -----------------------------------------
+    Some API versions may return
+    subscription information separately.
     */
 
     if (
@@ -990,7 +750,6 @@ function handleMessage(
 
         currentSubscriptionId =
             data.subscription.id;
-
 
         console.log(
             "Subscription ID:",
@@ -1004,151 +763,48 @@ function handleMessage(
    API ERROR
 ===================================================== */
 
-function handleApiError(
-    data
-) {
-
-    const error =
-        data.error || {};
-
-
-    const code =
-        error.code ||
-        "API_ERROR";
-
-
-    const message =
-        error.message ||
-        "Unknown Deriv API error";
-
+function handleApiError(data) {
 
     console.error(
         "DERIV API ERROR:",
-        error
+        data.error
     );
+
+
+    const errorCode =
+        data.error.code ||
+        "API_ERROR";
+
+
+    const errorMessage =
+        data.error.message ||
+        "Deriv API error";
 
 
     setText(
         statusText,
-        `${code}: ${message}`
+        `${errorCode}: ${errorMessage}`
     );
 
 
     setText(
         signalExplanation,
-        `${code}: ${message}`
+        `${errorCode}: ${errorMessage}`
     );
 
 
     /*
-    If the active-symbol request failed,
-    try the legacy endpoint once.
+    Only use fallback when market request
+    itself failed.
     */
-    const request =
-        data.echo_req || {};
-
 
     if (
-        request.active_symbols &&
-        !usingFallbackEndpoint
+        data.echo_req &&
+        data.echo_req.active_symbols
     ) {
 
-        console.warn(
-            "Active symbols failed on new endpoint. Trying legacy endpoint..."
-        );
-
-
-        switchToLegacyEndpoint();
-
-        return;
+        loadFallbackMarkets();
     }
-
-
-    /*
-    If history/ticks fail, show a useful message.
-    */
-    if (
-        request.ticks_history ||
-        request.ticks
-    ) {
-
-        setText(
-            tickStatus,
-            "Data request failed"
-        );
-    }
-}
-
-
-/* =====================================================
-   SWITCH TO LEGACY ENDPOINT
-===================================================== */
-
-function switchToLegacyEndpoint() {
-
-    if (
-        usingFallbackEndpoint
-    ) {
-
-        return;
-    }
-
-
-    usingFallbackEndpoint =
-        true;
-
-
-    websocketEndpoint =
-        LEGACY_DERIV_WS;
-
-
-    console.warn(
-        "Switching to legacy Deriv WebSocket:",
-        websocketEndpoint
-    );
-
-
-    try {
-
-        ws?.close();
-
-    } catch (error) {
-
-        console.warn(
-            error
-        );
-    }
-
-
-    connected = false;
-    connecting = false;
-
-
-    setText(
-        signalTitle,
-        "Retrying connection..."
-    );
-
-
-    setText(
-        signalExplanation,
-        "Trying Deriv's compatible public market-data endpoint..."
-    );
-
-
-    setTimeout(
-        () => {
-
-            if (
-                !manualDisconnect
-            ) {
-
-                connectDeriv();
-            }
-
-        },
-        1000
-    );
 }
 
 
@@ -1156,9 +812,7 @@ function switchToLegacyEndpoint() {
    ACTIVE SYMBOLS
 ===================================================== */
 
-function handleActiveSymbols(
-    data
-) {
+function handleActiveSymbols(data) {
 
     const symbols =
         Array.isArray(
@@ -1169,7 +823,7 @@ function handleActiveSymbols(
 
 
     console.log(
-        "Active symbols received:",
+        "Markets received:",
         symbols.length
     );
 
@@ -1177,15 +831,10 @@ function handleActiveSymbols(
     if (!symbols.length) {
 
         console.warn(
-            "Deriv returned an empty active_symbols array."
+            "Deriv returned zero active markets."
         );
 
 
-        /*
-        Do not immediately pretend these are live
-        markets. Show fallback choices but clearly
-        identify them as fallback.
-        */
         loadFallbackMarkets();
 
         return;
@@ -1202,28 +851,16 @@ function handleActiveSymbols(
    NORMALIZE MARKET
 ===================================================== */
 
-function normalizeMarket(
-    item
-) {
+function normalizeMarket(item) {
 
     if (!item) {
-
         return null;
     }
 
 
     /*
-    New API:
-      underlying_symbol
-      underlying_symbol_name
-      underlying_symbol_type
-      pip_size
-
-    Legacy API:
-      symbol
-      display_name
-      symbol_type
-      pip
+    New API field names.
+    Legacy names are retained for compatibility.
     */
 
     const symbol =
@@ -1233,7 +870,6 @@ function normalizeMarket(
 
 
     if (!symbol) {
-
         return null;
     }
 
@@ -1277,13 +913,7 @@ function normalizeMarket(
             item.subgroup || "",
 
         submarket:
-            item.submarket || "",
-
-        exchangeOpen:
-            item.exchange_is_open,
-
-        suspended:
-            item.is_trading_suspended
+            item.submarket || ""
     };
 }
 
@@ -1292,9 +922,7 @@ function normalizeMarket(
    LOAD MARKETS
 ===================================================== */
 
-function loadMarkets(
-    symbols
-) {
+function loadMarkets(symbols) {
 
     const normalized =
         symbols
@@ -1312,10 +940,8 @@ function loadMarkets(
 
     /*
     Prefer synthetic indices.
-
-    We retain all symbols if the API doesn't
-    return identifiable synthetic symbols.
     */
+
     let markets =
         normalized.filter(
             market => {
@@ -1326,62 +952,25 @@ function loadMarkets(
                 const type =
                     market.type.toLowerCase();
 
-                const marketName =
-                    market.name.toLowerCase();
-
-
                 return (
-
                     type.includes(
                         "synthetic"
-                    )
-
-                    ||
-
-                    type.includes(
-                        "derived"
-                    )
-
-                    ||
+                    ) ||
 
                     /^R_\d+/i.test(
                         symbol
-                    )
-
-                    ||
+                    ) ||
 
                     /^1HZ\d+/i.test(
                         symbol
-                    )
-
-                    ||
+                    ) ||
 
                     /^BOOM/i.test(
                         symbol
-                    )
-
-                    ||
+                    ) ||
 
                     /^CRASH/i.test(
                         symbol
-                    )
-
-                    ||
-
-                    marketName.includes(
-                        "volatility"
-                    )
-
-                    ||
-
-                    marketName.includes(
-                        "boom"
-                    )
-
-                    ||
-
-                    marketName.includes(
-                        "crash"
                     )
                 );
             }
@@ -1389,9 +978,10 @@ function loadMarkets(
 
 
     /*
-    If filtering produces nothing,
-    use all available symbols.
+    If synthetic filtering returns
+    nothing, show all markets.
     */
+
     if (!markets.length) {
 
         markets =
@@ -1408,39 +998,9 @@ function loadMarkets(
 
 
     /*
-    Remove duplicates.
-    */
-    const unique =
-        new Map();
-
-
-    markets.forEach(
-        market => {
-
-            if (
-                !unique.has(
-                    market.symbol
-                )
-            ) {
-
-                unique.set(
-                    market.symbol,
-                    market
-                );
-            }
-        }
-    );
-
-
-    markets =
-        Array.from(
-            unique.values()
-        );
-
-
-    /*
     Sort alphabetically.
     */
+
     markets.sort(
         (a, b) =>
             a.name.localeCompare(
@@ -1457,13 +1017,13 @@ function loadMarkets(
 
 
 /* =====================================================
-   FALLBACK MARKETS
+   FALLBACK
 ===================================================== */
 
 function loadFallbackMarkets() {
 
     console.warn(
-        "Using fallback synthetic markets."
+        "Using fallback markets."
     );
 
 
@@ -1494,7 +1054,7 @@ function loadFallbackMarkets() {
 
 
 /* =====================================================
-   POPULATE MARKET SELECT
+   MARKET SELECT
 ===================================================== */
 
 function populateMarketSelect(
@@ -1503,11 +1063,6 @@ function populateMarketSelect(
 ) {
 
     if (!marketSelect) {
-
-        console.error(
-            "marketSelect element not found."
-        );
-
         return;
     }
 
@@ -1522,8 +1077,7 @@ function populateMarketSelect(
         );
 
 
-    placeholder.value =
-        "";
+    placeholder.value = "";
 
 
     placeholder.textContent =
@@ -1562,10 +1116,6 @@ function populateMarketSelect(
                 market.pip || "";
 
 
-            option.dataset.type =
-                market.type || "";
-
-
             marketSelect.appendChild(
                 option
             );
@@ -1578,7 +1128,8 @@ function populateMarketSelect(
 
 
     console.log(
-        `Markets loaded: ${count}`
+        "Markets loaded:",
+        count
     );
 
 
@@ -1595,13 +1146,6 @@ function populateMarketSelect(
             "No markets"
         );
 
-
-        setText(
-            signalExplanation,
-            "Deriv returned no usable markets."
-        );
-
-
         return;
     }
 
@@ -1615,19 +1159,21 @@ function populateMarketSelect(
     setText(
         signalExplanation,
         fallback
-
-            ? "Deriv returned no usable market list. Fallback synthetic markets are shown."
-            
+            ? "Deriv returned no market list. Testing the fallback synthetic markets."
             : "Choose a market to begin analysis."
     );
 
 
     /*
-    Automatically select first available market.
+    Select first market automatically.
     */
-    marketSelect.selectedIndex =
-        1;
 
+    marketSelect.selectedIndex = 1;
+
+
+    /*
+    Start it automatically.
+    */
 
     handleMarketChange();
 }
@@ -1640,7 +1186,6 @@ function populateMarketSelect(
 function handleMarketChange() {
 
     if (!marketSelect) {
-
         return;
     }
 
@@ -1650,7 +1195,6 @@ function handleMarketChange() {
 
 
     if (!symbol) {
-
         return;
     }
 
@@ -1686,10 +1230,6 @@ function handleMarketChange() {
     };
 
 
-    /*
-    Use pip supplied by active_symbols
-    when available.
-    */
     if (
         Number.isFinite(
             selectedPip
@@ -1702,9 +1242,6 @@ function handleMarketChange() {
     }
 
 
-    /*
-    Clear previous market data.
-    */
     ticks = [];
 
 
@@ -1742,12 +1279,10 @@ function handleMarketChange() {
 
 
 /* =====================================================
-   SUBSCRIBE TO MARKET
+   SUBSCRIBE
 ===================================================== */
 
-function subscribeToMarket(
-    symbol
-) {
+function subscribeToMarket(symbol) {
 
     if (
         !connected ||
@@ -1757,29 +1292,34 @@ function subscribeToMarket(
     ) {
 
         console.warn(
-            "Cannot subscribe — WebSocket is not open."
+            "Cannot subscribe: not connected."
         );
-
-
-        setText(
-            statusText,
-            "Not connected"
-        );
-
 
         return;
     }
 
 
     /*
-    Cancel previous tick subscription.
+    Forget previous subscription.
     */
-    forgetCurrentSubscription();
+
+    if (currentSubscriptionId) {
+
+        send({
+
+            forget:
+                currentSubscriptionId,
+
+            req_id:
+                nextRequestId()
+        });
 
 
-    /*
-    Reset tick state.
-    */
+        currentSubscriptionId =
+            null;
+    }
+
+
     ticks = [];
 
 
@@ -1788,14 +1328,8 @@ function subscribeToMarket(
 
 
     /*
-    -----------------------------------------
-    HISTORY REQUEST
-    -----------------------------------------
+    HISTORY
     */
-
-    historyRequestId =
-        nextRequestId();
-
 
     const historyRequest = {
 
@@ -1812,7 +1346,7 @@ function subscribeToMarket(
             "ticks",
 
         req_id:
-            historyRequestId
+            nextRequestId()
     };
 
 
@@ -1822,25 +1356,14 @@ function subscribeToMarket(
     );
 
 
-    if (
-        !send(
-            historyRequest
-        )
-    ) {
-
-        return;
-    }
+    send(
+        historyRequest
+    );
 
 
     /*
-    -----------------------------------------
-    LIVE TICK SUBSCRIPTION
-    -----------------------------------------
+    LIVE SUBSCRIPTION
     */
-
-    tickRequestId =
-        nextRequestId();
-
 
     const tickRequest = {
 
@@ -1851,7 +1374,7 @@ function subscribeToMarket(
             1,
 
         req_id:
-            tickRequestId
+            nextRequestId()
     };
 
 
@@ -1874,46 +1397,15 @@ function subscribeToMarket(
 
 
 /* =====================================================
-   FORGET SUBSCRIPTION
-===================================================== */
-
-function forgetCurrentSubscription() {
-
-    if (
-        currentSubscriptionId &&
-        ws &&
-        ws.readyState ===
-            WebSocket.OPEN
-    ) {
-
-        send({
-
-            forget:
-                currentSubscriptionId,
-
-            req_id:
-                nextRequestId()
-        });
-    }
-
-
-    currentSubscriptionId =
-        null;
-}
-
-
-/* =====================================================
    HISTORY
 ===================================================== */
 
-function processHistory(
-    data
-) {
+function processHistory(data) {
 
     if (!data.history) {
 
         console.warn(
-            "History response has no history object:",
+            "No history object:",
             data
         );
 
@@ -1935,42 +1427,6 @@ function processHistory(
         )
             ? data.history.times
             : [];
-
-
-    /*
-    New API may provide pip_size in the
-    history response.
-    */
-    const historyPip =
-        Number(
-            data.pip_size ??
-            data.history.pip_size
-        );
-
-
-    if (
-        Number.isFinite(
-            historyPip
-        ) &&
-        historyPip > 0
-    ) {
-
-        /*
-        Some API versions represent pip_size
-        as decimal precision while others may
-        provide the actual price increment.
-
-        Only use it if it looks like a valid
-        decimal price increment.
-        */
-        if (
-            historyPip < 1
-        ) {
-
-            pipSize =
-                historyPip;
-        }
-    }
 
 
     console.log(
@@ -2017,7 +1473,6 @@ function processHistory(
                 price
             )
         ) {
-
             continue;
         }
 
@@ -2029,11 +1484,8 @@ function processHistory(
 
 
         if (
-            digit === null ||
-            digit < 0 ||
-            digit > 9
+            digit === null
         ) {
-
             continue;
         }
 
@@ -2065,7 +1517,7 @@ function processHistory(
 
     setText(
         statusText,
-        `LIVE • ${ticks.length} historical ticks`
+        `Live • ${ticks.length} ticks`
     );
 
 
@@ -2080,15 +1532,16 @@ function processHistory(
    LIVE TICK
 ===================================================== */
 
-function processTick(
-    data
-) {
+function processTick(data) {
 
     if (!data.tick) {
-
         return;
     }
 
+
+    /*
+    New API / legacy compatibility.
+    */
 
     const price =
         Number(
@@ -2103,7 +1556,7 @@ function processTick(
     ) {
 
         console.warn(
-            "Invalid tick price:",
+            "Invalid tick:",
             data.tick
         );
 
@@ -2112,8 +1565,9 @@ function processTick(
 
 
     /*
-    Get pip size if supplied by tick.
+    Update pip size when supplied.
     */
+
     const tickPip =
         Number(
             data.tick.pip_size ??
@@ -2122,11 +1576,8 @@ function processTick(
 
 
     if (
-        Number.isFinite(
-            tickPip
-        ) &&
-        tickPip > 0 &&
-        tickPip < 1
+        Number.isFinite(tickPip) &&
+        tickPip > 0
     ) {
 
         pipSize =
@@ -2143,22 +1594,6 @@ function processTick(
     if (
         digit === null
     ) {
-
-        return;
-    }
-
-
-    /*
-    Make sure this tick belongs to
-    the currently selected symbol.
-    */
-    if (
-        data.tick.symbol &&
-        currentSymbol &&
-        data.tick.symbol !==
-            currentSymbol
-    ) {
-
         return;
     }
 
@@ -2185,6 +1620,7 @@ function processTick(
     /*
     Capture subscription ID.
     */
+
     if (
         data.subscription &&
         data.subscription.id
@@ -2230,7 +1666,7 @@ function limitTicks() {
 
 
 /* =====================================================
-   ANALYSIS ENGINE
+   ANALYSIS
 ===================================================== */
 
 function analyze() {
@@ -2246,11 +1682,9 @@ function analyze() {
     let result;
 
 
-    /*
-    DIFFERS mode.
-    */
     if (
-        currentMode === "diff"
+        currentMode === "diff" &&
+        currentType === "MATCH"
     ) {
 
         result =
@@ -2317,7 +1751,6 @@ function analyze() {
 
 
     if (!result) {
-
         return;
     }
 
@@ -2365,9 +1798,6 @@ function analyze() {
     );
 
 
-    /*
-    Entry threshold.
-    */
     const required =
         getThreshold();
 
@@ -2424,38 +1854,25 @@ function calculateMatch() {
     ticks.forEach(
         tick => {
 
-            const digit =
-                Number(
-                    tick.digit
-                );
-
-
             if (
                 Number.isInteger(
-                    digit
-                ) &&
-                digit >= 0 &&
-                digit <= 9
+                    tick.digit
+                )
             ) {
 
-                counts[digit]++;
+                counts[
+                    tick.digit
+                ]++;
             }
         }
     );
 
 
-    /*
-    IMPORTANT:
-    Start at digit 0.
-    The old version incorrectly started
-    at digit 1.
-    */
-    let bestDigitValue =
-        0;
+    let bestDigitValue = 0;
 
 
     for (
-        let digit = 0;
+        let digit = 1;
         digit <= 9;
         digit++
     ) {
@@ -2471,17 +1888,13 @@ function calculateMatch() {
     }
 
 
-    const total =
-        ticks.length;
-
-
     const confidence =
-        total
+        ticks.length
             ? (
                 counts[
                     bestDigitValue
                 ] /
-                total
+                ticks.length
             ) * 100
             : 0;
 
@@ -2500,7 +1913,7 @@ function calculateMatch() {
             confidence,
 
         explanation:
-            `Digit ${bestDigitValue} occurred ${counts[bestDigitValue]} times in the last ${total} ticks.`
+            `Digit ${bestDigitValue} occurred ${counts[bestDigitValue]} times in the last ${ticks.length} ticks.`
     };
 }
 
@@ -2721,7 +2134,6 @@ function calculateOdd() {
 function updateDigitGrid() {
 
     if (!digitGrid) {
-
         return;
     }
 
@@ -2733,21 +2145,15 @@ function updateDigitGrid() {
     ticks.forEach(
         tick => {
 
-            const digit =
-                Number(
-                    tick.digit
-                );
-
-
             if (
                 Number.isInteger(
-                    digit
-                ) &&
-                digit >= 0 &&
-                digit <= 9
+                    tick.digit
+                )
             ) {
 
-                counts[digit]++;
+                counts[
+                    tick.digit
+                ]++;
             }
         }
     );
@@ -2804,10 +2210,6 @@ function updateDigitGrid() {
             <div class="digit-percent">
                 ${percentage.toFixed(1)}%
             </div>
-
-            <div class="digit-count">
-                ${counts[digit]} ticks
-            </div>
         `;
 
 
@@ -2825,7 +2227,6 @@ function updateDigitGrid() {
 function updateRecentDigits() {
 
     if (!recentDigits) {
-
         return;
     }
 
@@ -2870,7 +2271,6 @@ function updateRecentDigits() {
 function updateDisplay() {
 
     if (!ticks.length) {
-
         return;
     }
 
@@ -2910,7 +2310,7 @@ function updateDisplay() {
 
 
 /* =====================================================
-   CLEAR SIGNAL
+   CLEAR
 ===================================================== */
 
 function clearSignalOnly() {
@@ -2934,10 +2334,6 @@ function clearSignalOnly() {
     }
 }
 
-
-/* =====================================================
-   CLEAR ANALYSIS
-===================================================== */
 
 function clearAnalysis() {
 
@@ -3035,34 +2431,10 @@ function stopAutoScan() {
 
 
 /* =====================================================
-   CONNECTION TIMER
-===================================================== */
-
-function clearConnectionTimer() {
-
-    if (connectionTimer) {
-
-        clearTimeout(
-            connectionTimer
-        );
-
-        connectionTimer = null;
-    }
-}
-
-
-/* =====================================================
    CLOSE
 ===================================================== */
 
-function handleClose(
-    event
-) {
-
-    clearConnectionTimer();
-
-    stopPing();
-
+function handleClose(event) {
 
     console.warn(
         "Deriv WebSocket closed:",
@@ -3074,6 +2446,9 @@ function handleClose(
 
     connected = false;
     connecting = false;
+
+
+    stopPing();
 
 
     currentSubscriptionId =
@@ -3131,10 +2506,7 @@ function handleClose(
 
 function scheduleReconnect() {
 
-    if (
-        reconnectTimer
-    ) {
-
+    if (reconnectTimer) {
         return;
     }
 
@@ -3163,12 +2535,10 @@ function scheduleReconnect() {
 
 
 /* =====================================================
-   WEBSOCKET ERROR
+   ERROR
 ===================================================== */
 
-function handleError(
-    error
-) {
+function handleError(error) {
 
     console.error(
         "Deriv WebSocket error:",
@@ -3184,25 +2554,23 @@ function handleError(
 
     setText(
         signalExplanation,
-        "WebSocket connection error. The scanner will retry automatically."
+        "Unable to establish the Deriv WebSocket connection. Check the browser console."
     );
 }
 
 
 /* =====================================================
-   RESET CONNECT BUTTON
+   RESET BUTTON
 ===================================================== */
 
 function resetConnectButton() {
 
     if (!connectBtn) {
-
         return;
     }
 
 
-    connectBtn.disabled =
-        false;
+    connectBtn.disabled = false;
 
 
     connectBtn.textContent =
@@ -3222,26 +2590,39 @@ function disconnectDeriv() {
 
 
     stopAutoScan();
-
     stopPing();
 
-    clearConnectionTimer();
 
-
-    if (
-        reconnectTimer
-    ) {
+    if (reconnectTimer) {
 
         clearTimeout(
             reconnectTimer
         );
 
-        reconnectTimer =
-            null;
+        reconnectTimer = null;
     }
 
 
-    forgetCurrentSubscription();
+    if (
+        currentSubscriptionId &&
+        ws &&
+        ws.readyState ===
+            WebSocket.OPEN
+    ) {
+
+        send({
+
+            forget:
+                currentSubscriptionId,
+
+            req_id:
+                nextRequestId()
+        });
+    }
+
+
+    currentSubscriptionId =
+        null;
 
 
     if (ws) {
@@ -3256,7 +2637,6 @@ function disconnectDeriv() {
         } catch (error) {
 
             console.warn(
-                "Close error:",
                 error
             );
         }
@@ -3264,7 +2644,6 @@ function disconnectDeriv() {
 
 
     ws = null;
-
 
     connected = false;
     connecting = false;
@@ -3296,25 +2675,12 @@ if (connectBtn) {
 
             } else {
 
-                /*
-                Start with the current endpoint.
-                */
-                websocketEndpoint =
-                    DERIV_WS;
-
-                usingFallbackEndpoint =
-                    false;
-
                 connectDeriv();
             }
         }
     );
 }
 
-
-/* =====================================================
-   MARKET SELECT
-===================================================== */
 
 if (marketSelect) {
 
@@ -3324,10 +2690,6 @@ if (marketSelect) {
     );
 }
 
-
-/* =====================================================
-   SCAN BUTTON
-===================================================== */
 
 if (scanBtn) {
 
@@ -3351,10 +2713,6 @@ if (scanBtn) {
     );
 }
 
-
-/* =====================================================
-   AUTO SCAN
-===================================================== */
 
 if (autoScan) {
 
@@ -3466,7 +2824,7 @@ document
 
 
 /* =====================================================
-   THRESHOLD
+   SETTINGS
 ===================================================== */
 
 if (threshold) {
@@ -3476,17 +2834,12 @@ if (threshold) {
         analyze
     );
 
-
     threshold.addEventListener(
         "change",
         analyze
     );
 }
 
-
-/* =====================================================
-   BARRIER
-===================================================== */
 
 if (barrier) {
 
@@ -3495,17 +2848,12 @@ if (barrier) {
         analyze
     );
 
-
     barrier.addEventListener(
         "change",
         analyze
     );
 }
 
-
-/* =====================================================
-   TICK COUNT
-===================================================== */
 
 if (tickCount) {
 
@@ -3522,71 +2870,34 @@ if (tickCount) {
                     currentSymbol
                 );
             }
-
         }
     );
 }
 
 
 /* =====================================================
-   PAGE VISIBILITY
-===================================================== */
-
-document.addEventListener(
-    "visibilitychange",
-    () => {
-
-        /*
-        When the browser tab becomes visible
-        again, make sure the connection is alive.
-        */
-
-        if (
-            document.visibilityState ===
-            "visible"
-        ) {
-
-            if (
-                !connected &&
-                !connecting &&
-                !manualDisconnect
-            ) {
-
-                connectDeriv();
-            }
-        }
-    }
-);
-
-
-/* =====================================================
-   INITIALIZATION
+   INITIALIZE
 ===================================================== */
 
 console.log(
-    "=========================================="
+    "======================================"
 );
 
 console.log(
-    "DERIV MATCHES SIGNAL SCANNER"
+    "MATCHES SIGNAL SCANNER"
 );
 
 console.log(
-    "Analysis only — NO automatic trading"
+    "Analysis only - NO AUTOMATIC TRADING"
 );
 
 console.log(
-    "Primary endpoint:",
+    "Deriv endpoint:",
     DERIV_WS
 );
 
 console.log(
-    "Fallback endpoint:",
-    LEGACY_DERIV_WS
-);
-
-console.log(
-    "=========================================="
+    "======================================"
 );
 
 
@@ -3594,10 +2905,3 @@ updateConnectionUI(
     "offline",
     "Ready to connect"
 );
-
-
-/*
-Do not automatically connect on page load.
-The user presses Connect Scanner.
-*/
-```
