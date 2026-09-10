@@ -4,6 +4,11 @@
     box-sizing: border-box;
 }
 
+html {
+    width: 100%;
+    min-height: 100%;
+}
+
 body {
     margin: 0;
     min-height: 100vh;
@@ -13,45 +18,52 @@ body {
     background:
         radial-gradient(
             circle at 20% 0%,
-            rgba(112, 44, 255, 0.25),
+            rgba(112, 44, 255, 0.22),
             transparent 35%
         ),
-
         radial-gradient(
             circle at 100% 20%,
-            rgba(0, 209, 255, 0.12),
+            rgba(0, 209, 255, 0.10),
             transparent 30%
         ),
-
         #070817;
 
     color: #f5f5ff;
 }
 
+
+/* =====================================================
+   APP
+===================================================== */
+
 .app {
     width: 100%;
     max-width: 600px;
 
-    margin: auto;
+    margin: 0 auto;
 
-    padding: 18px 14px 40px;
+    padding:
+        12px
+        12px
+        30px;
 }
 
 
-/* ============================= */
-/* HEADER */
-/* ============================= */
+/* =====================================================
+   HEADER
+===================================================== */
 
 .topbar {
     display: flex;
 
     align-items: center;
-
     justify-content: space-between;
 
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 
-    padding: 10px 4px;
+    padding:
+        6px
+        4px;
 }
 
 .brand {
@@ -59,22 +71,21 @@ body {
 
     align-items: center;
 
-    gap: 12px;
+    gap: 10px;
 }
 
 .logo {
-    width: 45px;
-    height: 45px;
+    width: 42px;
+    height: 42px;
 
     display: flex;
 
     align-items: center;
-
     justify-content: center;
 
-    border-radius: 15px;
+    border-radius: 14px;
 
-    font-size: 24px;
+    font-size: 21px;
 
     background:
         linear-gradient(
@@ -84,66 +95,105 @@ body {
         );
 
     box-shadow:
-        0 0 30px
-        rgba(93, 78, 255, 0.4);
+        0 0 25px
+        rgba(93, 78, 255, 0.35);
 }
 
 .brand h1 {
     margin: 0;
 
-    font-size: 18px;
+    font-size: 17px;
 
     font-weight: 800;
 }
 
 .brand p {
-    margin: 4px 0 0;
+    margin: 3px 0 0;
 
     color: #8585a8;
 
-    font-size: 10px;
+    font-size: 9px;
 
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
 }
 
 
-/* ============================= */
-/* CONNECTION DOT */
-/* ============================= */
+/* =====================================================
+   CONNECTION DOT
+===================================================== */
 
 .connection-dot {
-    width: 15px;
-    height: 15px;
+    width: 13px;
+    height: 13px;
 
     border-radius: 50%;
+
+    background: #ff4d6d;
 }
 
-.offline {
+.connection-dot.offline {
     background: #ff4d6d;
 
     box-shadow:
-        0 0 15px
-        rgba(255, 77, 109, 0.8);
+        0 0 14px
+        rgba(255, 77, 109, 0.75);
 }
 
-.online {
+.connection-dot.online {
     background: #28e5a1;
 
     box-shadow:
-        0 0 18px
-        rgba(40, 229, 161, 0.9);
+        0 0 16px
+        rgba(40, 229, 161, 0.85);
+}
+
+.connection-dot.connecting {
+    background: #ffc107;
+
+    box-shadow:
+        0 0 16px
+        rgba(255, 193, 7, 0.75);
+
+    animation:
+        pulseConnection 1s infinite;
+}
+
+@keyframes pulseConnection {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: .35;
+    }
 }
 
 
-/* ============================= */
-/* CARDS */
-/* ============================= */
+/* =====================================================
+   COMMON CARDS
+===================================================== */
 
 .settings-card,
 .scanner-card,
 .live-card,
 .digits-card,
 .recent-card {
+
+    position: relative;
+
+    width: 100%;
+
+    margin-bottom: 12px;
+
+    padding: 16px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.07);
+
+    border-radius: 21px;
 
     background:
         linear-gradient(
@@ -152,30 +202,22 @@ body {
             rgba(13, 14, 34, 0.98)
         );
 
-    border:
-
-        1px solid
-        rgba(255, 255, 255, 0.07);
-
-    border-radius: 24px;
-
-    padding: 18px;
-
-    margin-bottom: 16px;
-
     box-shadow:
-
-        0 18px 50px
-        rgba(0, 0, 0, 0.3);
+        0 15px 40px
+        rgba(0, 0, 0, 0.28);
 }
 
 
-/* ============================= */
-/* SETTINGS */
-/* ============================= */
+/* =====================================================
+   SETTINGS
+===================================================== */
 
 .setting {
-    margin-bottom: 14px;
+    margin-bottom: 12px;
+}
+
+.setting:last-child {
+    margin-bottom: 0;
 }
 
 .setting label,
@@ -183,13 +225,13 @@ body {
 
     display: block;
 
-    margin-bottom: 7px;
+    margin-bottom: 6px;
 
     color: #9898ba;
 
-    font-size: 12px;
+    font-size: 10px;
 
-    font-weight: 700;
+    font-weight: 800;
 
     text-transform: uppercase;
 
@@ -203,35 +245,65 @@ body {
     grid-template-columns:
         1fr 1fr;
 
-    gap: 12px;
+    gap: 9px;
 }
 
-select {
+
+/* =====================================================
+   SELECT / INPUT
+===================================================== */
+
+select,
+input[type="number"],
+input[type="text"] {
 
     width: 100%;
 
-    padding: 13px 14px;
+    min-height: 43px;
 
-    border-radius: 14px;
+    padding:
+        10px
+        12px;
 
     border:
         1px solid
-        rgba(255,255,255,0.08);
+        rgba(255, 255, 255, 0.08);
+
+    border-radius: 12px;
+
+    outline: none;
 
     background:
         #101126;
 
-    color: white;
+    color: #ffffff;
 
-    font-size: 14px;
+    font-family: inherit;
 
-    outline: none;
+    font-size: 12px;
+
+    font-weight: 600;
+
+    transition:
+        border-color .2s,
+        box-shadow .2s;
+}
+
+select:focus,
+input:focus {
+
+    border-color:
+        rgba(125, 92, 255, .7);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(125, 92, 255, .10);
 }
 
 
-/* ============================= */
-/* BUTTONS */
-/* ============================= */
+/* =====================================================
+   BUTTON BASE
+===================================================== */
 
 button {
 
@@ -242,22 +314,45 @@ button {
     border: none;
 
     color: white;
+
+    transition:
+        transform .15s,
+        opacity .15s,
+        filter .15s;
 }
+
+button:active {
+    transform: scale(.98);
+}
+
+button:disabled {
+    cursor: not-allowed;
+
+    opacity: .65;
+}
+
+
+/* =====================================================
+   CONNECT BUTTON
+===================================================== */
 
 .connect-button {
 
     width: 100%;
 
-    padding: 15px;
+    min-height: 45px;
 
-    border-radius: 15px;
+    padding:
+        12px
+        15px;
+
+    border-radius: 13px;
+
+    font-size: 13px;
 
     font-weight: 800;
 
-    font-size: 15px;
-
     background:
-
         linear-gradient(
             90deg,
             #25d8ff,
@@ -265,76 +360,87 @@ button {
         );
 
     box-shadow:
-
-        0 8px 25px
-        rgba(89, 74, 255, 0.35);
+        0 8px 22px
+        rgba(89, 74, 255, 0.30);
 }
 
 
-/* ============================= */
-/* MAIN SIGNAL */
-/* ============================= */
+/* =====================================================
+   MAIN SIGNAL CARD
+===================================================== */
 
 .main-signal {
 
-    margin-bottom: 16px;
+    width: 100%;
 
-    padding: 22px;
+    margin-bottom: 12px;
 
-    border-radius: 26px;
+    padding: 17px;
+
+    border:
+        1px solid
+        rgba(72, 255, 193, 0.16);
+
+    border-radius: 22px;
 
     background:
-
         linear-gradient(
             145deg,
             #172b3d,
             #0c1628
         );
 
-    border:
-
-        1px solid
-        rgba(72, 255, 193, 0.18);
-
     box-shadow:
-
         inset 0 1px
         rgba(255,255,255,0.05),
 
-        0 20px 50px
-        rgba(0,0,0,0.35);
+        0 18px 45px
+        rgba(0,0,0,.32);
 }
+
+
+/* =====================================================
+   SIGNAL HEADER
+===================================================== */
 
 .signal-header {
 
     display: flex;
 
+    align-items: flex-start;
     justify-content: space-between;
 
-    align-items: flex-start;
+    gap: 10px;
 }
 
 .eyebrow {
 
     color: #61f0b3;
 
-    font-size: 10px;
+    font-size: 9px;
 
     font-weight: 800;
 
-    letter-spacing: 2px;
+    letter-spacing: 1.7px;
 }
 
 .signal-header h2 {
 
-    margin: 7px 0 0;
+    margin:
+        5px 0 0;
 
-    font-size: 21px;
+    font-size: 18px;
+
+    line-height: 1.2;
 }
 
 .live-badge {
 
-    padding: 6px 10px;
+    flex-shrink: 0;
+
+    padding:
+        6px
+        9px;
 
     border-radius: 20px;
 
@@ -343,9 +449,11 @@ button {
 
     color: #9696b8;
 
-    font-size: 10px;
+    font-size: 9px;
 
     font-weight: 800;
+
+    letter-spacing: .5px;
 }
 
 .live-badge.live {
@@ -354,7 +462,16 @@ button {
 
     background:
         rgba(44,230,162,0.13);
+
+    box-shadow:
+        0 0 15px
+        rgba(44,230,162,.08);
 }
+
+
+/* =====================================================
+   SIGNAL BODY
+===================================================== */
 
 .signal-body {
 
@@ -362,30 +479,31 @@ button {
 
     align-items: center;
 
-    gap: 20px;
+    gap: 15px;
 
-    margin: 25px 0;
+    margin:
+        20px 0;
 }
 
 .signal-digit {
 
-    width: 100px;
-    height: 100px;
+    flex-shrink: 0;
+
+    width: 84px;
+    height: 84px;
 
     display: flex;
 
     align-items: center;
-
     justify-content: center;
 
-    border-radius: 24px;
+    border-radius: 21px;
 
-    font-size: 52px;
+    font-size: 43px;
 
     font-weight: 800;
 
     background:
-
         linear-gradient(
             145deg,
             #36e69e,
@@ -393,52 +511,62 @@ button {
         );
 
     box-shadow:
-
-        0 0 35px
-        rgba(47,225,151,0.25);
+        0 0 30px
+        rgba(47,225,151,0.22);
 }
 
 .signal-info {
 
     flex: 1;
+
+    min-width: 0;
 }
 
 .confidence-label {
 
     color: #8b8ca8;
 
-    font-size: 10px;
+    font-size: 9px;
 
     font-weight: 800;
 
-    letter-spacing: 2px;
+    letter-spacing: 1.7px;
 }
 
 .confidence-number {
 
-    margin-top: 6px;
+    margin-top: 4px;
 
-    font-size: 38px;
+    font-size: 32px;
+
+    line-height: 1;
 
     font-weight: 800;
 }
 
 .confidence-number span {
-
-    color: white;
+    color: #ffffff;
 }
+
+
+/* =====================================================
+   CONFIDENCE PROGRESS
+===================================================== */
 
 .progress {
 
-    height: 9px;
+    width: 100%;
 
-    margin-top: 12px;
+    height: 8px;
+
+    margin-top: 10px;
 
     overflow: hidden;
 
     border-radius: 20px;
 
-    background: #090b18;
+    background:
+        #090b18;
 }
 
 .progress-fill {
@@ -449,10 +577,10 @@ button {
 
     border-radius: 20px;
 
-    transition: width 0.5s;
+    transition:
+        width .5s ease;
 
     background:
-
         linear-gradient(
             90deg,
             #36e69e,
@@ -460,30 +588,40 @@ button {
         );
 }
 
+
+/* =====================================================
+   EXPLANATION
+===================================================== */
+
 .signal-explanation {
 
     color: #9293ae;
 
-    font-size: 13px;
+    font-size: 11px;
 
-    line-height: 1.6;
+    line-height: 1.55;
 }
+
+
+/* =====================================================
+   ENTRY STATUS
+===================================================== */
 
 .entry-status {
 
-    margin-top: 18px;
+    margin-top: 13px;
 
-    padding: 13px;
+    padding: 11px;
 
     text-align: center;
 
-    border-radius: 14px;
+    border-radius: 12px;
 
-    font-size: 12px;
+    font-size: 10px;
 
     font-weight: 800;
 
-    letter-spacing: 1px;
+    letter-spacing: .8px;
 }
 
 .waiting {
@@ -492,6 +630,10 @@ button {
         rgba(255, 193, 7, 0.08);
 
     color: #ffc107;
+
+    border:
+        1px solid
+        rgba(255,193,7,.08);
 }
 
 .ready {
@@ -500,41 +642,46 @@ button {
         rgba(43, 230, 161, 0.12);
 
     color: #35e9a4;
+
+    border:
+        1px solid
+        rgba(43,230,161,.13);
 }
 
 
-/* ============================= */
-/* SECTION TITLE */
-/* ============================= */
+/* =====================================================
+   SECTION TITLE
+===================================================== */
 
 .section-title {
 
     display: flex;
 
     align-items: center;
-
     justify-content: space-between;
 
-    margin-bottom: 16px;
-
-    font-weight: 700;
-
-    font-size: 14px;
+    margin-bottom: 11px;
 
     color: #f2f2ff;
+
+    font-size: 12px;
+
+    font-weight: 800;
 }
 
 .section-title span:last-child {
 
     color: #777896;
 
-    font-size: 11px;
+    font-size: 9px;
+
+    font-weight: 600;
 }
 
 
-/* ============================= */
-/* MODE BUTTONS */
-/* ============================= */
+/* =====================================================
+   MODE BUTTONS
+===================================================== */
 
 .mode-buttons {
 
@@ -543,28 +690,33 @@ button {
     grid-template-columns:
         1fr 1fr;
 
-    gap: 10px;
+    gap: 8px;
 
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .mode {
 
-    padding: 14px;
+    min-height: 42px;
 
-    border-radius: 14px;
+    padding:
+        10px;
 
-    background: #11122a;
+    border-radius: 12px;
+
+    background:
+        #11122a;
 
     color: #8586a5;
 
-    font-weight: 700;
+    font-size: 11px;
+
+    font-weight: 800;
 }
 
 .mode.active {
 
     background:
-
         linear-gradient(
             135deg,
             #2ce59f,
@@ -572,39 +724,46 @@ button {
         );
 
     color: #07151a;
+
+    box-shadow:
+        0 7px 18px
+        rgba(44,229,159,.16);
 }
 
 
-/* ============================= */
-/* SIGNAL TYPES */
-/* ============================= */
+/* =====================================================
+   SIGNAL TYPES
+===================================================== */
 
 .signal-buttons {
 
-    display: flex;
+    display: grid;
 
-    flex-wrap: wrap;
+    grid-template-columns:
+        repeat(3, 1fr);
 
-    gap: 8px;
+    gap: 7px;
 
-    margin-bottom: 16px;
+    margin-bottom: 13px;
 }
 
 .type-button {
 
-    flex: 1;
+    min-width: 0;
 
-    min-width: 75px;
+    min-height: 38px;
 
-    padding: 11px 8px;
+    padding:
+        9px 5px;
 
-    border-radius: 12px;
+    border-radius: 11px;
 
-    background: #111229;
+    background:
+        #111229;
 
     color: #9999b7;
 
-    font-size: 11px;
+    font-size: 9px;
 
     font-weight: 800;
 }
@@ -612,7 +771,6 @@ button {
 .type-button.active {
 
     background:
-
         linear-gradient(
             135deg,
             #7d5cff,
@@ -620,17 +778,33 @@ button {
         );
 
     color: white;
+
+    box-shadow:
+        0 7px 17px
+        rgba(139,83,255,.16);
 }
 
 
-/* ============================= */
-/* BARRIER */
-/* ============================= */
+/* =====================================================
+   BARRIER
+===================================================== */
 
 .barrier-box {
 
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
+
+.barrier-box input {
+
+    width: 100%;
+
+    min-height: 42px;
+}
+
+
+/* =====================================================
+   AUTO SCAN
+===================================================== */
 
 .auto-scan {
 
@@ -638,36 +812,49 @@ button {
 
     align-items: center;
 
-    gap: 10px;
+    gap: 9px;
+
+    margin-bottom: 12px;
 
     color: #9899b4;
 
-    font-size: 12px;
+    font-size: 10px;
 
-    margin-bottom: 16px;
+    font-weight: 600;
 }
 
 .auto-scan input {
 
-    accent-color: #7d5cff;
+    width: 16px;
+    height: 16px;
 
-    width: 17px;
+    margin: 0;
 
-    height: 17px;
+    accent-color:
+        #7d5cff;
 }
+
+
+/* =====================================================
+   SCAN BUTTON
+===================================================== */
 
 .scan-button {
 
     width: 100%;
 
-    padding: 16px;
+    min-height: 45px;
 
-    border-radius: 15px;
+    padding:
+        12px;
+
+    border-radius: 13px;
+
+    font-size: 12px;
 
     font-weight: 800;
 
     background:
-
         linear-gradient(
             90deg,
             #8057ff,
@@ -675,15 +862,90 @@ button {
         );
 
     box-shadow:
-
-        0 10px 30px
-        rgba(139,83,255,0.3);
+        0 9px 25px
+        rgba(139,83,255,.25);
 }
 
 
-/* ============================= */
-/* LIVE */
-/* ============================= */
+/* =====================================================
+   LIVE MARKET CARD
+===================================================== */
+
+.live-card {
+
+    padding: 17px;
+}
+
+
+/* =====================================================
+   LIVE MARKET TITLE
+===================================================== */
+
+.live-card .section-title {
+    margin-bottom: 13px;
+}
+
+
+/* =====================================================
+   LIVE PRICE FEATURE
+===================================================== */
+
+.live-price-panel {
+
+    width: 100%;
+
+    padding:
+        18px
+        12px;
+
+    margin-bottom: 10px;
+
+    text-align: center;
+
+    border-radius: 17px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #101a2a,
+            #0a1020
+        );
+
+    border:
+        1px solid
+        rgba(255,255,255,.05);
+}
+
+.live-price {
+
+    font-size: 28px;
+
+    line-height: 1.1;
+
+    font-weight: 800;
+
+    letter-spacing: .5px;
+
+    color: #ffffff;
+}
+
+.live-price-label {
+
+    margin-top: 6px;
+
+    color: #35e9a4;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 1px;
+}
+
+
+/* =====================================================
+   LIVE GRID
+===================================================== */
 
 .live-grid {
 
@@ -692,16 +954,24 @@ button {
     grid-template-columns:
         1fr 1fr;
 
-    gap: 12px;
+    gap: 8px;
 }
 
 .live-grid div {
 
-    padding: 16px;
+    min-width: 0;
 
-    border-radius: 16px;
+    padding:
+        13px;
 
-    background: #0e1024;
+    border-radius: 14px;
+
+    background:
+        #0e1024;
+
+    border:
+        1px solid
+        rgba(255,255,255,.035);
 }
 
 .live-grid span {
@@ -710,26 +980,40 @@ button {
 
     color: #777895;
 
-    font-size: 10px;
+    font-size: 8px;
 
-    font-weight: 700;
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: .7px;
 }
 
 .live-grid strong {
 
     display: block;
 
-    margin-top: 8px;
+    margin-top: 6px;
 
-    font-size: 20px;
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    font-size: 18px;
 
     color: #37e6aa;
 }
 
 
-/* ============================= */
-/* DIGITS */
-/* ============================= */
+/* =====================================================
+   DIGIT STATISTICS
+===================================================== */
+
+.digits-card {
+    padding: 16px;
+}
 
 .digit-grid {
 
@@ -738,22 +1022,30 @@ button {
     grid-template-columns:
         repeat(5, 1fr);
 
-    gap: 8px;
+    gap: 7px;
 }
 
 .digit-item {
 
-    padding: 12px 6px;
+    min-width: 0;
+
+    padding:
+        10px 4px;
 
     text-align: center;
 
-    border-radius: 13px;
+    border-radius: 11px;
 
-    background: #0e1024;
+    background:
+        #0e1024;
 
     border:
         1px solid
         rgba(255,255,255,0.04);
+
+    transition:
+        transform .15s,
+        border-color .2s;
 }
 
 .digit-item.hot {
@@ -763,11 +1055,17 @@ button {
 
     background:
         rgba(53,233,164,0.08);
+
+    box-shadow:
+        inset 0 0 15px
+        rgba(53,233,164,.03);
 }
 
 .digit-number {
 
-    font-size: 22px;
+    font-size: 19px;
+
+    line-height: 1;
 
     font-weight: 800;
 }
@@ -778,13 +1076,19 @@ button {
 
     color: #8586a4;
 
-    font-size: 10px;
+    font-size: 8px;
+
+    font-weight: 600;
 }
 
 
-/* ============================= */
-/* RECENT */
-/* ============================= */
+/* =====================================================
+   RECENT DIGITS
+===================================================== */
+
+.recent-card {
+    padding: 16px;
+}
 
 .recent-digits {
 
@@ -792,31 +1096,143 @@ button {
 
     flex-wrap: wrap;
 
-    gap: 7px;
+    gap: 6px;
 }
 
 .recent-digit {
 
-    width: 36px;
-
-    height: 36px;
+    width: 31px;
+    height: 31px;
 
     display: flex;
 
     align-items: center;
-
     justify-content: center;
 
-    border-radius: 10px;
+    border-radius: 9px;
 
-    background: #101229;
+    background:
+        #101229;
 
     color: #c4c4dc;
 
-    font-size: 13px;
+    font-size: 11px;
+
+    font-weight: 800;
+
+    border:
+        1px solid
+        rgba(255,255,255,.035);
+}
+
+
+/* =====================================================
+   SCANNER CARD
+===================================================== */
+
+.scanner-card {
+    padding: 16px;
+}
+
+
+/* =====================================================
+   STATUS TEXT
+===================================================== */
+
+#statusText {
+
+    color: #8586a5;
+
+    font-size: 9px;
+
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   TICK STATUS
+===================================================== */
+
+#tickStatus {
+
+    color: #777895;
+
+    font-size: 9px;
+
+    font-weight: 600;
+}
+
+
+/* =====================================================
+   MARKET NAME
+===================================================== */
+
+#marketName {
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    color: #ffffff;
+
+    font-size: 12px;
 
     font-weight: 800;
 }
+
+
+/* =====================================================
+   SPECIAL NO-TRADE STATE
+===================================================== */
+
+.no-trade {
+    background:
+        rgba(255, 77, 109, .08);
+
+    color:
+        #ff718a;
+}
+
+.no-trade-bar {
+
+    background:
+        linear-gradient(
+            90deg,
+            #ff4d6d,
+            #ff8b5c
+        );
+}
+
+
+/* =====================================================
+   STRONG SIGNAL
+===================================================== */
+
+.strong-signal {
+    border-color:
+        rgba(53,233,164,.35);
+
+    box-shadow:
+        0 0 30px
+        rgba(53,233,164,.06);
+}
+
+
+/* =====================================================
+   MODERATE SIGNAL
+===================================================== */
+
+.moderate-signal {
+    border-color:
+        rgba(255,193,7,.25);
+}
+
+
+/* =====================================================
+   FOOTER
+===================================================== */
 
 footer {
 
@@ -824,33 +1240,151 @@ footer {
 
     color: #555670;
 
-    font-size: 10px;
+    font-size: 8px;
 
     line-height: 1.6;
 
-    padding: 10px 20px;
+    padding:
+        8px
+        15px;
 }
 
 
-/* ============================= */
-/* MOBILE */
-/* ============================= */
+/* =====================================================
+   SCROLLBAR
+===================================================== */
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background:
+        #070817;
+}
+
+::-webkit-scrollbar-thumb {
+
+    border-radius: 10px;
+
+    background:
+        #282945;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
 
 @media (max-width: 380px) {
+
+    .app {
+        padding:
+            9px
+            9px
+            25px;
+    }
 
     .brand h1 {
         font-size: 15px;
     }
 
-    .signal-digit {
-        width: 85px;
-        height: 85px;
+    .brand p {
+        font-size: 8px;
+    }
 
-        font-size: 42px;
+    .main-signal {
+        padding: 14px;
+    }
+
+    .signal-digit {
+
+        width: 74px;
+        height: 74px;
+
+        border-radius: 18px;
+
+        font-size: 38px;
     }
 
     .confidence-number {
-        font-size: 30px;
+        font-size: 28px;
     }
 
+    .signal-body {
+        gap: 11px;
+    }
+
+    .type-button {
+        font-size: 8px;
+    }
+
+    .live-price {
+        font-size: 24px;
+    }
+
+    .recent-digit {
+        width: 29px;
+        height: 29px;
+    }
+}
+
+
+/* =====================================================
+   VERY SMALL PHONES
+===================================================== */
+
+@media (max-width: 320px) {
+
+    .signal-body {
+        gap: 9px;
+    }
+
+    .signal-digit {
+
+        width: 66px;
+        height: 66px;
+
+        font-size: 33px;
+    }
+
+    .confidence-number {
+        font-size: 25px;
+    }
+
+    .digit-grid {
+        gap: 5px;
+    }
+
+    .digit-item {
+        padding: 8px 2px;
+    }
+}
+
+
+/* =====================================================
+   DESKTOP
+===================================================== */
+
+@media (min-width: 700px) {
+
+    .app {
+        padding-top: 25px;
+    }
+
+    .main-signal {
+        padding: 22px;
+    }
+
+    .signal-digit {
+
+        width: 100px;
+        height: 100px;
+
+        font-size: 52px;
+    }
+
+    .confidence-number {
+        font-size: 38px;
+    }
 }
