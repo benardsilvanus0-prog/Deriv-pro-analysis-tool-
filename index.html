@@ -1,4127 +1,3775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#07111f">
+<meta name="description" content="Deriv Expert Trader Analysis Tool - Analysis Only">
+<title>Expert Trader Analysis Tool</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root{
+    --bg:#07111f;
+    --panel:#0d1a2b;
+    --panel2:#101f33;
+    --panel3:#14263d;
+    --border:#203650;
+    --text:#eaf2ff;
+    --muted:#8fa6c2;
+    --green:#22c55e;
+    --green2:#16a34a;
+    --red:#ef4444;
+    --yellow:#f59e0b;
+    --blue:#3b82f6;
+    --cyan:#06b6d4;
+    --purple:#8b5cf6;
+    --shadow:0 12px 35px rgba(0,0,0,.25);
+}
+
+*{
+    box-sizing:border-box;
+}
+
+html,
+body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    font-family:Inter,Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+body{
+    overflow-x:hidden;
+}
+
+button,
+select,
+input{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+.top{
+    position:sticky;
+    top:0;
+    z-index:100;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    padding:14px 22px;
+    background:rgba(7,17,31,.94);
+    border-bottom:1px solid var(--border);
+    backdrop-filter:blur(14px);
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:240px;
+}
+
+.logo{
+    width:40px;
+    height:40px;
+    display:grid;
+    place-items:center;
+    border-radius:12px;
+    background:linear-gradient(135deg,var(--blue),var(--purple));
+    font-weight:900;
+}
+
+.brand-title{
+    font-weight:800;
+    font-size:15px;
+}
+
+.brand-sub{
+    color:var(--muted);
+    font-size:11px;
+    margin-top:3px;
+}
+
+.toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+select,
+input{
+    background:var(--panel2);
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:9px 11px;
+    outline:none;
+}
+
+select:focus,
+input:focus{
+    border-color:var(--blue);
+}
+
+.btn{
+    border:1px solid var(--border);
+    background:var(--panel2);
+    color:var(--text);
+    padding:9px 13px;
+    border-radius:9px;
+    font-weight:700;
+}
+
+.btn:hover{
+    background:var(--panel3);
+}
+
+.btn.primary{
+    background:var(--blue);
+    border-color:var(--blue);
+}
+
+.btn.primary:hover{
+    background:#2563eb;
+}
+
+.btn.danger{
+    background:rgba(239,68,68,.12);
+    border-color:rgba(239,68,68,.35);
+    color:#fecaca;
+}
+
+.page{
+    width:min(1500px,96%);
+    margin:0 auto;
+    padding:22px 0 40px;
+}
+
+.hero{
+    display:grid;
+    grid-template-columns:1.4fr .7fr .7fr;
+    gap:14px;
+    margin-bottom:14px;
+}
+
+.card{
+    background:linear-gradient(145deg,var(--panel),var(--panel2));
+    border:1px solid var(--border);
+    border-radius:15px;
+    box-shadow:var(--shadow);
+}
+
+.hero-card{
+    padding:18px;
+}
+
+.hero-label{
+    color:var(--muted);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
+
+.hero-value{
+    font-size:27px;
+    font-weight:900;
+    margin-top:6px;
+}
+
+.hero-small{
+    color:var(--muted);
+    font-size:12px;
+    margin-top:4px;
+}
+
+.status-dot{
+    display:inline-block;
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:var(--red);
+    margin-right:7px;
+}
+
+.status-dot.online{
+    background:var(--green);
+    box-shadow:0 0 12px rgba(34,197,94,.7);
+}
+
+.controls{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:10px;
+    margin-bottom:14px;
+}
+
+.control{
+    padding:12px;
+}
+
+.control label{
+    display:block;
+    color:var(--muted);
+    font-size:10px;
+    text-transform:uppercase;
+    margin-bottom:7px;
+    letter-spacing:.07em;
+}
+
+.control select,
+.control input{
+    width:100%;
+}
+
+.typebar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    padding:10px;
+    margin-bottom:14px;
+}
+
+.type-btn{
+    border:1px solid var(--border);
+    background:var(--panel2);
+    color:var(--muted);
+    border-radius:9px;
+    padding:10px 15px;
+    font-weight:800;
+}
+
+.type-btn.active{
+    color:white;
+    background:linear-gradient(135deg,#2563eb,#7c3aed);
+    border-color:#5b6ee1;
+}
+
+.progress-card{
+    padding:14px;
+    margin-bottom:14px;
+}
+
+.progress-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    font-size:12px;
+    margin-bottom:8px;
+}
+
+.progress{
+    height:9px;
+    background:#07101d;
+    border-radius:99px;
+    overflow:hidden;
+}
+
+.progress-bar{
+    width:0%;
+    height:100%;
+    background:linear-gradient(90deg,var(--blue),var(--cyan));
+    transition:width .25s ease;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1.1fr .9fr;
+    gap:14px;
+}
+
+.matches{
+    padding:16px;
+}
+
+.section-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:13px;
+}
+
+.section-title h2{
+    margin:0;
+    font-size:15px;
+}
+
+.section-title span{
+    color:var(--muted);
+    font-size:11px;
+}
+
+.match-grid{
+    display:grid;
+    grid-template-columns:repeat(10,1fr);
+    gap:8px;
+}
+
+.digit{
+    position:relative;
+    min-height:82px;
+    padding:10px 6px;
+    background:#091625;
+    border:1px solid var(--border);
+    border-radius:11px;
+    text-align:center;
+    overflow:hidden;
+}
+
+.digit.best{
+    border-color:var(--green);
+    box-shadow:0 0 18px rgba(34,197,94,.15);
+}
+
+.digit-number{
+    font-size:21px;
+    font-weight:900;
+}
+
+.digit-prob{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:4px;
+}
+
+.digit-bar{
+    position:absolute;
+    bottom:0;
+    left:0;
+    width:100%;
+    height:3px;
+    background:var(--blue);
+    transform-origin:left;
+}
+
+.summary-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+}
+
+.metric{
+    padding:14px;
+    border-radius:12px;
+    background:#091625;
+    border:1px solid var(--border);
+}
+
+.metric-label{
+    color:var(--muted);
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+}
+
+.metric-value{
+    font-size:21px;
+    font-weight:900;
+    margin-top:6px;
+}
+
+.metric-note{
+    color:var(--muted);
+    font-size:10px;
+    margin-top:4px;
+}
+
+.analysis-status{
+    margin-top:12px;
+    padding:14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#091625;
+}
+
+.signal{
+    font-size:20px;
+    font-weight:900;
+}
+
+.signal.green{
+    color:var(--green);
+}
+
+.signal.red{
+    color:var(--red);
+}
+
+.signal.yellow{
+    color:var(--yellow);
+}
+
+.status-message{
+    color:var(--muted);
+    font-size:12px;
+    margin-top:6px;
+    line-height:1.5;
+}
+
+.chart-card{
+    padding:16px;
+    margin-top:14px;
+}
+
+.chart-wrap{
+    height:310px;
+    position:relative;
+}
+
+.bottom-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-top:14px;
+}
+
+.table-card{
+    padding:16px;
+    overflow:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12px;
+}
+
+th,
+td{
+    padding:9px 7px;
+    border-bottom:1px solid var(--border);
+    text-align:left;
+}
+
+th{
+    color:var(--muted);
+    font-size:10px;
+    text-transform:uppercase;
+}
+
+.good{
+    color:var(--green);
+}
+
+.bad{
+    color:var(--red);
+}
+
+.warn{
+    color:var(--yellow);
+}
+
+.log{
+    height:200px;
+    overflow:auto;
+    background:#050d17;
+    border-radius:10px;
+    padding:10px;
+    font-family:monospace;
+    font-size:11px;
+    color:#a9bfd9;
+}
+
+.log-line{
+    margin-bottom:5px;
+}
+
+.footer{
+    margin-top:20px;
+    text-align:center;
+    color:var(--muted);
+    font-size:11px;
+    line-height:1.6;
+}
+
+.modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:300;
+    background:rgba(0,0,0,.7);
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-box{
+    width:min(650px,100%);
+    max-height:85vh;
+    overflow:auto;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:20px;
+    box-shadow:var(--shadow);
+}
+
+.modal-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+.modal-head h3{
+    margin:0;
+}
+
+.close{
+    border:0;
+    background:transparent;
+    color:var(--muted);
+    font-size:25px;
+    cursor:pointer;
+}
+
+.modal-body{
+    color:#c4d2e5;
+    font-size:13px;
+    line-height:1.7;
+}
+
+.toast{
+    position:fixed;
+    right:18px;
+    bottom:18px;
+    z-index:500;
+    background:#102238;
+    border:1px solid var(--border);
+    color:white;
+    padding:12px 15px;
+    border-radius:10px;
+    box-shadow:var(--shadow);
+    transform:translateY(100px);
+    opacity:0;
+    transition:.25s;
+    max-width:360px;
+    font-size:12px;
+}
+
+.toast.show{
+    transform:translateY(0);
+    opacity:1;
+}
+
+.small{
+    font-size:11px;
+    color:var(--muted);
+}
+
+@media(max-width:1100px){
+    .controls{
+        grid-template-columns:repeat(4,1fr);
+    }
+
+    .hero{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .hero-card:first-child{
+        grid-column:1/-1;
+    }
+}
+
+@media(max-width:800px){
+    .top{
+        position:relative;
+        align-items:flex-start;
+        flex-direction:column;
+    }
+
+    .toolbar{
+        width:100%;
+        justify-content:flex-start;
+    }
+
+    .controls{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .grid,
+    .bottom-grid{
+        grid-template-columns:1fr;
+    }
+
+    .match-grid{
+        grid-template-columns:repeat(5,1fr);
+    }
+}
+
+@media(max-width:500px){
+    .page{
+        width:94%;
+    }
+
+    .hero{
+        grid-template-columns:1fr;
+    }
+
+    .hero-card:first-child{
+        grid-column:auto;
+    }
+
+    .controls{
+        grid-template-columns:1fr;
+    }
+
+    .match-grid{
+        grid-template-columns:repeat(5,1fr);
+    }
+
+    .type-btn{
+        flex:1;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="top">
+    <div class="brand">
+        <div class="logo">ET</div>
+        <div>
+            <div class="brand-title">Expert Trader Analysis Tool</div>
+            <div class="brand-sub">Deriv digit market intelligence • Analysis only</div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <button class="btn primary" id="connectBtn">Connect</button>
+        <button class="btn" id="refreshBtn">Refresh</button>
+        <button class="btn" id="themeBtn">Theme</button>
+        <button class="btn" id="helpBtn">Help</button>
+    </div>
+</header>
+
+<main class="page">
+
+    <section class="hero">
+
+        <div class="card hero-card">
+            <div class="hero-label">Selected market</div>
+            <div class="hero-value" id="heroMarket">Loading...</div>
+            <div class="hero-small" id="marketSub">Waiting for Deriv market data</div>
+        </div>
+
+        <div class="card hero-card">
+            <div class="hero-label">Current price</div>
+            <div class="hero-value" id="price">—</div>
+            <div class="hero-small" id="lastDigitText">Last digit: —</div>
+        </div>
+
+        <div class="card hero-card">
+            <div class="hero-label">Connection</div>
+            <div class="hero-value" style="font-size:18px">
+                <span class="status-dot" id="connectionDot"></span>
+                <span id="connection">Disconnected</span>
+            </div>
+            <div class="hero-small" id="tickStatus">No ticks</div>
+        </div>
+
+    </section>
+
+    <section class="controls">
+
+        <div class="card control">
+            <label>Market</label>
+            <select id="market">
+                <option value="">Loading markets...</option>
+            </select>
+        </div>
+
+        <div class="card control">
+            <label>Contract</label>
+            <select id="contract">
+                <option value="OVER">OVER</option>
+                <option value="UNDER">UNDER</option>
+                <option value="MATCH">MATCH</option>
+                <option value="DIFF">DIFFERS</option>
+                <option value="EVEN">EVEN</option>
+                <option value="ODD">ODD</option>
+            </select>
+        </div>
+
+        <div class="card control">
+            <label>Duration</label>
+            <select id="duration">
+                <option value="10">10 ticks</option>
+                <option value="25">25 ticks</option>
+                <option value="50">50 ticks</option>
+                <option value="100" selected>100 ticks</option>
+                <option value="300">300 ticks</option>
+                <option value="500">500 ticks</option>
+                <option value="1000">1000 ticks</option>
+            </select>
+        </div>
+
+        <div class="card control">
+            <label>Analysis sample</label>
+            <select id="analysisTicks">
+                <option value="100">100 ticks</option>
+                <option value="300">300 ticks</option>
+                <option value="500" selected>500 ticks</option>
+                <option value="1000">1000 ticks</option>
+                <option value="2000">2000 ticks</option>
+            </select>
+        </div>
+
+        <div class="card control">
+            <label>Barrier</label>
+            <select id="barrier">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4" selected>4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+            </select>
+        </div>
+
+        <div class="card control">
+            <label>Minimum confidence</label>
+            <select id="threshold">
+                <option value="55">55%</option>
+                <option value="60">60%</option>
+                <option value="65" selected>65%</option>
+                <option value="70">70%</option>
+                <option value="75">75%</option>
+                <option value="80">80%</option>
+            </select>
+        </div>
+
+        <div class="card control">
+            <label>Auto analysis</label>
+            <select id="auto">
+                <option value="off" selected>OFF</option>
+                <option value="on">Every 30 sec</option>
+            </select>
+        </div>
+
+    </section>
+
+    <section class="card typebar">
+        <button class="type-btn active" data-type="OVER">OVER</button>
+        <button class="type-btn" data-type="UNDER">UNDER</button>
+        <button class="type-btn" data-type="MATCH">MATCH</button>
+        <button class="type-btn" data-type="DIFF">DIFFERS</button>
+        <button class="type-btn" data-type="EVEN">EVEN</button>
+        <button class="type-btn" data-type="ODD">ODD</button>
+    </section>
+
+    <section class="card progress-card">
+
+        <div class="progress-row">
+            <span>Historical data</span>
+            <strong id="dataBarText">0 / 500</strong>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="dataBar"></div>
+        </div>
+
+        <div style="height:10px"></div>
+
+        <div class="progress-row">
+            <span>Analysis confidence</span>
+            <strong id="confidenceText">0%</strong>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="confidenceBar"></div>
+        </div>
+
+    </section>
+
+    <section class="grid">
+
+        <div class="card matches">
+
+            <div class="section-title">
+                <h2>Digit probability matrix</h2>
+                <span id="sampleText">0 samples</span>
+            </div>
+
+            <div class="match-grid" id="matches"></div>
+
+        </div>
+
+        <div class="card matches">
+
+            <div class="section-title">
+                <h2>Analysis result</h2>
+                <span id="modeStatus">Analysis only</span>
+            </div>
+
+            <div class="summary-grid">
+
+                <div class="metric">
+                    <div class="metric-label">Best digit</div>
+                    <div class="metric-value" id="bestDigit">—</div>
+                    <div class="metric-note" id="bestDigitNote">Waiting for data</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">Probability</div>
+                    <div class="metric-value" id="bestProbability">—</div>
+                    <div class="metric-note">Estimated historical frequency</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">Edge</div>
+                    <div class="metric-value" id="edge">—</div>
+                    <div class="metric-note">Against theoretical baseline</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">Z-score</div>
+                    <div class="metric-value" id="zscore">—</div>
+                    <div class="metric-note">Statistical deviation</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">Consistency</div>
+                    <div class="metric-value" id="consistency">—</div>
+                    <div class="metric-note">Agreement across windows</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-label">Entropy</div>
+                    <div class="metric-value" id="entropy">—</div>
+                    <div class="metric-note">Lower can mean concentration</div>
+                </div>
+
+            </div>
+
+            <div class="analysis-status">
+                <div class="signal yellow" id="analysisStatus">
+                    WAITING FOR DATA
+                </div>
+
+                <div class="status-message" id="message">
+                    Connect to Deriv and load historical ticks.
+                </div>
+
+                <div class="status-message">
+                    Entry point:
+                    <strong id="entry">—</strong>
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+
+    <section class="card chart-card">
+
+        <div class="section-title">
+            <h2>Digit distribution</h2>
+            <span>0–9 probability</span>
+        </div>
+
+        <div class="chart-wrap">
+            <canvas id="frequency"></canvas>
+        </div>
+
+    </section>
+
+    <section class="bottom-grid">
+
+        <div class="card table-card">
+
+            <div class="section-title">
+                <h2>Statistical windows</h2>
+                <span>Multi-window confirmation</span>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Window</th>
+                        <th>Probability</th>
+                        <th>Edge</th>
+                        <th>Z</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody id="windowTable">
+                    <tr>
+                        <td colspan="5" class="small">Waiting for analysis...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+        <div class="card table-card">
+
+            <div class="section-title">
+                <h2>System log</h2>
+                <span>Diagnostics</span>
+            </div>
+
+            <div class="log" id="log"></div>
+
+        </div>
+
+    </section>
+
+    <div class="footer">
+        <strong>Analysis only.</strong>
+        This tool does not place trades or guarantee profits.
+        Statistical results describe historical tick behavior and can fail in future markets.
+    </div>
+
+</main>
+
+<div class="modal" id="modal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3 id="modalTitle">Help</h3>
+            <button class="close" id="close">&times;</button>
+        </div>
+
+        <div class="modal-body" id="modalBody">
+            <p>
+                This application is an analysis tool only. It connects to public
+                Deriv market data, downloads historical ticks and monitors live ticks.
+            </p>
+
+            <p>
+                For a 100-tick duration, the analyzer checks the digit approximately
+                100 ticks after each historical entry point. This is different from
+                simply counting the most recent digits.
+            </p>
+
+            <p>
+                <strong>NO SIGNAL</strong> means the statistical evidence does not
+                meet the configured requirements.
+            </p>
+
+            <p>
+                No statistical model can guarantee a winning result.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
 "use strict";
 
-/*
-===========================================================
- EXPERT TRADER PRO ANALYSIS ENGINE
- DERIV - ANALYSIS ONLY
-===========================================================
-
- Features:
- - Current Deriv public WebSocket API
- - Live market discovery
- - Historical tick analysis
- - Live tick stream
- - Duration/horizon-aware analysis
- - MATCH / DIFFERS / OVER / UNDER / EVEN / ODD
- - Bayesian smoothing
- - Z-score statistical evidence
- - Multi-window confirmation
- - Historical walk-forward validation
- - Consistency scoring
- - Entropy/randomness measurement
- - Strict NO-TRADE filter
- - No automatic trading
-===========================================================
-*/
-
-
-/* =========================================================
-   DERIV CURRENT PUBLIC MARKET DATA ENDPOINT
-========================================================= */
-
-const DERIV_WS =
-    "wss://api.derivws.com/trading/v1/options/ws/public";
-
-
-/* =========================================================
-   CONFIGURATION
-========================================================= */
+/* ============================================================
+   DERIV EXPERT TRADER ANALYSIS TOOL
+   ANALYSIS ONLY
+   ============================================================ */
 
 const CONFIG = {
+    currentEndpoint: "wss://api.derivws.com/trading/v1/options/ws/public",
+
+    legacyEndpoint: "wss://ws.binaryws.com/websockets/v3",
 
     maxTicks: 5000,
 
     minimumTicks: 100,
 
+    reconnectDelay: 4000,
+
+    analysisInterval: 30000,
+
     windows: [30, 100, 300, 1000],
-
-    minimumConfidence: 65,
-
-    maximumConfidence: 95,
-
-    minimumEdge: 1.5,
-
-    minimumZScore: 1.25,
-
-    minimumConsistency: 55,
-
-    minimumAgreement: 66,
 
     validationSamples: 150,
 
-    reconnectDelay: 4000,
+    minEdge: 1.5,
 
-    liveAnalysisDelay: 250
+    minZ: 1.25,
 
+    minConsistency: 55,
+
+    minAgreement: 66
 };
 
+const state = {
+    ws: null,
 
-/* =========================================================
-   STATE
-========================================================= */
+    endpoint: CONFIG.currentEndpoint,
 
-let ws = null;
+    connected: false,
 
-let connected = false;
+    connecting: false,
 
-let analyzing = false;
+    manuallyClosed: false,
 
-let manualDisconnect = false;
+    reconnectTimer: null,
 
-let reconnectTimer = null;
+    autoTimer: null,
 
-let autoTimer = null;
+    requestId: 1,
 
-let analysisTimer = null;
+    markets: [],
 
-let requestId = 1;
+    marketMap: new Map(),
 
-let subscriptionId = null;
+    symbol: "",
 
-let ticks = [];
+    marketName: "",
 
-let pip = 0.01;
+    pipSize: null,
 
-let barrierValue = 4;
+    ticks: [],
 
-let selectedDigit = 0;
+    lastQuote: null,
 
-let currentContract = "OVER";
+    lastEpoch: null,
 
-let marketList = [];
+    lastDigit: null,
 
-let lastAnalysis = null;
+    analysis: null,
 
+    chart: null,
 
-/* =========================================================
+    selectedType: "OVER",
+
+    dark: true
+};
+
+/* ============================================================
    DOM
-========================================================= */
+   ============================================================ */
 
-function $(id){
-
+function $(id) {
     return document.getElementById(id);
-
 }
 
+const DOM = {
+    market: $("market"),
+    contract: $("contract"),
+    duration: $("duration"),
+    analysisTicks: $("analysisTicks"),
+    barrier: $("barrier"),
+    threshold: $("threshold"),
+    auto: $("auto"),
 
-/* =========================================================
-   TOAST
-========================================================= */
+    heroMarket: $("heroMarket"),
+    marketSub: $("marketSub"),
+    price: $("price"),
+    lastDigitText: $("lastDigitText"),
 
-function toast(message){
+    connection: $("connection"),
+    connectionDot: $("connectionDot"),
+    tickStatus: $("tickStatus"),
 
-    $("toast").textContent = message;
+    dataBar: $("dataBar"),
+    dataBarText: $("dataBarText"),
 
-    $("toast").style.display = "block";
+    confidenceBar: $("confidenceBar"),
+    confidenceText: $("confidenceText"),
 
-    clearTimeout(toast.timer);
+    matches: $("matches"),
+    sampleText: $("sampleText"),
 
-    toast.timer = setTimeout(
-        function(){
+    bestDigit: $("bestDigit"),
+    bestDigitNote: $("bestDigitNote"),
+    bestProbability: $("bestProbability"),
+    edge: $("edge"),
+    zscore: $("zscore"),
+    consistency: $("consistency"),
+    entropy: $("entropy"),
 
-            $("toast").style.display = "none";
+    analysisStatus: $("analysisStatus"),
+    message: $("message"),
+    entry: $("entry"),
 
-        },
-        2500
-    );
+    windowTable: $("windowTable"),
+    log: $("log"),
 
+    connectBtn: $("connectBtn"),
+    refreshBtn: $("refreshBtn"),
+    themeBtn: $("themeBtn"),
+    helpBtn: $("helpBtn"),
+
+    modal: $("modal"),
+    modalTitle: $("modalTitle"),
+    modalBody: $("modalBody"),
+    close: $("close"),
+
+    toast: $("toast")
+};
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
 }
 
-
-/* =========================================================
-   MODAL
-========================================================= */
-
-function showModal(title,body){
-
-    $("modalTitle").textContent = title;
-
-    $("modalBody").innerHTML = body;
-
-    $("modal").classList.add("show");
-
-}
-
-
-/* =========================================================
-   NUMERIC HELPERS
-========================================================= */
-
-function clamp(value,min,max){
-
-    return Math.max(
-        min,
-        Math.min(max,value)
-    );
-
-}
-
-
-function mean(values){
-
-    if(!values.length){
-
+function round(value, decimals = 2) {
+    if (!Number.isFinite(value)) {
         return 0;
-
     }
 
-    return values.reduce(
-        (a,b)=>a+b,
-        0
-    ) / values.length;
+    const p = Math.pow(10, decimals);
 
+    return Math.round(value * p) / p;
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-function standardDeviation(values){
+function showToast(message) {
+    DOM.toast.textContent = message;
 
-    if(values.length < 2){
+    DOM.toast.classList.add("show");
 
-        return 0;
+    clearTimeout(showToast.timer);
 
+    showToast.timer = setTimeout(() => {
+        DOM.toast.classList.remove("show");
+    }, 3500);
+}
+
+function log(message, type = "info") {
+    const time = new Date().toLocaleTimeString();
+
+    const line = document.createElement("div");
+
+    line.className = "log-line";
+
+    let prefix = "[INFO]";
+
+    if (type === "error") {
+        prefix = "[ERROR]";
     }
 
-    const m = mean(values);
+    if (type === "warn") {
+        prefix = "[WARN]";
+    }
 
-    const variance =
-        mean(
-            values.map(
-                x => Math.pow(x-m,2)
-            )
+    line.textContent = `${time} ${prefix} ${message}`;
+
+    DOM.log.appendChild(line);
+
+    while (DOM.log.children.length > 200) {
+        DOM.log.removeChild(DOM.log.firstChild);
+    }
+
+    DOM.log.scrollTop = DOM.log.scrollHeight;
+
+    console.log(prefix, message);
+}
+
+function setConnection(status, online = false) {
+    DOM.connection.textContent = status;
+
+    DOM.connectionDot.classList.toggle("online", online);
+}
+
+function nextRequestId() {
+    state.requestId += 1;
+
+    return state.requestId;
+}
+
+/* ============================================================
+   MARKET HELPERS
+   ============================================================ */
+
+function getSymbol(item) {
+    return item.underlying_symbol || item.symbol || "";
+}
+
+function getMarketName(item) {
+    return item.underlying_symbol_name ||
+           item.display_name ||
+           item.symbol ||
+           item.underlying_symbol ||
+           "Unknown";
+}
+
+function getSymbolType(item) {
+    return item.underlying_symbol_type ||
+           item.symbol_type ||
+           "";
+}
+
+function getPipSize(item) {
+    const pip = Number(item.pip_size ?? item.pip);
+
+    if (Number.isFinite(pip) && pip > 0) {
+        return pip;
+    }
+
+    return null;
+}
+
+function marketScore(item) {
+    const symbol = getSymbol(item).toUpperCase();
+
+    let score = 0;
+
+    if (
+        symbol.startsWith("R_") ||
+        symbol.startsWith("1HZ") ||
+        symbol.startsWith("CRASH") ||
+        symbol.startsWith("BOOM") ||
+        symbol.startsWith("JD") ||
+        symbol.startsWith("RDB")
+    ) {
+        score += 100;
+    }
+
+    const type = getSymbolType(item).toLowerCase();
+
+    if (
+        type.includes("synthetic") ||
+        type.includes("index")
+    ) {
+        score += 50;
+    }
+
+    if (item.exchange_is_open) {
+        score += 10;
+    }
+
+    if (!item.is_trading_suspended) {
+        score += 5;
+    }
+
+    return score;
+}
+
+/* ============================================================
+   DIGIT EXTRACTION
+   ============================================================ */
+
+function decimalsFromPipSize(pipSize) {
+    if (!Number.isFinite(pipSize) || pipSize <= 0) {
+        return null;
+    }
+
+    const decimals = Math.round(
+        -Math.log10(pipSize)
+    );
+
+    if (!Number.isFinite(decimals)) {
+        return null;
+    }
+
+    return clamp(decimals, 0, 10);
+}
+
+function extractLastDigit(quote, pipSize = null) {
+    const value = Number(quote);
+
+    if (!Number.isFinite(value)) {
+        return null;
+    }
+
+    let decimals = decimalsFromPipSize(pipSize);
+
+    if (decimals === null) {
+        const text = String(value);
+
+        if (text.includes(".")) {
+            decimals = text.split(".")[1].length;
+        } else {
+            decimals = 0;
+        }
+    }
+
+    const fixed = value.toFixed(decimals);
+
+    const digits = fixed.replace(/\D/g, "");
+
+    if (!digits.length) {
+        return null;
+    }
+
+    return Number(digits[digits.length - 1]);
+}
+
+/* ============================================================
+   WEBSOCKET
+   ============================================================ */
+
+function connect() {
+    state.manuallyClosed = false;
+
+    if (
+        state.ws &&
+        (
+            state.ws.readyState === WebSocket.OPEN ||
+            state.ws.readyState === WebSocket.CONNECTING
+        )
+    ) {
+        log("WebSocket is already connected/connecting.");
+
+        return;
+    }
+
+    clearTimeout(state.reconnectTimer);
+
+    state.connecting = true;
+
+    setConnection("Connecting...", false);
+
+    log(`Connecting to ${state.endpoint}`);
+
+    let ws;
+
+    try {
+        ws = new WebSocket(state.endpoint);
+    } catch (error) {
+        state.connecting = false;
+
+        log(`WebSocket creation failed: ${error.message}`, "error");
+
+        fallbackEndpoint();
+
+        return;
+    }
+
+    state.ws = ws;
+
+    ws.onopen = () => {
+        state.connected = true;
+        state.connecting = false;
+
+        setConnection("Connected", true);
+
+        DOM.connectBtn.textContent = "Connected";
+
+        log("WebSocket connected.");
+
+        requestActiveSymbols();
+    };
+
+    ws.onmessage = event => {
+        handleMessage(event.data);
+    };
+
+    ws.onerror = () => {
+        log("WebSocket error received.", "error");
+
+        setConnection("Connection error", false);
+    };
+
+    ws.onclose = event => {
+        state.connected = false;
+        state.connecting = false;
+
+        DOM.connectBtn.textContent = "Connect";
+
+        setConnection("Disconnected", false);
+
+        log(
+            `WebSocket closed. Code ${event.code}.`,
+            "warn"
         );
 
-    return Math.sqrt(variance);
-
+        if (!state.manuallyClosed) {
+            scheduleReconnect();
+        }
+    };
 }
 
+function disconnect() {
+    state.manuallyClosed = true;
 
-/* =========================================================
-   DECIMAL PLACES
-========================================================= */
+    clearTimeout(state.reconnectTimer);
 
-function decimalPlaces(value){
-
-    value = Number(value);
-
-    if(!Number.isFinite(value) || value <= 0){
-
-        return 2;
-
+    if (state.ws) {
+        try {
+            state.ws.close();
+        } catch (error) {
+            console.warn(error);
+        }
     }
 
-    if(value >= 1){
+    state.ws = null;
 
-        return 0;
+    state.connected = false;
 
+    DOM.connectBtn.textContent = "Connect";
+
+    setConnection("Disconnected", false);
+
+    log("Disconnected manually.");
+}
+
+function scheduleReconnect() {
+    clearTimeout(state.reconnectTimer);
+
+    state.reconnectTimer = setTimeout(() => {
+        if (!state.manuallyClosed) {
+            connect();
+        }
+    }, CONFIG.reconnectDelay);
+}
+
+function fallbackEndpoint() {
+    if (state.endpoint === CONFIG.currentEndpoint) {
+        log("Trying compatibility WebSocket endpoint...", "warn");
+
+        state.endpoint = CONFIG.legacyEndpoint;
+
+        setTimeout(() => {
+            if (!state.manuallyClosed) {
+                connect();
+            }
+        }, 1000);
+
+        return;
     }
 
-    return Math.max(
-        0,
-        Math.round(
-            -Math.log10(value)
-        )
+    scheduleReconnect();
+}
+
+function send(data) {
+    if (
+        !state.ws ||
+        state.ws.readyState !== WebSocket.OPEN
+    ) {
+        log("Cannot send request: WebSocket is not open.", "error");
+
+        return false;
+    }
+
+    try {
+        state.ws.send(JSON.stringify(data));
+
+        return true;
+    } catch (error) {
+        log(`Send error: ${error.message}`, "error");
+
+        return false;
+    }
+}
+
+/* ============================================================
+   DERIV REQUESTS
+   ============================================================ */
+
+function requestActiveSymbols() {
+    log("Requesting active markets...");
+
+    const request = {
+        active_symbols: "brief",
+        req_id: nextRequestId()
+    };
+
+    send(request);
+}
+
+function requestHistory() {
+    if (!state.symbol) {
+        log("No market selected.", "warn");
+
+        return;
+    }
+
+    const analysisCount =
+        Number(DOM.analysisTicks.value) || 500;
+
+    const duration =
+        Number(DOM.duration.value) || 100;
+
+    const count = clamp(
+        analysisCount + duration + 100,
+        150,
+        CONFIG.maxTicks
     );
 
-}
+    state.ticks = [];
 
+    updateDataProgress();
 
-/* =========================================================
-   LAST DIGIT
-========================================================= */
+    DOM.tickStatus.textContent =
+        `Downloading ${count} ticks...`;
 
-function getLastDigit(price){
-
-    const places =
-        decimalPlaces(pip);
-
-    const fixed =
-        Number(price)
-            .toFixed(places);
-
-    const digits =
-        fixed.replace(/\D/g,"");
-
-    if(!digits){
-
-        return null;
-
-    }
-
-    return Number(
-        digits[digits.length-1]
+    log(
+        `Requesting ${count} historical ticks for ${state.symbol}.`
     );
 
+    const request = {
+        ticks_history: state.symbol,
+        end: "latest",
+        count: count,
+        style: "ticks",
+        subscribe: 0,
+        req_id: nextRequestId()
+    };
+
+    send(request);
 }
 
+function subscribeTicks() {
+    if (!state.symbol) {
+        return;
+    }
 
-/* =========================================================
-   NORMALIZE TICK
-========================================================= */
+    log(`Subscribing to live ticks: ${state.symbol}`);
 
-function createTick(price,epoch){
+    send({
+        ticks: state.symbol,
+        subscribe: 1,
+        req_id: nextRequestId()
+    });
+}
 
-    const numericPrice =
-        Number(price);
+/* ============================================================
+   MESSAGE HANDLER
+   ============================================================ */
 
-    if(!Number.isFinite(numericPrice)){
+function handleMessage(raw) {
+    let data;
 
-        return null;
+    try {
+        data = JSON.parse(raw);
+    } catch (error) {
+        log("Received invalid JSON from server.", "error");
 
+        return;
+    }
+
+    if (data.error) {
+        const errorCode =
+            data.error.code ||
+            "API_ERROR";
+
+        const errorMessage =
+            data.error.message ||
+            "Unknown Deriv API error";
+
+        log(
+            `${errorCode}: ${errorMessage}`,
+            "error"
+        );
+
+        DOM.message.textContent =
+            `${errorCode}: ${errorMessage}`;
+
+        if (
+            errorCode === "InvalidRequest" ||
+            errorMessage.toLowerCase().includes("invalid request")
+        ) {
+            if (state.endpoint === CONFIG.currentEndpoint) {
+                fallbackEndpoint();
+            }
+        }
+
+        return;
+    }
+
+    if (data.errors && Array.isArray(data.errors)) {
+        const message = data.errors
+            .map(error => error.message || "Unknown error")
+            .join("; ");
+
+        log(message, "error");
+
+        DOM.message.textContent = message;
+
+        return;
+    }
+
+    if (data.msg_type === "active_symbols") {
+        handleActiveSymbols(data);
+
+        return;
+    }
+
+    if (data.msg_type === "history") {
+        handleHistory(data);
+
+        return;
+    }
+
+    if (data.msg_type === "tick") {
+        handleTick(data);
+
+        return;
+    }
+}
+
+/* ============================================================
+   ACTIVE MARKETS
+   ============================================================ */
+
+function handleActiveSymbols(data) {
+    const rawMarkets = Array.isArray(data.active_symbols)
+        ? data.active_symbols
+        : [];
+
+    if (!rawMarkets.length) {
+        log("Deriv returned an empty market list.", "error");
+
+        return;
+    }
+
+    state.markets = rawMarkets
+        .filter(item => getSymbol(item))
+        .sort((a, b) => {
+            const scoreDifference =
+                marketScore(b) - marketScore(a);
+
+            if (scoreDifference !== 0) {
+                return scoreDifference;
+            }
+
+            return getMarketName(a).localeCompare(
+                getMarketName(b)
+            );
+        });
+
+    state.marketMap.clear();
+
+    DOM.market.innerHTML = "";
+
+    for (const market of state.markets) {
+        const symbol = getSymbol(market);
+
+        if (!symbol) {
+            continue;
+        }
+
+        state.marketMap.set(symbol, market);
+
+        const option = document.createElement("option");
+
+        option.value = symbol;
+
+        option.textContent =
+            `${getMarketName(market)} (${symbol})`;
+
+        DOM.market.appendChild(option);
+    }
+
+    log(
+        `Loaded ${state.markets.length} active markets.`
+    );
+
+    if (!state.markets.length) {
+        DOM.market.innerHTML =
+            `<option value="">No markets found</option>`;
+
+        return;
+    }
+
+    const preferred =
+        state.markets.find(item => marketScore(item) >= 100) ||
+        state.markets[0];
+
+    DOM.market.value = getSymbol(preferred);
+
+    selectMarket(DOM.market.value);
+}
+
+/* ============================================================
+   MARKET SELECTION
+   ============================================================ */
+
+function selectMarket(symbol) {
+    if (!symbol) {
+        return;
+    }
+
+    const market = state.marketMap.get(symbol);
+
+    if (!market) {
+        return;
+    }
+
+    state.symbol = symbol;
+
+    state.marketName = getMarketName(market);
+
+    state.pipSize = getPipSize(market);
+
+    state.ticks = [];
+
+    DOM.heroMarket.textContent =
+        state.marketName;
+
+    DOM.marketSub.textContent =
+        `${state.symbol} • ${getSymbolType(market) || "market"}`;
+
+    DOM.price.textContent = "—";
+
+    DOM.lastDigitText.textContent =
+        "Last digit: —";
+
+    DOM.tickStatus.textContent =
+        "Loading historical ticks...";
+
+    clearAnalysisDisplay();
+
+    if (state.connected) {
+        requestHistory();
+
+        setTimeout(() => {
+            if (
+                state.connected &&
+                state.symbol === symbol
+            ) {
+                subscribeTicks();
+            }
+        }, 400);
+    }
+}
+
+/* ============================================================
+   HISTORY
+   ============================================================ */
+
+function handleHistory(data) {
+    if (!data.history) {
+        log("History response contained no history object.", "error");
+
+        return;
+    }
+
+    const prices = Array.isArray(data.history.prices)
+        ? data.history.prices
+        : [];
+
+    const times = Array.isArray(data.history.times)
+        ? data.history.times
+        : [];
+
+    if (!prices.length) {
+        log("No historical prices returned.", "error");
+
+        DOM.tickStatus.textContent =
+            "No historical ticks";
+
+        return;
+    }
+
+    if (Number.isFinite(Number(data.pip_size))) {
+        state.pipSize = Number(data.pip_size);
+    }
+
+    state.ticks = [];
+
+    for (let i = 0; i < prices.length; i++) {
+        const quote = Number(prices[i]);
+
+        if (!Number.isFinite(quote)) {
+            continue;
+        }
+
+        const epoch =
+            Number(times[i]) || null;
+
+        const digit =
+            extractLastDigit(
+                quote,
+                state.pipSize
+            );
+
+        if (digit === null) {
+            continue;
+        }
+
+        state.ticks.push({
+            quote,
+            epoch,
+            digit
+        });
+    }
+
+    if (state.ticks.length > CONFIG.maxTicks) {
+        state.ticks =
+            state.ticks.slice(-CONFIG.maxTicks);
+    }
+
+    log(
+        `Received ${state.ticks.length} usable historical ticks.`
+    );
+
+    DOM.tickStatus.textContent =
+        `${state.ticks.length} historical ticks loaded`;
+
+    updateCurrentDisplay();
+
+    updateDataProgress();
+
+    analyze();
+}
+
+/* ============================================================
+   LIVE TICK
+   ============================================================ */
+
+function handleTick(data) {
+    if (!data.tick) {
+        return;
+    }
+
+    const tick = data.tick;
+
+    const symbol =
+        tick.symbol ||
+        state.symbol;
+
+    if (
+        state.symbol &&
+        symbol &&
+        symbol !== state.symbol
+    ) {
+        return;
+    }
+
+    const quote = Number(tick.quote);
+
+    if (!Number.isFinite(quote)) {
+        return;
+    }
+
+    if (Number.isFinite(Number(tick.pip_size))) {
+        state.pipSize = Number(tick.pip_size);
     }
 
     const digit =
-        getLastDigit(numericPrice);
-
-    if(
-        digit === null ||
-        digit < 0 ||
-        digit > 9
-    ){
-
-        return null;
-
-    }
-
-    return {
-
-        price:numericPrice,
-
-        digit:digit,
-
-        epoch:
-            epoch === undefined
-            ? null
-            : epoch
-
-    };
-
-}
-
-
-/* =========================================================
-   ANALYSIS DATA
-========================================================= */
-
-function getAnalysisTicks(){
-
-    const requested =
-        Number(
-            $("analysisTicks").value
-        ) || 1000;
-
-    return ticks.slice(
-        -requested
-    );
-
-}
-
-
-/* =========================================================
-   DIGIT COUNTS
-========================================================= */
-
-function getDigitCounts(data){
-
-    const counts =
-        Array(10).fill(0);
-
-    data.forEach(
-        item => {
-
-            if(
-                item &&
-                Number.isInteger(item.digit)
-            ){
-
-                counts[item.digit]++;
-
-            }
-
-        }
-    );
-
-    return counts;
-
-}
-
-
-/* =========================================================
-   DIGIT PROBABILITIES
-========================================================= */
-
-function getDigitProbabilities(data){
-
-    const counts =
-        getDigitCounts(data);
-
-    const total =
-        data.length;
-
-    if(!total){
-
-        return Array(10).fill(10);
-
-    }
-
-    /*
-       Laplace/Bayesian smoothing.
-       Prevents tiny samples from producing
-       absurd 0% or 100% probabilities.
-    */
-
-    const alpha = 1;
-
-    const denominator =
-        total + alpha*10;
-
-    return counts.map(
-        count =>
-            (count+alpha) /
-            denominator *
-            100
-    );
-
-}
-
-
-/* =========================================================
-   BASELINE
-========================================================= */
-
-function baselineFor(type,digit,barrier){
-
-    switch(type){
-
-        case "OVER":
-
-            return (
-                clamp(
-                    9-barrier,
-                    0,
-                    10
-                ) * 10
-            );
-
-
-        case "UNDER":
-
-            return (
-                clamp(
-                    barrier,
-                    0,
-                    10
-                ) * 10
-            );
-
-
-        case "EVEN":
-
-            return 50;
-
-
-        case "ODD":
-
-            return 50;
-
-
-        case "MATCH":
-
-            return 10;
-
-
-        case "DIFF":
-
-            return 90;
-
-
-        default:
-
-            return 50;
-
-    }
-
-}
-
-
-/* =========================================================
-   CONDITION TEST
-========================================================= */
-
-function isWin(digit,type,barrier,target){
-
-    switch(type){
-
-        case "OVER":
-            return digit > barrier;
-
-        case "UNDER":
-            return digit < barrier;
-
-        case "EVEN":
-            return digit % 2 === 0;
-
-        case "ODD":
-            return digit % 2 !== 0;
-
-        case "MATCH":
-            return digit === target;
-
-        case "DIFF":
-            return digit !== target;
-
-        default:
-            return false;
-
-    }
-
-}
-
-
-/* =========================================================
-   HORIZON OUTCOMES
-=========================================================
-
-   This is one of the most important improvements.
-
-   If duration = 100:
-
-   entry tick i
-          ↓
-   100 ticks
-          ↓
-   outcome tick i + 100
-
-========================================================= */
-
-function buildHorizonSamples(data,horizon){
-
-    horizon =
-        Math.max(
-            1,
-            Number(horizon) || 1
+        extractLastDigit(
+            quote,
+            state.pipSize
         );
 
+    if (digit === null) {
+        return;
+    }
+
+    const epoch =
+        Number(tick.epoch) || Math.floor(Date.now() / 1000);
+
+    state.lastQuote = quote;
+
+    state.lastEpoch = epoch;
+
+    state.lastDigit = digit;
+
+    state.ticks.push({
+        quote,
+        epoch,
+        digit
+    });
+
+    if (state.ticks.length > CONFIG.maxTicks) {
+        state.ticks.shift();
+    }
+
+    DOM.tickStatus.textContent =
+        `Live • ${state.ticks.length} ticks`;
+
+    updateCurrentDisplay();
+
+    updateDataProgress();
+
+    /*
+      Re-run analysis periodically rather than on every tick.
+      This prevents expensive calculations on very fast streams.
+    */
+
+    if (!state.lastAnalysisTime) {
+        state.lastAnalysisTime = 0;
+    }
+
+    const now = Date.now();
+
+    if (now - state.lastAnalysisTime >= 2500) {
+        state.lastAnalysisTime = now;
+
+        analyze();
+    }
+}
+
+/* ============================================================
+   CURRENT DISPLAY
+   ============================================================ */
+
+function updateCurrentDisplay() {
+    if (state.ticks.length === 0) {
+        return;
+    }
+
+    const latest =
+        state.ticks[state.ticks.length - 1];
+
+    DOM.price.textContent =
+        formatQuote(latest.quote);
+
+    DOM.lastDigitText.textContent =
+        `Last digit: ${latest.digit}`;
+}
+
+function formatQuote(value) {
+    if (!Number.isFinite(value)) {
+        return "—";
+    }
+
+    if (state.pipSize) {
+        const decimals =
+            decimalsFromPipSize(state.pipSize);
+
+        if (decimals !== null) {
+            return value.toFixed(decimals);
+        }
+    }
+
+    return String(value);
+}
+
+/* ============================================================
+   PROBABILITY FUNCTIONS
+   ============================================================ */
+
+function emptyCounts() {
+    return Array(10).fill(0);
+}
+
+function countDigits(digits) {
+    const counts = emptyCounts();
+
+    for (const digit of digits) {
+        if (
+            Number.isInteger(digit) &&
+            digit >= 0 &&
+            digit <= 9
+        ) {
+            counts[digit]++;
+        }
+    }
+
+    return counts;
+}
+
+function smoothedProbabilities(counts, alpha = 1) {
+    const total =
+        counts.reduce(
+            (sum, value) => sum + value,
+            0
+        );
+
+    const denominator =
+        total + alpha * 10;
+
+    return counts.map(
+        count => (count + alpha) / denominator
+    );
+}
+
+function normalizeProbabilities(values) {
+    const total =
+        values.reduce(
+            (sum, value) => sum + value,
+            0
+        );
+
+    if (total <= 0) {
+        return Array(10).fill(.1);
+    }
+
+    return values.map(value => value / total);
+}
+
+/* ============================================================
+   CONTRACT PROBABILITY
+   ============================================================ */
+
+function contractProbabilityFromDigits(
+    probabilities,
+    type,
+    barrier
+) {
+    const b = Number(barrier);
+
+    if (type === "OVER") {
+        return probabilities
+            .slice(b + 1)
+            .reduce((a, c) => a + c, 0);
+    }
+
+    if (type === "UNDER") {
+        return probabilities
+            .slice(0, b)
+            .reduce((a, c) => a + c, 0);
+    }
+
+    if (type === "MATCH") {
+        return probabilities[b] || 0;
+    }
+
+    if (type === "DIFF") {
+        return 1 - (probabilities[b] || 0);
+    }
+
+    if (type === "EVEN") {
+        return probabilities
+            .filter((_, index) => index % 2 === 0)
+            .reduce((a, c) => a + c, 0);
+    }
+
+    if (type === "ODD") {
+        return probabilities
+            .filter((_, index) => index % 2 === 1)
+            .reduce((a, c) => a + c, 0);
+    }
+
+    return 0;
+}
+
+function theoreticalProbability(type, barrier) {
+    const b = Number(barrier);
+
+    if (type === "OVER") {
+        return (9 - b) / 10;
+    }
+
+    if (type === "UNDER") {
+        return b / 10;
+    }
+
+    if (type === "MATCH") {
+        return 0.10;
+    }
+
+    if (type === "DIFF") {
+        return 0.90;
+    }
+
+    if (type === "EVEN") {
+        return 0.50;
+    }
+
+    if (type === "ODD") {
+        return 0.50;
+    }
+
+    return 0.10;
+}
+
+/* ============================================================
+   HORIZON OUTCOME
+   ============================================================ */
+
+function buildHorizonDigits(
+    ticks,
+    windowSize,
+    duration
+) {
     const result = [];
 
-    const max =
-        data.length-horizon;
+    if (!Array.isArray(ticks)) {
+        return result;
+    }
 
-    for(
-        let i=0;
-        i<max;
-        i++
-    ){
+    if (ticks.length < duration + 2) {
+        return result;
+    }
 
-        const entry =
-            data[i];
+    const end =
+        ticks.length - duration;
 
-        const outcome =
-            data[i+horizon];
+    const start =
+        Math.max(
+            0,
+            end - windowSize
+        );
 
-        if(
-            !entry ||
-            !outcome
-        ){
+    for (let i = start; i < end; i++) {
+        const target =
+            ticks[i + duration];
 
-            continue;
-
+        if (
+            target &&
+            Number.isInteger(target.digit)
+        ) {
+            result.push(target.digit);
         }
-
-        result.push({
-
-            entryDigit:entry.digit,
-
-            outcomeDigit:outcome.digit,
-
-            entryIndex:i,
-
-            outcomeIndex:i+horizon
-
-        });
-
     }
 
     return result;
-
 }
 
-
-/* =========================================================
-   CONDITION SAMPLES
-========================================================= */
-
-function getConditionSamples(
-    data,
-    horizon,
+function outcomeForDigit(
+    digit,
     type,
-    barrier,
-    target
-){
+    barrier
+) {
+    const b = Number(barrier);
 
-    const horizonData =
-        buildHorizonSamples(
-            data,
-            horizon
-        );
-
-    return horizonData.map(
-        sample => {
-
-            return {
-
-                ...sample,
-
-                win:isWin(
-                    sample.outcomeDigit,
-                    type,
-                    barrier,
-                    target
-                )
-
-            };
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   WILSON LOWER CONFIDENCE
-========================================================= */
-
-function wilsonLower(
-    wins,
-    total,
-    z=1.96
-){
-
-    if(!total){
-
-        return 0;
-
+    if (type === "OVER") {
+        return digit > b;
     }
 
-    const p =
-        wins/total;
+    if (type === "UNDER") {
+        return digit < b;
+    }
+
+    if (type === "MATCH") {
+        return digit === b;
+    }
+
+    if (type === "DIFF") {
+        return digit !== b;
+    }
+
+    if (type === "EVEN") {
+        return digit % 2 === 0;
+    }
+
+    if (type === "ODD") {
+        return digit % 2 === 1;
+    }
+
+    return false;
+}
+
+/* ============================================================
+   BEST DIGIT
+   ============================================================ */
+
+function findBestDigit(
+    probabilities,
+    type,
+    barrier
+) {
+    const b = Number(barrier);
+
+    if (type === "MATCH") {
+        return {
+            digit: b,
+            probability: probabilities[b] || 0
+        };
+    }
+
+    if (type === "DIFF") {
+        let bestDigit = 0;
+
+        let bestProbability = Infinity;
+
+        for (let digit = 0; digit <= 9; digit++) {
+            if (digit === b) {
+                continue;
+            }
+
+            if (probabilities[digit] < bestProbability) {
+                bestProbability =
+                    probabilities[digit];
+
+                bestDigit = digit;
+            }
+        }
+
+        return {
+            digit: bestDigit,
+            probability: bestProbability
+        };
+    }
+
+    if (type === "OVER") {
+        let bestDigit = b + 1;
+
+        for (let digit = b + 1; digit <= 9; digit++) {
+            if (
+                probabilities[digit] >
+                probabilities[bestDigit]
+            ) {
+                bestDigit = digit;
+            }
+        }
+
+        return {
+            digit: bestDigit,
+            probability: probabilities[bestDigit] || 0
+        };
+    }
+
+    if (type === "UNDER") {
+        let bestDigit = Math.max(0, b - 1);
+
+        for (let digit = 0; digit < b; digit++) {
+            if (
+                probabilities[digit] >
+                probabilities[bestDigit]
+            ) {
+                bestDigit = digit;
+            }
+        }
+
+        return {
+            digit: bestDigit,
+            probability: probabilities[bestDigit] || 0
+        };
+    }
+
+    if (type === "EVEN") {
+        let bestDigit = 0;
+
+        let bestProbability = -Infinity;
+
+        for (let digit = 0; digit <= 9; digit += 2) {
+            if (probabilities[digit] > bestProbability) {
+                bestProbability = probabilities[digit];
+
+                bestDigit = digit;
+            }
+        }
+
+        return {
+            digit: bestDigit,
+            probability: bestProbability
+        };
+    }
+
+    if (type === "ODD") {
+        let bestDigit = 1;
+
+        let bestProbability = -Infinity;
+
+        for (let digit = 1; digit <= 9; digit += 2) {
+            if (probabilities[digit] > bestProbability) {
+                bestProbability = probabilities[digit];
+
+                bestDigit = digit;
+            }
+        }
+
+        return {
+            digit: bestDigit,
+            probability: bestProbability
+        };
+    }
+
+    return {
+        digit: 0,
+        probability: probabilities[0]
+    };
+}
+
+/* ============================================================
+   BINOMIAL Z SCORE
+   ============================================================ */
+
+function zScore(
+    probability,
+    baseline,
+    samples
+) {
+    if (
+        samples <= 0 ||
+        baseline <= 0 ||
+        baseline >= 1
+    ) {
+        return 0;
+    }
+
+    const variance =
+        samples *
+        baseline *
+        (1 - baseline);
+
+    if (variance <= 0) {
+        return 0;
+    }
+
+    return (
+        (probability * samples -
+            baseline * samples) /
+        Math.sqrt(variance)
+    );
+}
+
+/* ============================================================
+   WILSON LOWER BOUND
+   ============================================================ */
+
+function wilsonLower(
+    successes,
+    total,
+    z = 1.96
+) {
+    if (total <= 0) {
+        return 0;
+    }
+
+    const p = successes / total;
 
     const denominator =
-        1 +
-        (z*z)/total;
+        1 + (z * z) / total;
 
     const centre =
         p +
-        (z*z)/(2*total);
+        (z * z) / (2 * total);
 
     const adjustment =
         z *
         Math.sqrt(
             (
-                p*(1-p) +
-                (z*z)/(4*total)
-            ) / total
+                p * (1 - p) +
+                (z * z) / (4 * total)
+            ) /
+            total
         );
 
     return (
-        centre-adjustment
-    ) / denominator * 100;
-
+        centre - adjustment
+    ) / denominator;
 }
 
-
-/* =========================================================
-   BINOMIAL Z-SCORE
-========================================================= */
-
-function binomialZ(
-    wins,
-    total,
-    expectedPercent
-){
-
-    if(!total){
-
-        return 0;
-
-    }
-
-    const p0 =
-        expectedPercent/100;
-
-    const observed =
-        wins/total;
-
-    const standardError =
-        Math.sqrt(
-            Math.max(
-                1e-9,
-                p0*(1-p0)/total
-            )
-        );
-
-    return (
-        observed-p0
-    ) / standardError;
-
-}
-
-
-/* =========================================================
-   CONDITION RATE
-========================================================= */
-
-function conditionRate(samples){
-
-    if(!samples.length){
-
-        return 0;
-
-    }
-
-    return (
-        samples.filter(
-            x => x.win
-        ).length /
-        samples.length
-    ) * 100;
-
-}
-
-
-/* =========================================================
-   MULTI WINDOW ANALYSIS
-========================================================= */
-
-function analyzeWindows(
-    samples,
-    type,
-    barrier,
-    target
-){
-
-    const expected =
-        baselineFor(
-            type,
-            target,
-            barrier
-        );
-
-    const available =
-        samples.length;
-
-    const results = [];
-
-    const usableWindows =
-        CONFIG.windows
-            .filter(
-                w =>
-                    w <= available
-            );
-
-    usableWindows.forEach(
-        windowSize => {
-
-            const subset =
-                samples.slice(
-                    -windowSize
-                );
-
-            const wins =
-                subset.filter(
-                    x => x.win
-                ).length;
-
-            const rate =
-                conditionRate(
-                    subset
-                );
-
-            const edge =
-                rate-expected;
-
-            const z =
-                binomialZ(
-                    wins,
-                    subset.length,
-                    expected
-                );
-
-            const lower =
-                wilsonLower(
-                    wins,
-                    subset.length
-                );
-
-            results.push({
-
-                window:windowSize,
-
-                total:subset.length,
-
-                wins:wins,
-
-                rate:rate,
-
-                edge:edge,
-
-                z:z,
-
-                lower:lower
-
-            });
-
-        }
-    );
-
-    return results;
-
-}
-
-
-/* =========================================================
-   CONSISTENCY
-========================================================= */
-
-function consistencyScore(
-    windows,
-    expected
-){
-
-    if(windows.length < 2){
-
-        return 0;
-
-    }
-
-    const edges =
-        windows.map(
-            x => x.edge
-        );
-
-    const positive =
-        edges.filter(
-            x => x > 0
-        ).length;
-
-    const agreement =
-        positive /
-        edges.length *
-        100;
-
-    const spread =
-        standardDeviation(
-            edges
-        );
-
-    const stability =
-        clamp(
-            100 -
-            spread*8,
-            0,
-            100
-        );
-
-    return (
-        agreement*.65 +
-        stability*.35
-    );
-
-}
-
-
-/* =========================================================
-   AGREEMENT
-========================================================= */
-
-function agreementScore(windows){
-
-    if(!windows.length){
-
-        return 0;
-
-    }
-
-    const direction =
-        windows.filter(
-            x => x.edge > 0
-        ).length;
-
-    return (
-        direction /
-        windows.length *
-        100
-    );
-
-}
-
-
-/* =========================================================
+/* ============================================================
    ENTROPY
-========================================================= */
+   ============================================================ */
 
-function entropyScore(data){
+function entropy(probabilities) {
+    let value = 0;
 
-    if(!data.length){
-
-        return 0;
-
+    for (const p of probabilities) {
+        if (p > 0) {
+            value -= p * Math.log2(p);
+        }
     }
 
-    const probabilities =
-        getDigitProbabilities(data)
-            .map(
-                p => p/100
-            );
-
-    let entropy = 0;
-
-    probabilities.forEach(
-        p => {
-
-            if(p > 0){
-
-                entropy -=
-                    p*Math.log2(p);
-
-            }
-
-        }
-    );
-
-    /*
-       Maximum entropy for 10 digits = log2(10).
-       Higher entropy = more random.
-    */
-
-    return (
-        entropy/
-        Math.log2(10) *
-        100
-    );
-
+    return value;
 }
 
-
-/* =========================================================
+/* ============================================================
    TRANSITION ANALYSIS
-========================================================= */
+   ============================================================ */
 
-function transitionSignal(
-    data,
+function transitionScore(
+    ticks,
+    duration,
     type,
-    barrier,
-    target
-){
-
-    if(data.length < 20){
-
+    barrier
+) {
+    if (ticks.length < duration + 10) {
         return 0;
-
     }
 
-    const recent =
-        data.slice(-100);
-
-    let opportunities = 0;
-
-    let wins = 0;
-
-    for(
-        let i=0;
-        i<recent.length-1;
-        i++
-    ){
-
-        const current =
-            recent[i].digit;
-
-        const next =
-            recent[i+1].digit;
-
-        if(
-            type === "MATCH" &&
-            current === target
-        ){
-
-            opportunities++;
-
-            if(next === target){
-
-                wins++;
-
-            }
-
-        }
-
-        else if(
-            type === "DIFF" &&
-            current === target
-        ){
-
-            opportunities++;
-
-            if(next !== target){
-
-                wins++;
-
-            }
-
-        }
-
-        else if(
-            type === "OVER" &&
-            current > barrier
-        ){
-
-            opportunities++;
-
-            if(next > barrier){
-
-                wins++;
-
-            }
-
-        }
-
-        else if(
-            type === "UNDER" &&
-            current < barrier
-        ){
-
-            opportunities++;
-
-            if(next < barrier){
-
-                wins++;
-
-            }
-
-        }
-
-    }
-
-    if(opportunities < 5){
-
-        return 0;
-
-    }
-
-    return (
-        wins/opportunities*100
+    const recentCount = Math.min(
+        250,
+        ticks.length - duration
     );
-
-}
-
-
-/* =========================================================
-   FIND BEST DIGIT
-========================================================= */
-
-function findBestDigit(data,horizon,type){
-
-    const probabilities =
-        Array(10).fill(0);
-
-    for(let d=0;d<10;d++){
-
-        const samples =
-            getConditionSamples(
-                data,
-                horizon,
-                "MATCH",
-                barrierValue,
-                d
-            );
-
-        probabilities[d] =
-            conditionRate(
-                samples
-            );
-
-    }
-
-    if(type === "MATCH"){
-
-        let best = 0;
-
-        for(let d=1;d<10;d++){
-
-            if(
-                probabilities[d] >
-                probabilities[best]
-            ){
-
-                best = d;
-
-            }
-
-        }
-
-        return {
-
-            digit:best,
-
-            probability:
-                probabilities[best]
-
-        };
-
-    }
-
-
-    if(type === "DIFF"){
-
-        let best = 0;
-
-        for(let d=1;d<10;d++){
-
-            if(
-                probabilities[d] <
-                probabilities[best]
-            ){
-
-                best = d;
-
-            }
-
-        }
-
-        return {
-
-            digit:best,
-
-            probability:
-                100 -
-                probabilities[best]
-
-        };
-
-    }
-
-    return {
-
-        digit:
-            probabilities.indexOf(
-                Math.max(
-                    ...probabilities
-                )
-            ),
-
-        probability:
-            Math.max(
-                ...probabilities
-            )
-
-    };
-
-}
-
-
-/* =========================================================
-   WALK-FORWARD VALIDATION
-=========================================================
-
-   Instead of only asking:
-
-   "What happened recently?"
-
-   we also ask:
-
-   "When this type of signal appeared historically,
-    how often did it actually work?"
-
-========================================================= */
-
-function walkForwardValidation(
-    data,
-    horizon,
-    type,
-    barrier,
-    target
-){
-
-    const minimumTraining = 50;
-
-    if(
-        data.length <
-        minimumTraining+horizon+20
-    ){
-
-        return {
-
-            score:50,
-
-            samples:0,
-
-            wins:0,
-
-            rate:0
-
-        };
-
-    }
 
     const start =
-        minimumTraining;
+        ticks.length -
+        duration -
+        recentCount;
 
-    const end =
-        data.length-horizon;
+    let sameDirection = 0;
 
-    const step =
-        Math.max(
-            1,
-            Math.floor(
-                (end-start) /
-                CONFIG.validationSamples
-            )
+    let total = 0;
+
+    for (
+        let i = Math.max(0, start);
+        i < ticks.length - duration - 1;
+        i++
+    ) {
+        const current =
+            ticks[i + duration].digit;
+
+        const next =
+            ticks[i + duration + 1].digit;
+
+        const currentOutcome =
+            outcomeForDigit(
+                current,
+                type,
+                barrier
+            );
+
+        const nextOutcome =
+            outcomeForDigit(
+                next,
+                type,
+                barrier
+            );
+
+        if (currentOutcome === nextOutcome) {
+            sameDirection++;
+        }
+
+        total++;
+    }
+
+    if (total === 0) {
+        return 0;
+    }
+
+    return sameDirection / total;
+}
+
+/* ============================================================
+   WALK FORWARD VALIDATION
+   ============================================================ */
+
+function walkForwardValidation(
+    ticks,
+    duration,
+    type,
+    barrier,
+    maxSamples = 150
+) {
+    const available =
+        ticks.length - duration;
+
+    if (available < 100) {
+        return {
+            accuracy: 0,
+            samples: 0
+        };
+    }
+
+    const samples =
+        Math.min(
+            maxSamples,
+            available - 20
         );
 
-    let samples = 0;
+    let correct = 0;
 
-    let wins = 0;
+    let tested = 0;
 
-    for(
-        let i=start;
-        i<end;
-        i+=step
-    ){
+    /*
+      For each historical point, calculate a simple
+      probability using data BEFORE that point and then
+      test the actual future horizon result.
 
-        const training =
-            data.slice(
+      This prevents using future ticks to predict an
+      earlier tick.
+    */
+
+    const first =
+        Math.max(
+            50,
+            available - samples
+        );
+
+    for (
+        let i = first;
+        i < available;
+        i++
+    ) {
+        const historyStart =
+            Math.max(
                 0,
-                i
+                i - 300
             );
 
-        const horizonSamples =
-            getConditionSamples(
-                training,
-                horizon,
-                type,
-                barrier,
-                target
-            );
+        const training = ticks.slice(
+            historyStart,
+            i + 1
+        );
 
-        if(
-            horizonSamples.length <
-            minimumTraining
-        ){
-
+        if (training.length < 50) {
             continue;
-
         }
 
-        const windows =
-            analyzeWindows(
-                horizonSamples,
-                type,
-                barrier,
-                target
+        const digitCounts =
+            countDigits(
+                training.map(t => t.digit)
             );
 
-        if(!windows.length){
+        const probabilities =
+            smoothedProbabilities(
+                digitCounts
+            );
 
-            continue;
+        const estimated =
+            contractProbabilityFromDigits(
+                probabilities,
+                type,
+                barrier
+            );
 
-        }
-
-        const latest =
-            windows[
-                windows.length-1
-            ];
+        const baseline =
+            theoreticalProbability(
+                type,
+                barrier
+            );
 
         /*
-           Only validate when the historical
-           model would have considered the
-           signal direction positive.
+          Validation only counts a directional call when
+          historical probability is actually above baseline.
         */
 
-        if(
-            latest.edge <
-            CONFIG.minimumEdge
-        ){
-
+        if (estimated <= baseline) {
             continue;
+        }
 
+        const actualDigit =
+            ticks[i + duration]?.digit;
+
+        if (
+            !Number.isInteger(actualDigit)
+        ) {
+            continue;
         }
 
         const actual =
-            data[i+horizon];
-
-        if(!actual){
-
-            continue;
-
-        }
-
-        samples++;
-
-        if(
-            isWin(
-                actual.digit,
+            outcomeForDigit(
+                actualDigit,
                 type,
-                barrier,
-                target
-            )
-        ){
+                barrier
+            );
 
-            wins++;
-
+        if (actual) {
+            correct++;
         }
 
+        tested++;
     }
 
-    if(!samples){
+    return {
+        accuracy:
+            tested > 0
+                ? correct / tested
+                : 0,
 
+        samples: tested
+    };
+}
+
+/* ============================================================
+   WINDOW ANALYSIS
+   ============================================================ */
+
+function analyzeWindow(
+    ticks,
+    windowSize,
+    duration,
+    type,
+    barrier
+) {
+    const targetDigits =
+        buildHorizonDigits(
+            ticks,
+            windowSize,
+            duration
+        );
+
+    if (targetDigits.length < 20) {
         return {
-
-            score:50,
-
-            samples:0,
-
-            wins:0,
-
-            rate:0
-
+            window: windowSize,
+            samples: targetDigits.length,
+            probabilities: Array(10).fill(.1),
+            contractProbability: 0,
+            baseline: theoreticalProbability(type, barrier),
+            edge: 0,
+            z: 0,
+            lowerBound: 0,
+            bestDigit: null,
+            bestProbability: 0,
+            entropy: 0,
+            transition: 0
         };
-
     }
 
-    const rate =
-        wins/samples*100;
+    const counts =
+        countDigits(targetDigits);
 
-    /*
-       Validation score is relative to
-       the theoretical baseline.
-    */
+    const probabilities =
+        smoothedProbabilities(counts);
 
-    const expected =
-        baselineFor(
+    const contractProbability =
+        contractProbabilityFromDigits(
+            probabilities,
             type,
-            target,
+            barrier
+        );
+
+    const baseline =
+        theoreticalProbability(
+            type,
             barrier
         );
 
     const edge =
-        rate-expected;
+        (contractProbability -
+            baseline) * 100;
 
-    const score =
-        clamp(
-            50 +
-            edge*3,
-            0,
-            100
+    const z =
+        zScore(
+            contractProbability,
+            baseline,
+            targetDigits.length
+        );
+
+    const successes =
+        targetDigits.filter(
+            digit =>
+                outcomeForDigit(
+                    digit,
+                    type,
+                    barrier
+                )
+        ).length;
+
+    const lowerBound =
+        wilsonLower(
+            successes,
+            targetDigits.length
+        );
+
+    const best =
+        findBestDigit(
+            probabilities,
+            type,
+            barrier
+        );
+
+    const transition =
+        transitionScore(
+            ticks,
+            duration,
+            type,
+            barrier
         );
 
     return {
-
-        score:score,
-
-        samples:samples,
-
-        wins:wins,
-
-        rate:rate,
-
-        edge:edge
-
+        window: windowSize,
+        samples: targetDigits.length,
+        counts,
+        probabilities,
+        contractProbability,
+        baseline,
+        edge,
+        z,
+        lowerBound,
+        bestDigit: best.digit,
+        bestProbability: best.probability,
+        entropy: entropy(probabilities),
+        transition
     };
-
 }
 
+/* ============================================================
+   MAIN ANALYSIS
+   ============================================================ */
 
-/* =========================================================
-   FINAL CONFIDENCE ENGINE
-========================================================= */
-
-function calculateProfessionalAnalysis(){
-
-    const data =
-        getAnalysisTicks();
-
+function analyze() {
     const duration =
-        Number(
-            $("duration").value
-        ) || 100;
+        Number(DOM.duration.value);
 
-    if(
-        data.length <
-        CONFIG.minimumTicks
-    ){
+    const type =
+        DOM.contract.value;
 
-        return {
+    const barrier =
+        Number(DOM.barrier.value);
 
-            ready:false,
+    const minimumConfidence =
+        Number(DOM.threshold.value);
 
-            confidence:0,
+    const requiredTicks =
+        duration + 50;
 
-            reason:
-                "Waiting for more tick data."
-
-        };
-
-    }
-
-    let target =
-        selectedDigit;
-
-
-    /*
-       Automatically optimize MATCH/DIFFERS
-       target digit.
-    */
-
-    if(
-        currentContract === "MATCH" ||
-        currentContract === "DIFF"
-    ){
-
-        const best =
-            findBestDigit(
-                data,
-                duration,
-                currentContract
-            );
-
-        target =
-            best.digit;
-
-        selectedDigit =
-            target;
-
-    }
-
-
-    const samples =
-        getConditionSamples(
-            data,
-            duration,
-            currentContract,
-            barrierValue,
-            target
+    if (state.ticks.length < requiredTicks) {
+        setAnalysisStatus(
+            "WAITING FOR DATA",
+            "yellow"
         );
 
-    if(
-        samples.length <
-        CONFIG.minimumTicks/2
-    ){
+        DOM.message.textContent =
+            `Need at least ${requiredTicks} ticks. Currently ${state.ticks.length}.`;
 
-        return {
+        DOM.confidenceText.textContent =
+            "0%";
 
-            ready:false,
+        DOM.confidenceBar.style.width =
+            "0%";
 
-            confidence:0,
-
-            reason:
-                "Not enough completed duration samples."
-
-        };
-
+        return;
     }
-
-
-    const expected =
-        baselineFor(
-            currentContract,
-            target,
-            barrierValue
-        );
-
 
     const windows =
-        analyzeWindows(
-            samples,
-            currentContract,
-            barrierValue,
-            target
-        );
+        CONFIG.windows
+            .filter(windowSize =>
+                windowSize + duration <=
+                state.ticks.length
+            );
 
-
-    if(!windows.length){
-
-        return {
-
-            ready:false,
-
-            confidence:0,
-
-            reason:
-                "No valid analysis windows."
-
-        };
-
+    if (!windows.length) {
+        return;
     }
 
+    const results =
+        windows.map(
+            windowSize =>
+                analyzeWindow(
+                    state.ticks,
+                    windowSize,
+                    duration,
+                    type,
+                    barrier
+                )
+        );
 
-    const latest =
-        windows[
-            windows.length-1
-        ];
+    const primary =
+        results.find(
+            result =>
+                result.window ===
+                Number(DOM.analysisTicks.value)
+        ) ||
+        results[results.length - 1];
 
+    const best =
+        findBestDigit(
+            primary.probabilities,
+            type,
+            barrier
+        );
 
-    const longTerm =
-        windows[0];
+    const probabilities =
+        primary.probabilities;
 
+    const baseline =
+        primary.baseline;
 
-    const recent =
-        windows[
-            windows.length-1
-        ];
+    const edge =
+        primary.edge;
 
+    const z =
+        primary.z;
+
+    /*
+      Multi-window agreement
+    */
+
+    const bestDigits =
+        results
+            .map(result => result.bestDigit)
+            .filter(
+                digit =>
+                    Number.isInteger(digit)
+            );
+
+    let agreement = 0;
+
+    if (bestDigits.length) {
+        const frequency = {};
+
+        for (const digit of bestDigits) {
+            frequency[digit] =
+                (frequency[digit] || 0) + 1;
+        }
+
+        const max =
+            Math.max(
+                ...Object.values(frequency)
+            );
+
+        agreement =
+            (max / bestDigits.length) * 100;
+    }
+
+    /*
+      Consistency of probability edge
+    */
+
+    const positiveResults =
+        results.filter(
+            result =>
+                result.edge > 0
+        ).length;
 
     const consistency =
-        consistencyScore(
-            windows,
-            expected
-        );
+        results.length
+            ? (positiveResults /
+                results.length) * 100
+            : 0;
 
-
-    const agreement =
-        agreementScore(
-            windows
-        );
-
+    /*
+      Validation
+    */
 
     const validation =
         walkForwardValidation(
-            data,
+            state.ticks,
             duration,
-            currentContract,
-            barrierValue,
-            target
+            type,
+            barrier,
+            CONFIG.validationSamples
         );
-
-
-    const transition =
-        transitionSignal(
-            data,
-            currentContract,
-            barrierValue,
-            target
-        );
-
-
-    const entropy =
-        entropyScore(
-            data
-        );
-
-
-    const recencyEdge =
-        recent.edge;
-
-
-    const longEdge =
-        longTerm.edge;
-
-
-    const z =
-        latest.z;
-
-
-    const statisticalEvidence =
-        clamp(
-            50 +
-            z*9,
-            0,
-            100
-        );
-
-
-    const edgeScore =
-        clamp(
-            50 +
-            recencyEdge*4,
-            0,
-            100
-        );
-
-
-    const validationScore =
-        validation.samples
-        ? validation.score
-        : 50;
-
-
-    const recencyScore =
-        clamp(
-            50 +
-            recencyEdge*5,
-            0,
-            100
-        );
-
 
     /*
-       Randomness penalty.
-
-       We don't reject high entropy by itself,
-       because synthetic digit streams can remain
-       highly random even when a small statistical
-       edge appears.
-
-       We only penalize if there is almost no
-       statistical separation.
+      Confidence model.
+      This is NOT a guaranteed probability of winning.
     */
 
-    let randomnessPenalty = 0;
+    const sampleFactor =
+        clamp(
+            primary.samples / 500,
+            0,
+            1
+        );
 
-    if(
-        entropy > 99 &&
-        Math.abs(recencyEdge) < 1
-    ){
+    const edgeFactor =
+        clamp(
+            Math.abs(edge) / 10,
+            0,
+            1
+        );
 
-        randomnessPenalty = 12;
+    const zFactor =
+        clamp(
+            Math.abs(z) / 3,
+            0,
+            1
+        );
 
-    }
+    const agreementFactor =
+        clamp(
+            agreement / 100,
+            0,
+            1
+        );
 
+    const consistencyFactor =
+        clamp(
+            consistency / 100,
+            0,
+            1
+        );
 
-    /*
-       Ensemble score.
-    */
+    const validationFactor =
+        validation.samples >= 30
+            ? clamp(
+                validation.accuracy,
+                0,
+                1
+            )
+            : 0.5;
 
     let confidence =
-        statisticalEvidence*.24 +
-        edgeScore*.22 +
-        consistency*.16 +
-        agreement*.12 +
-        validationScore*.16 +
-        recencyScore*.10;
-
-
-    confidence -=
-        randomnessPenalty;
-
-
-    /*
-       Small transition confirmation.
-    */
-
-    if(
-        transition > expected
-    ){
-
-        confidence += 3;
-
-    }
-
+        (
+            sampleFactor * 0.15 +
+            edgeFactor * 0.20 +
+            zFactor * 0.20 +
+            agreementFactor * 0.15 +
+            consistencyFactor * 0.15 +
+            validationFactor * 0.15
+        ) * 100;
 
     confidence =
         clamp(
             confidence,
             0,
-            CONFIG.maximumConfidence
+            95
         );
 
-
     /*
-       Strict signal filters.
+      Signal filters
     */
 
-    const positiveEdge =
-        latest.edge >=
-        CONFIG.minimumEdge;
+    const enoughSample =
+        primary.samples >= 50;
 
+    const edgePass =
+        edge >= CONFIG.minEdge;
 
-    const statisticallySignificant =
-        latest.z >=
-        CONFIG.minimumZScore;
+    const zPass =
+        z >= CONFIG.minZ;
 
+    const consistencyPass =
+        consistency >= CONFIG.minConsistency;
 
-    const consistent =
-        consistency >=
-        CONFIG.minimumConsistency;
+    const agreementPass =
+        agreement >= CONFIG.minAgreement;
 
+    const confidencePass =
+        confidence >= minimumConfidence;
 
-    const agreed =
-        agreement >=
-        CONFIG.minimumAgreement;
-
-
-    const validated =
-        validation.samples < 10 ||
-        validation.edge >= 0;
-
-
-    const minimum =
-        Number(
-            $("threshold").value
-        ) || CONFIG.minimumConfidence;
-
+    const validationPass =
+        validation.samples < 30 ||
+        validation.accuracy >= 0.52;
 
     const signal =
-        samples.length >= CONFIG.minimumTicks/2 &&
-        confidence >= minimum &&
-        positiveEdge &&
-        statisticallySignificant &&
-        consistent &&
-        agreed &&
-        validated;
+        enoughSample &&
+        edgePass &&
+        zPass &&
+        consistencyPass &&
+        agreementPass &&
+        confidencePass &&
+        validationPass;
 
-
-    return {
-
-        ready:true,
-
-        signal:signal,
-
-        confidence:confidence,
-
-        target:target,
-
-        expected:expected,
-
-        observed:latest.rate,
-
-        edge:latest.edge,
-
-        z:z,
-
-        consistency:consistency,
-
-        agreement:agreement,
-
-        validation:validation,
-
-        transition:transition,
-
-        entropy:entropy,
-
-        windows:windows,
-
-        samples:samples.length,
-
-        duration:duration,
-
-        label:getSignalLabel(
-            currentContract,
-            target,
-            barrierValue
-        )
-
+    state.analysis = {
+        type,
+        barrier,
+        duration,
+        primary,
+        results,
+        best,
+        edge,
+        z,
+        agreement,
+        consistency,
+        confidence,
+        validation,
+        signal,
+        probabilities,
+        entropy: primary.entropy
     };
 
+    renderAnalysis();
 }
 
+/* ============================================================
+   RENDER ANALYSIS
+   ============================================================ */
 
-/* =========================================================
-   LABEL
-========================================================= */
+function renderAnalysis() {
+    const analysis =
+        state.analysis;
 
-function getSignalLabel(
-    type,
-    target,
-    barrier
-){
-
-    switch(type){
-
-        case "OVER":
-            return "OVER " + barrier;
-
-        case "UNDER":
-            return "UNDER " + barrier;
-
-        case "MATCH":
-            return "MATCH " + target;
-
-        case "DIFF":
-            return "DIFFERS " + target;
-
-        case "EVEN":
-            return "EVEN";
-
-        case "ODD":
-            return "ODD";
-
-        default:
-            return type;
-
-    }
-
-}
-
-
-/* =========================================================
-   MAIN ANALYSIS
-========================================================= */
-
-function analyze(){
-
-    clearTimeout(
-        analysisTimer
-    );
-
-    analysisTimer =
-        setTimeout(
-            performAnalysis,
-            CONFIG.liveAnalysisDelay
-        );
-
-}
-
-
-function performAnalysis(){
-
-    const data =
-        getAnalysisTicks();
-
-    const requested =
-        Number(
-            $("analysisTicks").value
-        ) || 1000;
-
-
-    const required =
-        Math.max(
-            requested,
-            100
-        );
-
-
-    const dataPercent =
-        clamp(
-            ticks.length /
-            required *
-            100,
-            0,
-            100
-        );
-
-
-    $("dataBar").style.width =
-        dataPercent + "%";
-
-
-    $("statusBar").style.width =
-        dataPercent + "%";
-
-
-    $("tickStatus").textContent =
-        ticks.length +
-        " ticks";
-
-
-    $("lastDigit").textContent =
-        data.length
-        ? data[data.length-1].digit
-        : "-";
-
-
-    if(!data.length){
-
-        resetAnalysisDisplay();
-
-        drawCharts();
-
+    if (!analysis) {
         return;
-
     }
 
+    const {
+        type,
+        barrier,
+        duration,
+        primary,
+        best,
+        edge,
+        z,
+        agreement,
+        consistency,
+        confidence,
+        validation,
+        signal,
+        probabilities
+    } = analysis;
 
-    const result =
-        calculateProfessionalAnalysis();
+    DOM.bestDigit.textContent =
+        Number.isInteger(best.digit)
+            ? best.digit
+            : "—";
 
+    DOM.bestDigitNote.textContent =
+        `${type} • ${duration} ticks`;
 
-    lastAnalysis =
-        result;
+    DOM.bestProbability.textContent =
+        `${round(
+            best.probability * 100,
+            2
+        )}%`;
 
+    DOM.edge.textContent =
+        `${edge >= 0 ? "+" : ""}${round(edge, 2)}%`;
 
-    if(!result.ready){
+    DOM.zscore.textContent =
+        round(z, 2);
 
-        $("analysisStatus").textContent =
-            analyzing
-            ? "Collecting data"
-            : "Waiting";
+    DOM.consistency.textContent =
+        `${round(consistency, 1)}%`;
 
+    DOM.entropy.textContent =
+        round(primary.entropy, 3);
 
-        $("confidence").textContent =
-            "0%";
+    DOM.confidenceText.textContent =
+        `${round(confidence, 1)}%`;
 
+    DOM.confidenceBar.style.width =
+        `${clamp(confidence, 0, 100)}%`;
 
-        $("confidenceBar").style.width =
-            "0%";
+    DOM.entry.textContent =
+        signal
+            ? `${type} ${barrier} • ${duration} ticks`
+            : "NO ENTRY";
 
+    DOM.sampleText.textContent =
+        `${primary.samples} samples`;
 
-        $("entry").textContent =
-            "NO SIGNAL • " +
-            result.reason;
+    if (signal) {
+        setAnalysisStatus(
+            "ENTRY SIGNAL",
+            "green"
+        );
 
+        DOM.message.textContent =
+            `Evidence passed the configured filters. Confidence ${round(confidence, 1)}%, edge ${round(edge, 2)}%, z-score ${round(z, 2)}%, agreement ${round(agreement, 1)}%.`;
+    } else {
+        setAnalysisStatus(
+            "NO SIGNAL",
+            "yellow"
+        );
 
-        $("message").textContent =
-            result.reason;
+        const reasons = [];
 
+        if (!edgePassForDisplay(edge)) {
+            reasons.push(
+                `edge below ${CONFIG.minEdge}%`
+            );
+        }
 
-        drawCharts();
+        if (z < CONFIG.minZ) {
+            reasons.push(
+                `z-score below ${CONFIG.minZ}`
+            );
+        }
 
+        if (consistency < CONFIG.minConsistency) {
+            reasons.push(
+                `consistency below ${CONFIG.minConsistency}%`
+            );
+        }
+
+        if (agreement < CONFIG.minAgreement) {
+            reasons.push(
+                `window agreement below ${CONFIG.minAgreement}%`
+            );
+        }
+
+        if (confidence < Number(DOM.threshold.value)) {
+            reasons.push(
+                `confidence below ${DOM.threshold.value}%`
+            );
+        }
+
+        if (
+            validation.samples >= 30 &&
+            validation.accuracy < 0.52
+        ) {
+            reasons.push(
+                "walk-forward validation weak"
+            );
+        }
+
+        DOM.message.textContent =
+            reasons.length
+                ? `No entry: ${reasons.join(", ")}.`
+                : "Statistical evidence is not strong enough.";
+    }
+
+    renderDigitMatrix(probabilities);
+
+    renderWindowTable();
+
+    updateChart(probabilities);
+}
+
+function edgePassForDisplay(edge) {
+    return edge >= CONFIG.minEdge;
+}
+
+function setAnalysisStatus(text, color) {
+    DOM.analysisStatus.textContent = text;
+
+    DOM.analysisStatus.className =
+        "signal " + color;
+}
+
+/* ============================================================
+   DIGIT MATRIX
+   ============================================================ */
+
+function renderDigitMatrix(probabilities) {
+    DOM.matches.innerHTML = "";
+
+    let bestDigit = null;
+
+    if (state.analysis) {
+        bestDigit =
+            state.analysis.best.digit;
+    }
+
+    for (let digit = 0; digit <= 9; digit++) {
+        const probability =
+            probabilities[digit] || 0;
+
+        const box =
+            document.createElement("div");
+
+        box.className =
+            "digit" +
+            (
+                digit === bestDigit
+                    ? " best"
+                    : ""
+            );
+
+        const number =
+            document.createElement("div");
+
+        number.className =
+            "digit-number";
+
+        number.textContent =
+            digit;
+
+        const prob =
+            document.createElement("div");
+
+        prob.className =
+            "digit-prob";
+
+        prob.textContent =
+            `${round(
+                probability * 100,
+                2
+            )}%`;
+
+        const bar =
+            document.createElement("div");
+
+        bar.className =
+            "digit-bar";
+
+        bar.style.transform =
+            `scaleX(${clamp(
+                probability * 10,
+                0,
+                1
+            )})`;
+
+        box.appendChild(number);
+
+        box.appendChild(prob);
+
+        box.appendChild(bar);
+
+        DOM.matches.appendChild(box);
+    }
+}
+
+/* ============================================================
+   WINDOW TABLE
+   ============================================================ */
+
+function renderWindowTable() {
+    if (!state.analysis) {
         return;
-
     }
 
+    DOM.windowTable.innerHTML = "";
 
-    /*
-       Update selected digit.
-    */
+    for (const result of state.analysis.results) {
+        const row =
+            document.createElement("tr");
 
-    if(
-        currentContract === "MATCH" ||
-        currentContract === "DIFF"
-    ){
+        const edgeClass =
+            result.edge >= CONFIG.minEdge
+                ? "good"
+                : "warn";
 
-        selectedDigit =
-            result.target;
+        const zClass =
+            result.z >= CONFIG.minZ
+                ? "good"
+                : "warn";
 
+        const status =
+            result.edge >= CONFIG.minEdge &&
+            result.z >= CONFIG.minZ
+                ? "PASS"
+                : "WEAK";
+
+        row.innerHTML = `
+            <td>${result.window}</td>
+            <td>${round(
+                result.contractProbability * 100,
+                2
+            )}%</td>
+            <td class="${edgeClass}">
+                ${result.edge >= 0 ? "+" : ""}
+                ${round(result.edge, 2)}%
+            </td>
+            <td class="${zClass}">
+                ${round(result.z, 2)}
+            </td>
+            <td class="${
+                status === "PASS"
+                    ? "good"
+                    : "warn"
+            }">
+                ${status}
+            </td>
+        `;
+
+        DOM.windowTable.appendChild(row);
     }
-
-
-    $("bestDigit").textContent =
-        selectedDigit;
-
-
-    $("bestStatus").textContent =
-        selectedDigit;
-
-
-    $("modeStatus").textContent =
-        result.label;
-
-
-    const confidence =
-        Math.round(
-            result.confidence
-        );
-
-
-    $("confidence").textContent =
-        confidence + "%";
-
-
-    $("confidenceBar").style.width =
-        confidence + "%";
-
-
-    $("statusBar").style.width =
-        dataPercent + "%";
-
-
-    $("analysisStatus").textContent =
-        analyzing
-        ? "Live Analysis"
-        : "Ready";
-
-
-    /*
-       Pattern status.
-    */
-
-    if(
-        result.edge >= 5
-    ){
-
-        $("patternStatus").textContent =
-            "Strong positive bias";
-
-    }
-
-    else if(
-        result.edge >= 2
-    ){
-
-        $("patternStatus").textContent =
-            "Positive bias";
-
-    }
-
-    else if(
-        result.edge <= -2
-    ){
-
-        $("patternStatus").textContent =
-            "Below baseline";
-
-    }
-
-    else{
-
-        $("patternStatus").textContent =
-            "Neutral";
-
-    }
-
-
-    /*
-       Detailed message.
-    */
-
-    $("message").textContent =
-        result.label +
-        " • " +
-        result.observed.toFixed(2) +
-        "% observed vs " +
-        result.expected.toFixed(2) +
-        "% baseline • Edge " +
-        (result.edge >= 0 ? "+" : "") +
-        result.edge.toFixed(2) +
-        " pp • Z " +
-        result.z.toFixed(2) +
-        " • Consistency " +
-        result.consistency.toFixed(0) +
-        "% • Validation " +
-        (
-            result.validation.samples
-            ? result.validation.rate.toFixed(1)+"%"
-            : "N/A"
-        );
-
-
-    /*
-       ENTRY DECISION
-    */
-
-    if(result.signal){
-
-        $("entry").textContent =
-            "SIGNAL • " +
-            result.label +
-            " • Evidence " +
-            confidence +
-            "% • " +
-            result.samples +
-            " completed samples";
-
-    }
-
-    else{
-
-        $("entry").textContent =
-            "NO TRADE • Evidence is not strong enough. " +
-            "Wait for confirmation.";
-
-    }
-
-
-    drawCharts();
-
 }
 
-
-/* =========================================================
-   RESET
-========================================================= */
-
-function resetAnalysisDisplay(){
-
-    $("confidence").textContent =
-        "0%";
-
-    $("confidenceBar").style.width =
-        "0%";
-
-    $("entry").textContent =
-        "NO SIGNAL";
-
-    $("bestDigit").textContent =
-        "-";
-
-    $("bestStatus").textContent =
-        "-";
-
-    $("patternStatus").textContent =
-        "Waiting...";
-
-}
-
-
-/* =========================================================
-   DIGIT BUTTONS
-========================================================= */
-
-function buildDigitButtons(){
-
-    $("overDigits").innerHTML = "";
-
-    $("underDigits").innerHTML = "";
-
-    $("barrier").innerHTML = "";
-
-
-    for(
-        let d=0;
-        d<10;
-        d++
-    ){
-
-        ["overDigits","underDigits"]
-            .forEach(
-                id => {
-
-                    const button =
-                        document.createElement(
-                            "button"
-                        );
-
-                    button.className =
-                        "digit";
-
-                    button.textContent =
-                        d;
-
-                    button.dataset.digit =
-                        d;
-
-                    button.onclick =
-                        function(){
-
-                            barrierValue =
-                                d;
-
-                            $("barrier").value =
-                                d;
-
-                            updateBarrierButtons();
-
-                            analyze();
-
-                        };
-
-                    $(id)
-                        .appendChild(
-                            button
-                        );
-
-                }
-            );
-
-
-        const option =
-            document.createElement(
-                "option"
-            );
-
-        option.value =
-            d;
-
-        option.textContent =
-            d;
-
-        $("barrier")
-            .appendChild(
-                option
-            );
-
-    }
-
-
-    $("barrier").value =
-        barrierValue;
-
-
-    updateBarrierButtons();
-
-}
-
-
-function updateBarrierButtons(){
-
-    document
-        .querySelectorAll(
-            ".digit"
-        )
-        .forEach(
-            button => {
-
-                button.classList.toggle(
-                    "active",
-                    Number(
-                        button.dataset.digit
-                    ) === barrierValue
-                );
-
-            }
-        );
-
-}
-
-
-buildDigitButtons();
-
-
-/* =========================================================
-   CONTRACT
-========================================================= */
-
-function setContract(type){
-
-    currentContract =
-        type;
-
-    $("contract").value =
-        type;
-
-    $("modeStatus").textContent =
-        type;
-
-
-    document
-        .querySelectorAll(
-            ".type"
-        )
-        .forEach(
-            button => {
-
-                button.classList.toggle(
-                    "active",
-                    button.dataset.type === type
-                );
-
-            }
-        );
-
-
-    analyze();
-
-}
-
-
-/* =========================================================
-   CANVAS
-========================================================= */
-
-function resizeCanvas(canvas){
-
-    const rect =
-        canvas.getBoundingClientRect();
-
-    const ratio =
-        window.devicePixelRatio || 1;
-
-    canvas.width =
-        Math.max(
-            1,
-            rect.width*ratio
-        );
-
-    canvas.height =
-        Math.max(
-            1,
-            rect.height*ratio
-        );
-
-    const ctx =
-        canvas.getContext("2d");
-
-    ctx.setTransform(
-        ratio,
-        0,
-        0,
-        ratio,
-        0,
-        0
-    );
-
-    return [
-        ctx,
-        rect.width,
-        rect.height
-    ];
-
-}
-
-
-/* =========================================================
-   CHARTS
-========================================================= */
-
-function drawCharts(){
-
-    const data =
-        getAnalysisTicks();
-
-
-    /*
-       FREQUENCY
-    */
-
+/* ============================================================
+   CHART
+   ============================================================ */
+
+function createChart() {
     const canvas =
-        $("frequency");
+        document.getElementById("frequency");
 
-    const [
-        ctx,
-        width,
-        height
-    ] =
-        resizeCanvas(
-            canvas
+    if (!canvas) {
+        return;
+    }
+
+    if (state.chart) {
+        state.chart.destroy();
+    }
+
+    state.chart =
+        new Chart(canvas, {
+            type: "bar",
+
+            data: {
+                labels: [
+                    "0","1","2","3","4",
+                    "5","6","7","8","9"
+                ],
+
+                datasets: [
+                    {
+                        label: "Probability %",
+                        data: Array(10).fill(0),
+                        borderWidth: 1
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+
+                    tooltip: {
+                        callbacks: {
+                            label: context =>
+                                `${round(
+                                    context.raw,
+                                    2
+                                )}%`
+                        }
+                    }
+                },
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+
+                        max: 100,
+
+                        ticks: {
+                            callback: value =>
+                                `${value}%`
+                        },
+
+                        grid: {
+                            color:
+                                "rgba(140,160,190,.10)"
+                        }
+                    },
+
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+}
+
+function updateChart(probabilities) {
+    if (!state.chart) {
+        createChart();
+    }
+
+    if (!state.chart) {
+        return;
+    }
+
+    state.chart.data.datasets[0].data =
+        probabilities.map(
+            probability =>
+                probability * 100
         );
 
+    state.chart.update("none");
+}
 
-    ctx.clearRect(
-        0,
-        0,
-        width,
-        height
-    );
+/* ============================================================
+   PROGRESS
+   ============================================================ */
 
+function updateDataProgress() {
+    const target =
+        Number(DOM.analysisTicks.value) || 500;
 
-    const counts =
-        getDigitCounts(data);
-
-
-    const max =
-        Math.max(
-            1,
-            ...counts
+    const current =
+        Math.min(
+            state.ticks.length,
+            target
         );
 
-
-    const slot =
-        width/10;
-
-    const barWidth =
-        slot*.55;
-
-
-    for(
-        let d=0;
-        d<10;
-        d++
-    ){
-
-        const percentage =
-            data.length
-            ? counts[d] /
-              data.length *
-              100
+    const percent =
+        target > 0
+            ? (current / target) * 100
             : 0;
 
-
-        const barHeight =
-            counts[d] /
-            max *
-            (height-45);
-
-
-        const x =
-            d*slot +
-            (slot-barWidth)/2;
-
-
-        const y =
-            height-28-barHeight;
-
-
-        const gradient =
-            ctx.createLinearGradient(
-                0,
-                y,
-                0,
-                height
-            );
-
-
-        gradient.addColorStop(
-            0,
-            "#18bfe8"
-        );
-
-
-        gradient.addColorStop(
-            1,
-            "#4a18c8"
-        );
-
-
-        ctx.fillStyle =
-            gradient;
-
-
-        ctx.fillRect(
-            x,
-            y,
-            barWidth,
-            barHeight
-        );
-
-
-        ctx.fillStyle =
-            "#667085";
-
-
-        ctx.font =
-            "10px system-ui";
-
-
-        ctx.textAlign =
-            "center";
-
-
-        ctx.fillText(
-            d,
-            x+barWidth/2,
-            height-8
-        );
-
-
-        ctx.fillText(
-            percentage.toFixed(1)+"%",
-            x+barWidth/2,
-            Math.max(
-                12,
-                y-5
-            )
-        );
-
-    }
-
-
-    /*
-       PATTERN
-    */
-
-    const pc =
-        $("pattern");
-
-    const [
-        pctx,
-        pw,
-        ph
-    ] =
-        resizeCanvas(
-            pc
-        );
-
-
-    pctx.clearRect(
-        0,
-        0,
-        pw,
-        ph
-    );
-
-
-    const recent =
-        data.slice(-60);
-
-
-    if(!recent.length){
-
-        return;
-
-    }
-
-
-    /*
-       Grid
-    */
-
-    pctx.strokeStyle =
-        "#e9edff";
-
-    pctx.lineWidth =
-        1;
-
-
-    for(
-        let y=20;
-        y<ph;
-        y+=25
-    ){
-
-        pctx.beginPath();
-
-        pctx.moveTo(
-            0,
-            y
-        );
-
-        pctx.lineTo(
-            pw,
-            y
-        );
-
-        pctx.stroke();
-
-    }
-
-
-    /*
-       Digit path
-    */
-
-    const step =
-        recent.length > 1
-        ? pw/(recent.length-1)
-        : pw;
-
-
-    pctx.strokeStyle =
-        "#4a18c8";
-
-    pctx.lineWidth =
-        2;
-
-    pctx.beginPath();
-
-
-    recent.forEach(
-        (item,index) => {
-
-            const x =
-                index*step;
-
-            const y =
-                ph-
-                15-
-                (
-                    item.digit/9 *
-                    (ph-30)
-                );
-
-
-            if(index === 0){
-
-                pctx.moveTo(
-                    x,
-                    y
-                );
-
-            }
-
-            else{
-
-                pctx.lineTo(
-                    x,
-                    y
-                );
-
-            }
-
-        }
-    );
-
-
-    pctx.stroke();
-
-
-    /*
-       Points
-    */
-
-    recent.forEach(
-        (item,index) => {
-
-            const x =
-                index*step;
-
-            const y =
-                ph-
-                15-
-                (
-                    item.digit/9 *
-                    (ph-30)
-                );
-
-
-            pctx.fillStyle =
-                item.digit % 2
-                ? "#4a18c8"
-                : "#08a978";
-
-
-            pctx.beginPath();
-
-            pctx.arc(
-                x,
-                y,
-                4,
-                0,
-                Math.PI*2
-            );
-
-            pctx.fill();
-
-        }
-    );
-
+    DOM.dataBar.style.width =
+        `${clamp(percent, 0, 100)}%`;
+
+    DOM.dataBarText.textContent =
+        `${current} / ${target}`;
 }
 
+/* ============================================================
+   CLEAR ANALYSIS
+   ============================================================ */
 
-/* =========================================================
-   WEBSOCKET SEND
-========================================================= */
+function clearAnalysisDisplay() {
+    state.analysis = null;
 
-function send(data){
+    DOM.bestDigit.textContent = "—";
 
-    if(
-        !ws ||
-        ws.readyState !==
-        WebSocket.OPEN
-    ){
+    DOM.bestDigitNote.textContent =
+        "Waiting for data";
 
-        return false;
+    DOM.bestProbability.textContent =
+        "—";
 
-    }
+    DOM.edge.textContent =
+        "—";
 
-    try{
+    DOM.zscore.textContent =
+        "—";
 
-        ws.send(
-            JSON.stringify(data)
+    DOM.consistency.textContent =
+        "—";
+
+    DOM.entropy.textContent =
+        "—";
+
+    DOM.confidenceText.textContent =
+        "0%";
+
+    DOM.confidenceBar.style.width =
+        "0%";
+
+    DOM.entry.textContent =
+        "—";
+
+    DOM.sampleText.textContent =
+        "0 samples";
+
+    DOM.windowTable.innerHTML = `
+        <tr>
+            <td colspan="5" class="small">
+                Waiting for analysis...
+            </td>
+        </tr>
+    `;
+
+    setAnalysisStatus(
+        "WAITING FOR DATA",
+        "yellow"
+    );
+
+    DOM.message.textContent =
+        "Connect to Deriv and load historical ticks.";
+
+    renderDigitMatrix(
+        Array(10).fill(.1)
+    );
+
+    if (state.chart) {
+        updateChart(
+            Array(10).fill(.1)
         );
-
-        return true;
-
     }
-
-    catch(error){
-
-        console.error(
-            "WebSocket send error:",
-            error
-        );
-
-        return false;
-
-    }
-
 }
 
+/* ============================================================
+   CONTROLS
+   ============================================================ */
 
-/* =========================================================
-   CONNECTION STATUS
-========================================================= */
+function setContract(type) {
+    DOM.contract.value = type;
 
-function setConnectionStatus(text){
+    state.selectedType = type;
 
-    $("connection").textContent =
-        text;
-
-}
-
-
-/* =========================================================
-   CONNECT
-========================================================= */
-
-function connect(){
-
-    manualDisconnect =
-        false;
-
-
-    if(
-        ws &&
-        ws.readyState ===
-        WebSocket.OPEN
-    ){
-
-        return;
-
-    }
-
-
-    if(
-        ws &&
-        (
-            ws.readyState ===
-            WebSocket.CONNECTING
-        )
-    ){
-
-        return;
-
-    }
-
-
-    setConnectionStatus(
-        "Connecting to Deriv..."
-    );
-
-
-    $("market").innerHTML =
-        '<option value="">Connecting...</option>';
-
-
-    try{
-
-        ws =
-            new WebSocket(
-                DERIV_WS
+    document
+        .querySelectorAll(".type-btn")
+        .forEach(button => {
+            button.classList.toggle(
+                "active",
+                button.dataset.type === type
             );
-
-    }
-
-    catch(error){
-
-        setConnectionStatus(
-            "Connection failed"
-        );
-
-        scheduleReconnect();
-
-        return;
-
-    }
-
-
-    ws.onopen =
-        function(){
-
-            connected =
-                true;
-
-
-            setConnectionStatus(
-                "Connected • Public Market Data"
-            );
-
-
-            $("connector").textContent =
-                "Disconnect";
-
-
-            $("connector").className =
-                "btn red";
-
-
-            toast(
-                "Connected to Deriv"
-            );
-
-
-            /*
-               Current API:
-               do NOT send product_type.
-            */
-
-            send({
-
-                active_symbols:
-                    "brief",
-
-                req_id:
-                    requestId++
-
-            });
-
-        };
-
-
-    ws.onmessage =
-        function(event){
-
-            let message;
-
-
-            try{
-
-                message =
-                    JSON.parse(
-                        event.data
-                    );
-
-            }
-
-            catch(error){
-
-                console.error(
-                    "Invalid Deriv message",
-                    error
-                );
-
-                return;
-
-            }
-
-
-            handleDerivMessage(
-                message
-            );
-
-        };
-
-
-    ws.onerror =
-        function(error){
-
-            console.error(
-                "Deriv WebSocket error",
-                error
-            );
-
-            setConnectionStatus(
-                "WebSocket error"
-            );
-
-        };
-
-
-    ws.onclose =
-        function(){
-
-            connected =
-                false;
-
-            subscriptionId =
-                null;
-
-
-            setConnectionStatus(
-                "Disconnected"
-            );
-
-
-            $("connector").textContent =
-                "Deriv Connector";
-
-
-            $("connector").className =
-                "btn green";
-
-
-            if(!manualDisconnect){
-
-                scheduleReconnect();
-
-            }
-
-        };
-
-}
-
-
-/* =========================================================
-   RECONNECT
-========================================================= */
-
-function scheduleReconnect(){
-
-    clearTimeout(
-        reconnectTimer
-    );
-
-
-    reconnectTimer =
-        setTimeout(
-            function(){
-
-                if(!manualDisconnect){
-
-                    connect();
-
-                }
-
-            },
-            CONFIG.reconnectDelay
-        );
-
-}
-
-
-/* =========================================================
-   HANDLE DERIV MESSAGE
-========================================================= */
-
-function handleDerivMessage(message){
-
-    console.log(
-        "Deriv:",
-        message
-    );
-
-
-    /*
-       API ERROR
-    */
-
-    if(message.error){
-
-        const errorMessage =
-            message.error.message ||
-            "Unknown Deriv API error";
-
-
-        setConnectionStatus(
-            "API error: " +
-            errorMessage
-        );
-
-
-        $("message").textContent =
-            "Deriv API: " +
-            errorMessage;
-
-
-        console.error(
-            "Deriv API error:",
-            message.error
-        );
-
-
-        return;
-
-    }
-
-
-    /*
-       ACTIVE SYMBOLS
-    */
-
-    if(
-        message.msg_type ===
-        "active_symbols" ||
-        Array.isArray(
-            message.active_symbols
-        )
-    ){
-
-        loadMarkets(
-            message.active_symbols || []
-        );
-
-        return;
-
-    }
-
-
-    /*
-       HISTORY
-    */
-
-    if(
-        message.msg_type ===
-        "history" ||
-        message.history
-    ){
-
-        processHistory(
-            message.history
-        );
-
-        return;
-
-    }
-
-
-    /*
-       LIVE TICK
-    */
-
-    if(
-        message.msg_type ===
-        "tick" ||
-        message.tick
-    ){
-
-        processLiveTick(
-            message
-        );
-
-        return;
-
-    }
-
-
-    /*
-       Subscription response
-    */
-
-    if(
-        message.subscription &&
-        message.subscription.id
-    ){
-
-        subscriptionId =
-            message.subscription.id;
-
-    }
-
-}
-
-
-/* =========================================================
-   LOAD MARKETS
-========================================================= */
-
-function loadMarkets(symbols){
-
-    /*
-       Current API fields:
-       underlying_symbol
-       underlying_symbol_name
-       underlying_symbol_type
-       pip_size
-    */
-
-    const normalized =
-        symbols
-            .map(
-                item => {
-
-                    const symbol =
-                        item.underlying_symbol ||
-                        item.symbol;
-
-                    const name =
-                        item.underlying_symbol_name ||
-                        item.display_name ||
-                        symbol;
-
-                    const type =
-                        item.underlying_symbol_type ||
-                        item.symbol_type ||
-                        "";
-
-                    const pipSize =
-                        Number(
-                            item.pip_size ||
-                            item.pip ||
-                            0.01
-                        );
-
-
-                    return {
-
-                        symbol:symbol,
-
-                        name:name,
-
-                        type:type,
-
-                        pip:pipSize,
-
-                        suspended:
-                            Number(
-                                item.is_trading_suspended
-                            ) === 1
-
-                    };
-
-                }
-            )
-            .filter(
-                item =>
-                    item.symbol &&
-                    !item.suspended
-            );
-
-
-    /*
-       Keep digit/synthetic markets.
-    */
-
-    marketList =
-        normalized.filter(
-            item => {
-
-                const text =
-                    (
-                        item.symbol +
-                        " " +
-                        item.name +
-                        " " +
-                        item.type
-                    ).toLowerCase();
-
-
-                return (
-                    /^r_/i.test(
-                        item.symbol
-                    ) ||
-
-                    /^1hz/i.test(
-                        item.symbol
-                    ) ||
-
-                    text.includes(
-                        "volatility"
-                    ) ||
-
-                    text.includes(
-                        "synthetic"
-                    ) ||
-
-                    text.includes(
-                        "crash"
-                    ) ||
-
-                    text.includes(
-                        "boom"
-                    ) ||
-
-                    text.includes(
-                        "jump"
-                    ) ||
-
-                    text.includes(
-                        "range break"
-                    );
-
-                };
-
-            }
-        );
-
-
-    /*
-       Remove duplicates.
-    */
-
-    const unique =
-        new Map();
-
-
-    marketList.forEach(
-        item => {
-
-            if(
-                !unique.has(
-                    item.symbol
-                )
-            ){
-
-                unique.set(
-                    item.symbol,
-                    item
-                );
-
-            }
-
-        }
-    );
-
-
-    marketList =
-        Array.from(
-            unique.values()
-        );
-
-
-    /*
-       If filtering somehow produces nothing,
-       use every valid returned symbol.
-    */
-
-    if(!marketList.length){
-
-        marketList =
-            normalized;
-
-    }
-
-
-    /*
-       Sort by name.
-    */
-
-    marketList.sort(
-        (a,b) =>
-            a.name.localeCompare(
-                b.name
-            )
-    );
-
-
-    const select =
-        $("market");
-
-
-    select.innerHTML =
-        "";
-
-
-    marketList.forEach(
-        item => {
-
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-
-            option.value =
-                item.symbol;
-
-
-            option.textContent =
-                item.name;
-
-
-            option.dataset.name =
-                item.name;
-
-
-            option.dataset.pip =
-                item.pip;
-
-
-            select.appendChild(
-                option
-            );
-
-        }
-    );
-
-
-    if(!marketList.length){
-
-        select.innerHTML =
-            '<option value="">No markets returned</option>';
-
-        setConnectionStatus(
-            "Connected, but no compatible markets returned"
-        );
-
-        return;
-
-    }
-
-
-    /*
-       Prefer Volatility 25.
-    */
-
-    const preferred =
-        marketList.find(
-            item =>
-                /volatility 25/i.test(
-                    item.name
-                )
-        );
-
-
-    const chosen =
-        preferred ||
-        marketList[0];
-
-
-    select.value =
-        chosen.symbol;
-
-
-    $("heroMarket").textContent =
-        chosen.name;
-
-
-    pip =
-        Number(
-            chosen.pip
-        ) || 0.01;
-
-
-    setConnectionStatus(
-        "Connected • " +
-        marketList.length +
-        " markets available"
-    );
-
-
-    /*
-       Start analysis.
-    */
-
-    startAnalysis();
-
-}
-
-
-/* =========================================================
-   PROCESS HISTORY
-========================================================= */
-
-function processHistory(history){
-
-    if(!history){
-
-        return;
-
-    }
-
-
-    const prices =
-        history.prices || [];
-
-
-    const times =
-        history.times || [];
-
-
-    const parsed = [];
-
-
-    prices.forEach(
-        (price,index) => {
-
-            const tick =
-                createTick(
-                    price,
-                    times[index]
-                );
-
-
-            if(tick){
-
-                parsed.push(
-                    tick
-                );
-
-            }
-
-        }
-    );
-
-
-    if(!parsed.length){
-
-        $("analysisStatus").textContent =
-            "No history received";
-
-
-        $("message").textContent =
-            "Deriv returned no usable historical ticks.";
-
-
-        return;
-
-    }
-
-
-    ticks =
-        parsed.slice(
-            -CONFIG.maxTicks
-        );
-
-
-    /*
-       Update latest price.
-    */
-
-    const latest =
-        ticks[
-            ticks.length-1
-        ];
-
-
-    if(latest){
-
-        $("price").textContent =
-            latest.price.toFixed(
-                decimalPlaces(pip)
-            );
-
-
-        $("lastDigit").textContent =
-            latest.digit;
-
-    }
-
-
-    $("analysisStatus").textContent =
-        "Historical data loaded";
-
+        });
 
     analyze();
-
 }
 
-
-/* =========================================================
-   PROCESS LIVE TICK
-========================================================= */
-
-function processLiveTick(message){
-
-    const tick =
-        message.tick;
-
-
-    if(!tick){
-
-        return;
-
-    }
-
-
-    if(
-        tick.pip_size !==
-        undefined
-    ){
-
-        pip =
-            Number(
-                tick.pip_size
-            ) || pip;
-
-    }
-
-
-    const parsed =
-        createTick(
-            tick.quote,
-            tick.epoch
-        );
-
-
-    if(!parsed){
-
-        return;
-
-    }
-
-
-    if(
-        message.subscription &&
-        message.subscription.id
-    ){
-
-        subscriptionId =
-            message.subscription.id;
-
-    }
-
-
-    /*
-       Avoid duplicate tick.
-    */
-
-    const last =
-        ticks[
-            ticks.length-1
-        ];
-
-
-    if(
-        last &&
-        last.epoch ===
-        parsed.epoch
-    ){
-
-        return;
-
-    }
-
-
-    ticks.push(
-        parsed
-    );
-
-
-    if(
-        ticks.length >
-        CONFIG.maxTicks
-    ){
-
-        ticks.shift();
-
-    }
-
-
-    $("price").textContent =
-        parsed.price.toFixed(
-            decimalPlaces(pip)
-        );
-
-
-    $("lastDigit").textContent =
-        parsed.digit;
-
-
-    analyze();
-
-}
-
-
-/* =========================================================
-   START ANALYSIS
-========================================================= */
-
-function startAnalysis(){
-
-    if(!connected){
-
+function refreshAnalysis() {
+    if (!state.connected) {
         connect();
 
         return;
-
     }
 
-
-    const symbol =
-        $("market").value;
-
-
-    if(!symbol){
-
-        return;
-
-    }
-
-
-    analyzing =
-        true;
-
-
-    ticks = [];
-
-
-    const option =
-        $("market").options[
-            $("market").selectedIndex
-        ];
-
-
-    pip =
-        Number(
-            option?.dataset.pip
-        ) || 0.01;
-
-
-    $("heroMarket").textContent =
-        option?.dataset.name ||
-        symbol;
-
-
-    /*
-       Stop previous subscription.
-    */
-
-    if(subscriptionId){
-
-        send({
-
-            forget:
-                subscriptionId
-
-        });
-
-
-        subscriptionId =
-            null;
-
-    }
-
-
-    /*
-       We need:
-
-       analysis history
-       +
-       contract duration
-       +
-       extra buffer
-
-       Example:
-
-       1000 analysis ticks
-       + 1000 duration
-       + 50 buffer
-
-       = 2050 ticks
-
-       This makes horizon analysis possible.
-    */
-
-    const analysisCount =
-        Number(
-            $("analysisTicks").value
-        ) || 1000;
-
-
-    const duration =
-        Number(
-            $("duration").value
-        ) || 100;
-
-
-    const count =
-        Math.min(
-            CONFIG.maxTicks,
-            Math.max(
-                300,
-                analysisCount +
-                duration +
-                50
-            )
-        );
-
-
-    $("analysisStatus").textContent =
-        "Loading " +
-        count +
-        " ticks...";
-
-
-    /*
-       Historical data.
-    */
-
-    send({
-
-        ticks_history:
-            symbol,
-
-        count:
-            count,
-
-        end:
-            "latest",
-
-        style:
-            "ticks",
-
-        req_id:
-            requestId++
-
-    });
-
-
-    /*
-       Live data.
-    */
-
-    send({
-
-        ticks:
-            symbol,
-
-        subscribe:
-            1,
-
-        req_id:
-            requestId++
-
-    });
-
-
-    analyze();
-
+    requestHistory();
 }
 
-
-/* =========================================================
-   STOP
-========================================================= */
-
-function stopAnalysis(){
-
-    analyzing =
-        false;
-
-
-    if(subscriptionId){
-
-        send({
-
-            forget:
-                subscriptionId
-
-        });
-
-    }
-
-
-    subscriptionId =
-        null;
-
-
-    ticks = [];
-
-
-    $("analysisStatus").textContent =
-        "Stopped";
-
-
-    $("entry").textContent =
-        "NO SIGNAL";
-
-
-    $("message").textContent =
-        "Analysis stopped.";
-
-
-    resetAnalysisDisplay();
-
-    drawCharts();
-
-
-    toast(
-        "Analysis stopped"
+function setupEvents() {
+    DOM.connectBtn.addEventListener(
+        "click",
+        () => {
+            if (state.connected) {
+                disconnect();
+            } else {
+                connect();
+            }
+        }
     );
 
-}
+    DOM.refreshBtn.addEventListener(
+        "click",
+        refreshAnalysis
+    );
 
-
-/* =========================================================
-   CONNECT BUTTON
-========================================================= */
-
-$("connector").onclick =
-    function(){
-
-        if(connected){
-
-            manualDisconnect =
-                true;
-
-
-            if(ws){
-
-                ws.close();
-
-            }
-
-
-            connected =
-                false;
-
-
-            setConnectionStatus(
-                "Disconnected"
-            );
-
-
-            return;
-
-        }
-
-
-        connect();
-
-    };
-
-
-/* =========================================================
-   START
-========================================================= */
-
-$("start").onclick =
-    function(){
-
-        startAnalysis();
-
-        toast(
-            "Professional analysis started"
-        );
-
-    };
-
-
-/* =========================================================
-   STOP
-========================================================= */
-
-$("stop").onclick =
-    stopAnalysis;
-
-
-/* =========================================================
-   MARKET
-========================================================= */
-
-$("market").onchange =
-    function(){
-
-        startAnalysis();
-
-    };
-
-
-/* =========================================================
-   DURATION
-========================================================= */
-
-$("duration").onchange =
-    function(){
-
-        startAnalysis();
-
-    };
-
-
-/* =========================================================
-   ANALYSIS TICKS
-========================================================= */
-
-$("analysisTicks").onchange =
-    function(){
-
-        analyze();
-
-        if(analyzing){
-
-            startAnalysis();
-
-        }
-
-    };
-
-
-/* =========================================================
-   CONTRACT SELECT
-========================================================= */
-
-$("contract").onchange =
-    function(event){
-
-        setContract(
-            event.target.value
-        );
-
-    };
-
-
-/* =========================================================
-   THRESHOLD
-========================================================= */
-
-$("threshold").onchange =
-    function(){
-
-        analyze();
-
-    };
-
-
-/* =========================================================
-   BARRIER
-========================================================= */
-
-$("barrier").onchange =
-    function(event){
-
-        barrierValue =
-            Number(
+    DOM.market.addEventListener(
+        "change",
+        event => {
+            selectMarket(
                 event.target.value
             );
+        }
+    );
 
+    DOM.contract.addEventListener(
+        "change",
+        event => {
+            setContract(
+                event.target.value
+            );
+        }
+    );
 
-        updateBarrierButtons();
+    DOM.duration.addEventListener(
+        "change",
+        () => {
+            requestHistoryIfConnected();
+        }
+    );
 
-        analyze();
+    DOM.analysisTicks.addEventListener(
+        "change",
+        () => {
+            updateDataProgress();
 
-    };
+            requestHistoryIfConnected();
+        }
+    );
 
+    DOM.barrier.addEventListener(
+        "change",
+        analyze
+    );
 
-/* =========================================================
-   CONTRACT BUTTONS
-========================================================= */
+    DOM.threshold.addEventListener(
+        "change",
+        analyze
+    );
 
-document
-    .querySelectorAll(
-        ".type[data-type]"
-    )
-    .forEach(
-        button => {
+    DOM.auto.addEventListener(
+        "change",
+        setupAutoAnalysis
+    );
 
-            button.onclick =
-                function(){
-
+    document
+        .querySelectorAll(".type-btn")
+        .forEach(button => {
+            button.addEventListener(
+                "click",
+                () => {
                     setContract(
                         button.dataset.type
                     );
-
-                };
-
-        }
-    );
-
-
-/* =========================================================
-   MATCHES
-========================================================= */
-
-$("matches").onclick =
-    function(){
-
-        setContract(
-            "MATCH"
-        );
-
-        toast(
-            "MATCH analysis selected"
-        );
-
-    };
-
-
-/* =========================================================
-   DIFFERS
-========================================================= */
-
-$("differs").onclick =
-    function(){
-
-        setContract(
-            "DIFF"
-        );
-
-        toast(
-            "DIFFERS analysis selected"
-        );
-
-    };
-
-
-/* =========================================================
-   BOT
-========================================================= */
-
-$("bot").onclick =
-    function(){
-
-        showModal(
-            "Analysis Engine",
-            `
-            <p>
-                <b>Professional statistical analysis only.</b>
-            </p>
-
-            <p>
-                The engine does not automatically place trades.
-            </p>
-
-            <ul>
-                <li>Multi-window analysis</li>
-                <li>Duration-aware probabilities</li>
-                <li>Statistical significance</li>
-                <li>Historical validation</li>
-                <li>Consistency filtering</li>
-                <li>Strict NO-SIGNAL protection</li>
-            </ul>
-            `
-        );
-
-    };
-
-
-/* =========================================================
-   RISK
-========================================================= */
-
-$("risk").onclick =
-    function(){
-
-        showModal(
-            "Risk Management",
-            `
-            <p>
-                <b>Important:</b> statistical confidence is
-                not a guaranteed winning probability.
-            </p>
-
-            <ul>
-                <li>Use demo mode for testing.</li>
-                <li>Never risk money you cannot afford to lose.</li>
-                <li>A NO SIGNAL result means the model does not have enough evidence.</li>
-                <li>Do not increase stake simply because of a losing streak.</li>
-            </ul>
-            `
-        );
-
-    };
-
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-$("logout").onclick =
-    function(){
-
-        manualDisconnect =
-            true;
-
-
-        stopAnalysis();
-
-
-        if(ws){
-
-            ws.close();
-
-        }
-
-
-        showModal(
-            "Disconnected",
-            `
-            <p>
-                The public Deriv market-data connection
-                has been closed.
-            </p>
-
-            <button
-                class="btn green"
-                id="reconnectModal"
-            >
-                Reconnect
-            </button>
-            `
-        );
-
-
-        setTimeout(
-            function(){
-
-                const button =
-                    $("reconnectModal");
-
-                if(button){
-
-                    button.onclick =
-                        function(){
-
-                            $("modal")
-                                .classList
-                                .remove(
-                                    "show"
-                                );
-
-                            manualDisconnect =
-                                false;
-
-                            connect();
-
-                        };
-
                 }
-
-            },
-            0
-        );
-
-    };
-
-
-/* =========================================================
-   MODAL CLOSE
-========================================================= */
-
-$("close").onclick =
-    function(){
-
-        $("modal")
-            .classList
-            .remove(
-                "show"
             );
+        });
 
-    };
-
-
-/* =========================================================
-   THEME
-========================================================= */
-
-$("theme").onchange =
-    function(event){
-
-        if(event.target.checked){
-
-            document.body.style.filter =
-                "brightness(.92) saturate(.9)";
-
-        }
-
-        else{
-
-            document.body.style.filter =
-                "none";
-
-        }
-
-    };
-
-
-/* =========================================================
-   AUTO ANALYSIS
-========================================================= */
-
-function setupAutoAnalysis(){
-
-    clearInterval(
-        autoTimer
+    DOM.themeBtn.addEventListener(
+        "click",
+        toggleTheme
     );
 
+    DOM.helpBtn.addEventListener(
+        "click",
+        openHelp
+    );
 
-    if(
-        $("auto").checked
-    ){
+    DOM.close.addEventListener(
+        "click",
+        closeHelp
+    );
 
-        autoTimer =
-            setInterval(
-                function(){
-
-                    if(
-                        connected &&
-                        analyzing
-                    ){
-
-                        startAnalysis();
-
-                    }
-
-                },
-                30000
-            );
-
-    }
-
+    DOM.modal.addEventListener(
+        "click",
+        event => {
+            if (event.target === DOM.modal) {
+                closeHelp();
+            }
+        }
+    );
 }
 
+function requestHistoryIfConnected() {
+    if (!state.connected) {
+        clearAnalysisDisplay();
 
-$("auto").onchange =
-    function(){
+        return;
+    }
 
-        setupAutoAnalysis();
+    requestHistory();
+}
 
-        toast(
-            $("auto").checked
-            ? "Auto analysis enabled"
-            : "Auto analysis disabled"
+/* ============================================================
+   AUTO ANALYSIS
+   ============================================================ */
+
+function setupAutoAnalysis() {
+    clearInterval(state.autoTimer);
+
+    state.autoTimer = null;
+
+    if (DOM.auto.value !== "on") {
+        log("Automatic analysis disabled.");
+
+        return;
+    }
+
+    log("Automatic analysis enabled.");
+
+    state.autoTimer =
+        setInterval(() => {
+            if (state.connected) {
+                requestHistory();
+            }
+        }, CONFIG.analysisInterval);
+}
+
+/* ============================================================
+   THEME
+   ============================================================ */
+
+function toggleTheme() {
+    state.dark = !state.dark;
+
+    if (!state.dark) {
+        document.documentElement.style.setProperty(
+            "--bg",
+            "#f4f7fb"
         );
 
-    };
+        document.documentElement.style.setProperty(
+            "--panel",
+            "#ffffff"
+        );
 
+        document.documentElement.style.setProperty(
+            "--panel2",
+            "#f1f5f9"
+        );
 
-/* =========================================================
-   RESIZE
-========================================================= */
+        document.documentElement.style.setProperty(
+            "--panel3",
+            "#e7eef7"
+        );
 
-window.addEventListener(
-    "resize",
-    function(){
+        document.documentElement.style.setProperty(
+            "--border",
+            "#d4deea"
+        );
 
-        drawCharts();
+        document.documentElement.style.setProperty(
+            "--text",
+            "#102033"
+        );
 
+        document.documentElement.style.setProperty(
+            "--muted",
+            "#63758a"
+        );
+
+        document.body.style.color =
+            "#102033";
+
+        DOM.themeBtn.textContent =
+            "Dark";
+    } else {
+        document.documentElement.style.setProperty(
+            "--bg",
+            "#07111f"
+        );
+
+        document.documentElement.style.setProperty(
+            "--panel",
+            "#0d1a2b"
+        );
+
+        document.documentElement.style.setProperty(
+            "--panel2",
+            "#101f33"
+        );
+
+        document.documentElement.style.setProperty(
+            "--panel3",
+            "#14263d"
+        );
+
+        document.documentElement.style.setProperty(
+            "--border",
+            "#203650"
+        );
+
+        document.documentElement.style.setProperty(
+            "--text",
+            "#eaf2ff"
+        );
+
+        document.documentElement.style.setProperty(
+            "--muted",
+            "#8fa6c2"
+        );
+
+        document.body.style.color =
+            "#eaf2ff";
+
+        DOM.themeBtn.textContent =
+            "Light";
     }
-);
+}
 
+/* ============================================================
+   HELP
+   ============================================================ */
 
-/* =========================================================
-   INITIAL UI
-========================================================= */
+function openHelp() {
+    DOM.modalTitle.textContent =
+        "Expert Trader Analysis Tool";
 
-setContract(
-    "OVER"
-);
+    DOM.modalBody.innerHTML = `
+        <p>
+            <strong>Analysis only:</strong>
+            this application reads public Deriv market data.
+            It does not place trades.
+        </p>
 
-$("barrier").value =
-    barrierValue;
+        <p>
+            <strong>Duration-aware analysis:</strong>
+            if the selected duration is 100 ticks, the analyzer
+            studies what happened approximately 100 ticks after
+            historical entry points.
+        </p>
 
-updateBarrierButtons();
+        <p>
+            <strong>OVER:</strong>
+            checks whether the future digit is above the barrier.
+        </p>
 
-setupAutoAnalysis();
+        <p>
+            <strong>UNDER:</strong>
+            checks whether the future digit is below the barrier.
+        </p>
 
-connect();
+        <p>
+            <strong>MATCH:</strong>
+            checks whether the future digit equals the selected barrier.
+        </p>
+
+        <p>
+            <strong>DIFFERS:</strong>
+            checks whether the future digit is different from
+            the selected barrier.
+        </p>
+
+        <p>
+            <strong>EVEN / ODD:</strong>
+            checks the parity of the future digit.
+        </p>
+
+        <p>
+            The tool combines multiple historical windows,
+            probability, edge, z-score, consistency,
+            window agreement and walk-forward validation.
+        </p>
+
+        <p>
+            <strong>Important:</strong>
+            a high confidence score is not a guarantee of profit.
+            Financial markets can change and historical patterns
+            can disappear.
+        </p>
+    `;
+
+    DOM.modal.classList.add("show");
+}
+
+function closeHelp() {
+    DOM.modal.classList.remove("show");
+}
+
+/* ============================================================
+   STARTUP
+   ============================================================ */
+
+function initialize() {
+    log("Initializing Expert Trader Analysis Tool...");
+
+    createChart();
+
+    setupEvents();
+
+    renderDigitMatrix(
+        Array(10).fill(.1)
+    );
+
+    setConnection(
+        "Disconnected",
+        false
+    );
+
+    DOM.message.textContent =
+        "Connecting to Deriv public market data...";
+
+    connect();
+}
+
+initialize();
 
 </script>
+
+</body>
+</html>
