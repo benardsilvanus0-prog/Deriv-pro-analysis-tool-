@@ -2,651 +2,1186 @@
     box-sizing: border-box;
 }
 
-html {
-    background: #e9edf3;
+html,
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
 }
 
 body {
-    margin: 0;
     font-family: Arial, Helvetica, sans-serif;
-    background: #e9edf3;
-    color: #172033;
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #f5f7ff 48%,
+            #ffffff 100%
+        );
+
+    color: #202431;
 }
 
-button,
-select {
-    font: inherit;
-}
 
-button {
-    cursor: pointer;
-}
+/* =====================================
+   MAIN DASHBOARD
+===================================== */
 
-.app {
+.dashboard {
     width: 100%;
-    max-width: 430px;
-    min-height: 100vh;
-    margin: 0 auto;
-    background: #f5f7fa;
-    padding: 14px;
+    max-width: 1150px;
+    margin: auto;
+    padding: 8px;
 }
 
 
-/* =========================
+/* =====================================
    HEADER
-========================= */
+===================================== */
 
-.app-header {
+.top-header {
+    min-height: 158px;
+
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
+    align-items: flex-start;
+
+    position: relative;
+
+    background: rgba(255,255,255,.96);
+
+    border: 1px solid #cfd8ff;
+    border-radius: 14px;
+
+    padding: 35px 24px 18px;
+
+    box-shadow:
+        0 8px 25px rgba(50,60,150,.06);
 }
 
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+
+/* LOGO */
+
+.logo-area {
+    width: 220px;
+    flex-shrink: 0;
 }
 
-.brand-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 13px;
-    background: linear-gradient(135deg, #126bff, #6038e8);
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 13px;
+.logo-text {
+    font-size: 31px;
+    line-height: 1.55;
     font-weight: 800;
+
+    background:
+        linear-gradient(
+            90deg,
+            #ec268c,
+            #8a15bd
+        );
+
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    color: transparent;
 }
 
-.brand h1 {
-    margin: 0;
-    font-size: 18px;
-}
+.logo-line {
+    width: 135px;
+    height: 4px;
 
-.brand span {
-    color: #7c8799;
-    font-size: 11px;
-}
+    margin-top: 1px;
 
-.connection-dot {
-    width: 12px;
-    height: 12px;
-    background: #ff4d4d;
-    border-radius: 50%;
-    box-shadow: 0 0 0 4px rgba(255, 77, 77, .12);
-}
+    border-radius: 10px;
 
-.connection-dot.connected {
-    background: #20bd67;
-    box-shadow: 0 0 0 4px rgba(32, 189, 103, .12);
-}
-
-
-/* =========================
-   CARDS
-========================= */
-
-.market-card,
-.analysis-card,
-.scanner-card,
-.digits-card,
-.recent-card,
-.settings-card {
-    background: white;
-    border-radius: 17px;
-    padding: 16px;
-    margin-bottom: 13px;
-    box-shadow: 0 3px 15px rgba(28, 45, 75, .07);
-}
-
-.market-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.small-label {
-    display: block;
-    color: #929bad;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: .7px;
-    margin-bottom: 5px;
-}
-
-#marketSelect {
-    border: 0;
-    background: transparent;
-    font-size: 14px;
-    font-weight: 700;
-    color: #202a3b;
-    max-width: 230px;
-    outline: none;
-}
-
-.live-pill {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background: #eaf9f0;
-    color: #159653;
-    padding: 5px 8px;
-    border-radius: 20px;
-    font-size: 9px;
-    font-weight: 800;
-}
-
-.live-pill span {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #20bd67;
-}
-
-.price-row {
-    margin-top: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: end;
-}
-
-.price-row strong {
-    display: block;
-    font-size: 20px;
-    margin-top: 2px;
-}
-
-.digit-box {
-    text-align: right;
-}
-
-.digit-box span {
-    color: #929bad;
-    font-size: 9px;
-    font-weight: 800;
-}
-
-.digit-box strong {
-    font-size: 28px;
-    color: #1769ff;
+    background:
+        linear-gradient(
+            90deg,
+            #ec268c,
+            #8b13bd
+        );
 }
 
 
-/* =========================
-   OVER / UNDER
-========================= */
+/* CONTROLS */
 
-.direction-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 13px;
-}
-
-.direction-btn {
-    border: 0;
-    border-radius: 12px;
-    padding: 13px;
-    color: white;
-    font-size: 14px;
-    font-weight: 800;
-    box-shadow: 0 4px 9px rgba(0,0,0,.08);
-}
-
-.direction-btn span {
-    margin-right: 5px;
-}
-
-.direction-btn.over {
-    background: linear-gradient(135deg, #19ae5c, #098944);
-}
-
-.direction-btn.under {
-    background: linear-gradient(135deg, #ef5c40, #d72d15);
-}
-
-.direction-btn.active {
-    transform: scale(.98);
-    box-shadow: 0 0 0 3px rgba(25, 110, 255, .18);
-}
-
-
-/* =========================
-   ANALYSIS
-========================= */
-
-.section-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 13px;
-}
-
-.section-title h2 {
-    margin: 0;
-    font-size: 15px;
-}
-
-.section-title p {
-    margin: 3px 0 0;
-    color: #9099aa;
-    font-size: 10px;
-}
-
-.ai-symbol {
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
-    background: #edf3ff;
-    color: #256df4;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-}
-
-.info-card {
-    display: flex;
-    gap: 11px;
-    padding: 12px;
-    border: 1px solid #edf0f5;
-    border-radius: 12px;
-    margin-bottom: 9px;
-}
-
-.info-icon {
-    min-width: 31px;
-    height: 31px;
-    border-radius: 9px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    font-size: 13px;
-}
-
-.trend-icon {
-    background: #edf8f1;
-    color: #149454;
-}
-
-.confidence-icon {
-    background: #eef3ff;
-    color: #276cf3;
-}
-
-.pattern-icon {
-    background: #fff5e9;
-    color: #d98a20;
-}
-
-.info-content {
-    min-width: 0;
+.control-area {
     flex: 1;
 }
 
-.info-content > span {
-    display: block;
-    font-size: 10px;
-    color: #8993a5;
-    margin-bottom: 3px;
+.controls-row {
+    display: flex;
+    align-items: end;
+    gap: 10px;
 }
 
-.info-content strong {
-    display: block;
-    font-size: 13px;
+.control {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
-.info-content p {
-    margin: 5px 0 0;
-    color: #697486;
-    font-size: 10px;
-    line-height: 1.4;
+.control label {
+    display: none;
+}
+
+.control select {
+    height: 38px;
+
+    min-width: 145px;
+
+    padding: 0 12px;
+
+    border: 2px solid #d7ddff;
+    border-radius: 9px;
+
+    background: white;
+
+    color: #292d38;
+
+    font-weight: 700;
+
+    box-shadow:
+        0 2px 6px rgba(80,90,170,.05);
+
+    outline: none;
+}
+
+.control:first-child select {
+    min-width: 110px;
+}
+
+.control:nth-child(2) select {
+    min-width: 200px;
+}
+
+.control:nth-child(3) select {
+    min-width: 125px;
 }
 
 
-/* =========================
-   CONFIDENCE
-========================= */
-
-.confidence-track {
-    height: 6px;
-    background: #edf0f4;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-top: 7px;
-}
-
-.confidence-fill {
-    height: 100%;
-    width: 0;
-    border-radius: 10px;
-    background: linear-gradient(90deg, #2874ef, #27b867);
-    transition: width .4s ease;
+.second-row {
+    margin-top: 22px;
+    align-items: center;
 }
 
 
-/* =========================
-   RECOMMENDATION
-========================= */
+/* BOT */
 
-.recommendation {
-    margin-top: 12px;
-    padding: 13px;
-    background: #f7f9fc;
-    border: 1px solid #e8ecf2;
-    border-radius: 13px;
+.bot-button {
+    border: 0;
+
+    height: 37px;
+
+    padding: 0 18px;
+
+    border-radius: 9px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #8e20d5,
+            #5410ad
+        );
+
+    color: white;
+
+    font-weight: 800;
+
+    box-shadow:
+        0 5px 15px rgba(116,28,190,.3);
 }
 
-.recommendation-title {
-    color: #657084;
-    font-size: 10px;
+
+/* CONNECTOR */
+
+.connector-button {
+    position: absolute;
+
+    right: -10px;
+    top: 66px;
+
+    border: 0;
+
+    padding: 10px 17px;
+
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #c96b70,
+            #705e67
+        );
+
+    color: white;
+
     font-weight: 700;
 }
 
-.recommendation-title span {
-    color: #20ae61;
+
+/* RISK */
+
+.risk-button {
+    position: absolute;
+
+    right: -10px;
+    top: 117px;
+
+    border: 0;
+
+    padding: 10px 17px;
+
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #09a56e,
+            #008c63
+        );
+
+    color: white;
+
+    font-weight: 700;
+}
+
+
+/* TOGGLE */
+
+.header-right {
+    position: absolute;
+
+    right: -2px;
+    top: 9px;
+}
+
+.toggle {
+    width: 51px;
+    height: 27px;
+
+    padding: 3px;
+
+    background: #3516ad;
+
+    border-radius: 30px;
+}
+
+.toggle-circle {
+    width: 21px;
+    height: 21px;
+
+    background: white;
+
+    border-radius: 50%;
+}
+
+
+/* LOGOUT */
+
+.logout-button {
+    position: absolute;
+
+    top: 9px;
+    right: 59px;
+
+    border: 0;
+
+    background: #ef3c42;
+    color: white;
+
+    padding: 10px 14px;
+
+    border-radius: 9px;
+
+    font-weight: 800;
+}
+
+
+/* =====================================
+   MARKET PRICE
+===================================== */
+
+.market-price-card {
+    margin-top: 45px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f5f8ff,
+            #ffffff
+        );
+
+    border-radius: 15px;
+
+    padding: 17px;
+
+    box-shadow:
+        0 15px 40px rgba(57,75,190,.15);
+
+    text-align: center;
+}
+
+.market-price-card::before {
+    content: "";
+
+    display: block;
+
+    background: white;
+
+    height: 86px;
+
+    border-radius: 13px;
+
+    position: absolute;
+}
+
+.market-title {
+    position: relative;
+
+    font-size: 15px;
+
+    font-weight: 800;
+
+    margin-bottom: 8px;
+}
+
+.market-price {
+    position: relative;
+
+    font-size: 21px;
+
+    color: #404de2;
+
+    font-weight: 900;
+}
+
+.live-status {
+    position: relative;
+
+    margin-top: 7px;
+
+    font-size: 10px;
+
+    color: #8a91a5;
+}
+
+.live-status span:first-child {
+    display: inline-block;
+
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #16b76b;
+
     margin-right: 4px;
 }
 
-.recommendation-text {
-    margin-top: 8px;
-    font-size: 11px;
-    line-height: 1.4;
-    color: #4d596c;
+
+/* =====================================
+   STOP ANALYSIS
+===================================== */
+
+.analysis-control {
+    text-align: center;
+
+    margin: 28px 0 36px;
 }
 
-.signal-result {
-    margin-top: 8px;
-    font-size: 17px;
+.stop-button {
+    border: 0;
+
+    min-width: 207px;
+
+    height: 50px;
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            100deg,
+            #ff9700,
+            #ff0753
+        );
+
+    color: white;
+
+    font-size: 16px;
+
     font-weight: 900;
-    color: #1769ff;
-}
 
-.signal-confidence {
-    margin-top: 5px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    color: #7c8798;
+    box-shadow:
+        0 7px 15px rgba(255,80,50,.25);
 }
 
 
-/* =========================
-   SCANNER
-========================= */
+/* =====================================
+   OVER / UNDER
+===================================== */
 
-.scanner-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.scanner-header h2 {
-    margin: 0;
-    font-size: 15px;
-}
-
-#tickStatus {
-    font-size: 10px;
-    color: #8a94a5;
-}
-
-.mode-switch {
+.digit-analysis {
     display: grid;
+
     grid-template-columns: 1fr 1fr;
-    gap: 5px;
-    background: #edf1f6;
-    padding: 4px;
-    border-radius: 11px;
-    margin-top: 13px;
+
+    gap: 15px;
+
+    background:
+        linear-gradient(
+            110deg,
+            #edfaff,
+            #f0f0ff
+        );
+
+    border-radius: 15px;
+
+    padding: 15px 28px;
+
+    margin-bottom: 20px;
 }
 
-.mode {
-    border: 0;
-    border-radius: 8px;
-    padding: 9px;
-    background: transparent;
-    color: #7c8799;
-    font-size: 11px;
-    font-weight: 700;
+.digit-column h2 {
+    margin: 0 0 17px;
+
+    text-align: center;
+
+    color: #17bce9;
+
+    font-size: 18px;
 }
 
-.mode.active {
-    background: #1769ff;
-    color: white;
-}
-
-.type-buttons {
+.digit-buttons {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 5px;
-    margin-top: 10px;
+
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    gap: 10px;
 }
 
-.type-button {
-    border: 1px solid #e3e7ee;
-    background: white;
-    color: #697487;
-    padding: 8px 2px;
+.digit-select {
+    height: 34px;
+
+    border: 2px solid #dbe2ff;
+
     border-radius: 8px;
-    font-size: 9px;
-    font-weight: 700;
-}
 
-.type-button.active {
-    background: #edf3ff;
-    color: #1769ff;
-    border-color: #bfd3ff;
-}
-
-.barrier-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 13px;
-}
-
-.barrier-row label {
-    color: #717c8e;
-    font-size: 11px;
-}
-
-#barrier {
-    border: 1px solid #e1e5eb;
     background: white;
-    border-radius: 8px;
-    padding: 6px 10px;
-}
 
-.scan-button {
-    width: 100%;
-    margin-top: 13px;
-    border: 0;
-    border-radius: 10px;
-    padding: 12px;
-    background: #1769ff;
-    color: white;
+    color: #303544;
+
     font-weight: 800;
+
+    box-shadow:
+        0 3px 7px rgba(40,60,150,.12);
+
+    transition: .15s;
+}
+
+.digit-select:hover,
+.digit-select.active {
+    transform: translateY(-2px);
+
+    border-color: #6575ef;
+
+    color: #4054df;
+
+    box-shadow:
+        0 5px 12px rgba(70,80,220,.2);
+}
+
+
+/* =====================================
+   CONTRACT BUTTONS
+===================================== */
+
+.contract-buttons {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr 1fr 1fr 1fr;
+
+    gap: 18px;
+
+    padding: 23px 16%;
+
+    margin-bottom: 29px;
+
+    background:
+        linear-gradient(
+            100deg,
+            #ffeaf7,
+            #eeeaff
+        );
+
+    border-radius: 15px;
+}
+
+.contract-btn {
+    height: 48px;
+
+    border: 0;
+
+    border-radius: 12px;
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: 900;
+
+    box-shadow:
+        0 4px 8px rgba(60,60,100,.12);
+}
+
+.over-btn {
+    background: #a875e6;
+}
+
+.even-btn {
+    background: #ff9d95;
+}
+
+.start-btn {
+    background:
+        linear-gradient(
+            135deg,
+            #4856e8,
+            #3112ae
+        );
+}
+
+.odd-btn {
+    background: #86b6e5;
+}
+
+.under-btn {
+    background: #ed9561;
+}
+
+
+/* =====================================
+   ANALYSIS BARS
+===================================== */
+
+.analysis-bars {
+    padding: 15px;
+
+    background:
+        linear-gradient(
+            100deg,
+            #fff6e6,
+            #ffe8f1
+        );
+
+    border-radius: 14px;
+
+    margin-bottom: 30px;
+}
+
+.analysis-bar {
+    height: 29px;
+
+    margin-bottom: 14px;
+
+    border-radius: 30px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #f5eadf,
+            #eedaf0
+        );
+
+    padding: 7px 14px;
+
+    color: #74798a;
+
+    font-size: 10px;
+
+    overflow: hidden;
+}
+
+.analysis-bar:last-child {
+    margin-bottom: 0;
+}
+
+
+/* =====================================
+   MATCH / DIFF
+===================================== */
+
+.match-area {
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 12px;
+
+    margin-bottom: 26px;
+
+    background:
+        linear-gradient(
+            100deg,
+            #e5f9f3,
+            #eaf9f6
+        );
+
+    border-radius: 14px;
+}
+
+.match-button {
+    min-width: 95px;
+
+    height: 40px;
+
+    border: 0;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #3549df,
+            #2415ad
+        );
+
+    color: #17104e;
+
+    color: white;
+
+    font-weight: 800;
+
+    box-shadow:
+        0 3px 8px rgba(40,40,170,.2);
+}
+
+.main-digit {
+    width: 75px;
+    height: 75px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        radial-gradient(
+            circle at 30% 30%,
+            #51d5df,
+            #4353dd 60%,
+            #35219d
+        );
+
+    border: 5px solid rgba(255,255,255,.45);
+
+    box-shadow:
+        0 7px 18px rgba(50,80,180,.3);
+
+    color: white;
+
+    font-size: 26px;
+
+    font-weight: 900;
+}
+
+
+/* =====================================
+   CONFIDENCE
+===================================== */
+
+.confidence-section {
+    max-width: 850px;
+
+    margin: 0 auto 25px;
+
+    padding: 16px;
+
+    background: white;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 4px 15px rgba(60,70,130,.08);
+}
+
+.confidence-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    color: #6c7282;
+
     font-size: 12px;
 }
 
-.auto-scan {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 10px;
-    font-size: 9px;
-    color: #8a94a5;
+.confidence-header strong {
+    color: #4051df;
+}
+
+.confidence-track {
+    width: 100%;
+
+    height: 9px;
+
+    margin-top: 9px;
+
+    border-radius: 20px;
+
+    background: #edf0f6;
+
+    overflow: hidden;
+}
+
+.confidence-fill {
+    width: 0%;
+
+    height: 100%;
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #21b9e9,
+            #4446dd,
+            #18b77a
+        );
+
+    transition: width .4s;
+}
+
+.entry-status {
+    margin-top: 8px;
+
+    font-size: 10px;
+
+    color: #8a91a0;
 }
 
 
-/* =========================
-   DIGITS
-========================= */
+/* =====================================
+   LARGE ANALYSIS CARDS
+===================================== */
 
-.digit-grid {
+.large-card {
+    background: white;
+
+    border: 1px solid #e0e6fa;
+
+    border-radius: 14px;
+
+    padding: 20px;
+
+    margin-bottom: 20px;
+
+    box-shadow:
+        0 5px 18px rgba(40,50,100,.07);
+}
+
+.large-card h2 {
+    margin: 0 0 20px;
+
+    color: #3ba3ef;
+
+    font-size: 18px;
+}
+
+
+/* CHART */
+
+.chart-box {
+    min-height: 270px;
+
+    border: 1px solid #e2e7fa;
+
+    border-radius: 12px;
+
+    background: white;
+
+    padding: 15px;
+}
+
+.frequency-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 7px;
+
+    grid-template-columns:
+        repeat(10, 1fr);
+
+    align-items: end;
+
+    min-height: 235px;
+
+    gap: 8px;
 }
 
-.digit-item {
+.frequency-grid .digit-item {
     text-align: center;
-    padding: 10px 4px;
-    border: 1px solid #e9edf2;
+}
+
+.frequency-grid .digit-item strong {
+    font-size: 16px;
+}
+
+.frequency-grid .digit-item span {
+    display: block;
+
+    margin-top: 5px;
+
+    font-size: 10px;
+
+    color: #737b8e;
+}
+
+.frequency-grid .hot {
+    color: #4054dd;
+}
+
+
+/* LAST DIGIT */
+
+.last-digit {
+    text-align: center;
+
+    margin-top: 6px;
+
+    color: #4056e4;
+
+    font-size: 22px;
+
+    font-weight: 900;
+}
+
+
+/* =====================================
+   TRADING PATTERN
+===================================== */
+
+.pattern-box {
+    min-height: 250px;
+
+    border: 1px solid #e2e7fa;
+
+    border-radius: 12px;
+
+    padding: 20px;
+}
+
+.pattern-title {
+    text-align: center;
+
+    font-size: 20px;
+
+    font-weight: 900;
+
+    color: #4255df;
+
+    margin-bottom: 25px;
+}
+
+.pattern-details {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 12px;
+
+    margin-bottom: 20px;
+}
+
+.pattern-details div {
+    text-align: center;
+
+    padding: 13px;
+
     border-radius: 10px;
-    background: #fafbfd;
+
+    background: #f6f8ff;
+
+    color: #80879a;
+
+    font-size: 10px;
 }
 
-.digit-item strong {
+.pattern-details strong {
     display: block;
-    font-size: 15px;
-}
 
-.digit-item span {
-    display: block;
-    margin-top: 3px;
-    color: #8993a4;
-    font-size: 9px;
-}
+    margin-top: 5px;
 
-.digit-item.hot {
-    background: #eef8f2;
-    border-color: #bce7cd;
-}
+    color: #2c3242;
 
-.digit-item.hot strong {
-    color: #139451;
-}
-
-
-/* =========================
-   RECENT
-========================= */
-
-.recent-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 9px;
-}
-
-.recent-header h2 {
-    margin: 0;
     font-size: 14px;
-}
-
-.recent-header span {
-    color: #929bad;
-    font-size: 9px;
 }
 
 .recent-digits {
     display: flex;
-    gap: 5px;
-    overflow: hidden;
+
+    justify-content: center;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
 }
 
 .recent-digits span {
-    min-width: 27px;
-    height: 27px;
-    border-radius: 50%;
-    background: #edf2f8;
+    width: 29px;
+    height: 29px;
+
     display: flex;
+
     align-items: center;
     justify-content: center;
-    font-size: 10px;
+
+    border-radius: 50%;
+
+    background: #edf1ff;
+
+    color: #4254d9;
+
+    font-size: 11px;
+
     font-weight: 800;
 }
 
 
-/* =========================
+/* =====================================
    SETTINGS
-========================= */
+===================================== */
 
-.setting-row {
+.settings-card {
     display: flex;
-    justify-content: space-between;
+
     align-items: center;
-    margin-bottom: 10px;
+
+    justify-content: center;
+
+    gap: 25px;
+
+    padding: 17px;
+
+    background: #f8f9ff;
+
+    border-radius: 14px;
 }
 
-.setting-row label {
-    color: #687386;
+.setting {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+.setting label {
     font-size: 11px;
+
+    color: #70788b;
 }
 
-.setting-row select {
-    border: 1px solid #e0e5ec;
-    border-radius: 8px;
-    padding: 6px 8px;
+.setting select {
+    border: 1px solid #dce2f8;
+
+    border-radius: 7px;
+
+    padding: 6px 9px;
+
     background: white;
+}
+
+.auto-scan {
     font-size: 10px;
-}
 
-.connect-button {
-    width: 100%;
-    border: 0;
-    border-radius: 10px;
-    padding: 11px;
-    background: #172033;
-    color: white;
-    font-weight: 700;
-    font-size: 11px;
+    color: #777f91;
 }
 
 
-/* =========================
+/* =====================================
    FOOTER
-========================= */
+===================================== */
 
 footer {
     text-align: center;
-    padding: 10px 5px 20px;
-    color: #929bad;
-    font-size: 9px;
+
+    padding: 20px;
+
+    color: #8b91a2;
+
+    font-size: 10px;
 }
 
-footer div {
-    font-weight: 700;
-    margin-bottom: 5px;
-}
-
-.footer-dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    background: #20bd67;
-    border-radius: 50%;
-    margin-right: 4px;
+footer strong {
+    color: #4958d8;
 }
 
 footer p {
-    margin: 0;
+    margin: 6px 0;
 }
 
 
-/* =========================
+/* =====================================
+   TABLET
+===================================== */
+
+@media (max-width: 850px) {
+
+    .top-header {
+        min-height: 180px;
+    }
+
+    .logo-area {
+        width: 170px;
+    }
+
+    .logo-text {
+        font-size: 25px;
+    }
+
+    .controls-row {
+        flex-wrap: wrap;
+    }
+
+    .control select {
+        min-width: 130px;
+    }
+
+    .contract-buttons {
+        padding: 18px 5%;
+    }
+
+}
+
+
+/* =====================================
    MOBILE
-========================= */
+===================================== */
 
-@media (max-width: 360px) {
+@media (max-width: 600px) {
 
-    .app {
-        padding: 10px;
+    .dashboard {
+        padding: 5px;
     }
 
-    .brand h1 {
-        font-size: 16px;
+    .top-header {
+        display: block;
+
+        padding: 18px;
+
+        min-height: auto;
     }
 
-    .type-button {
-        font-size: 8px;
+    .logo-area {
+        width: 100%;
+
+        margin-bottom: 20px;
+    }
+
+    .logo-text {
+        font-size: 25px;
+    }
+
+    .control-area {
+        width: 100%;
+    }
+
+    .controls-row {
+        display: grid;
+
+        grid-template-columns: 1fr 1fr;
+
+        gap: 8px;
+    }
+
+    .control select {
+        width: 100%;
+
+        min-width: 0 !important;
+
+        font-size: 11px;
+    }
+
+    .second-row {
+        display: flex;
+
+        margin-top: 10px;
+    }
+
+    .connector-button,
+    .risk-button {
+        position: static;
+
+        font-size: 10px;
+
+        padding: 8px;
+    }
+
+    .header-right {
+        top: 10px;
+        right: 10px;
+    }
+
+    .logout-button {
+        display: none;
+    }
+
+    .market-price-card {
+        margin-top: 20px;
+    }
+
+    .digit-analysis {
+        padding: 13px;
+
+        gap: 8px;
+    }
+
+    .digit-buttons {
+        gap: 6px;
+    }
+
+    .digit-select {
+        height: 32px;
+    }
+
+    .contract-buttons {
+        grid-template-columns:
+            repeat(5, 1fr);
+
+        gap: 5px;
+
+        padding: 15px 8px;
+    }
+
+    .contract-btn {
+        height: 43px;
+
+        font-size: 10px;
+    }
+
+    .match-button {
+        min-width: 80px;
+    }
+
+    .main-digit {
+        width: 62px;
+        height: 62px;
+
+        font-size: 22px;
+    }
+
+    .pattern-details {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-card {
+        flex-direction: column;
+
+        align-items: stretch;
     }
 
 }
