@@ -25,9 +25,7 @@
   --shadow:0 10px 30px rgba(71,82,160,.10)
 }
 
-*{
-  box-sizing:border-box
-}
+*{box-sizing:border-box}
 
 body{
   margin:0;
@@ -36,8 +34,7 @@ body{
   color:var(--text)
 }
 
-button,
-select{
+button,select{
   font:inherit
 }
 
@@ -111,10 +108,6 @@ select{
   box-shadow:0 2px 7px rgba(60,60,180,.06)
 }
 
-.smallselect{
-  min-width:92px
-}
-
 .btn{
   height:38px;
   border:0;
@@ -128,21 +121,6 @@ select{
 
 .btn.red{
   background:linear-gradient(135deg,#ff6b55,#ff0755)
-}
-
-.btn.green{
-  background:linear-gradient(135deg,#10ae70,#00955d)
-}
-
-.btn.gray{
-  background:#6f6f7e
-}
-
-.btn.light{
-  background:#fff;
-  color:#33405f;
-  border:1px solid #d6ddfb;
-  box-shadow:none
 }
 
 .statusbar{
@@ -169,10 +147,6 @@ select{
 
 .risk{
   background:#0b9e66
-}
-
-.logout{
-  background:#ff4050
 }
 
 .market-card{
@@ -282,25 +256,11 @@ select{
   box-shadow:0 5px 12px rgba(55,50,180,.18)
 }
 
-.over{
-  background:#a778e9
-}
-
-.even{
-  background:#ff9b90
-}
-
-.start2{
-  background:#4038df
-}
-
-.odd{
-  background:#6fc8e8
-}
-
-.under{
-  background:#f29a61
-}
+.over{background:#a778e9}
+.even{background:#ff9b90}
+.start2{background:#4038df}
+.odd{background:#6fc8e8}
+.under{background:#f29a61}
 
 .progress{
   padding:15px 14px;
@@ -478,8 +438,8 @@ select{
   font-weight:900;
   padding:9px 12px;
   border-radius:8px;
-  background:#eafff5;
-  color:#07935d;
+  background:#fff6e8;
+  color:#b06a10;
   white-space:nowrap
 }
 
@@ -588,11 +548,17 @@ select{
 <header class="top">
 
   <div>
-    <div class="logo">Expert Trader</div>
+
+    <div class="logo">
+      Expert Trader
+    </div>
+
     <div class="logo-line"></div>
+
     <div class="sub">
       Deriv digit market intelligence • Analysis only
     </div>
+
   </div>
 
   <div class="controls">
@@ -604,38 +570,103 @@ select{
 
     <div class="field">
       <label>Contract Type</label>
+
       <select id="contract">
-        <option value="OVER">OVER</option>
-        <option value="UNDER">UNDER</option>
-        <option value="MATCH">MATCH</option>
-        <option value="DIFF">DIFFERS</option>
-        <option value="EVEN">EVEN</option>
-        <option value="ODD">ODD</option>
+
+        <option value="OVER">
+          OVER
+        </option>
+
+        <option value="UNDER">
+          UNDER
+        </option>
+
+        <option value="MATCH">
+          MATCH
+        </option>
+
+        <option value="DIFF">
+          DIFFERS
+        </option>
+
+        <option value="EVEN">
+          EVEN
+        </option>
+
+        <option value="ODD">
+          ODD
+        </option>
+
       </select>
+
     </div>
 
     <div class="field">
+
       <label>Duration</label>
+
       <select id="duration">
-        <option value="10">10 Ticks</option>
-        <option value="25">25 Ticks</option>
-        <option value="50">50 Ticks</option>
-        <option value="100" selected>100 Ticks</option>
-        <option value="300">300 Ticks</option>
-        <option value="500">500 Ticks</option>
-        <option value="1000">1000 Ticks</option>
+
+        <option value="10">
+          10 Ticks
+        </option>
+
+        <option value="25">
+          25 Ticks
+        </option>
+
+        <option value="50">
+          50 Ticks
+        </option>
+
+        <option value="100" selected>
+          100 Ticks
+        </option>
+
+        <option value="300">
+          300 Ticks
+        </option>
+
+        <option value="500">
+          500 Ticks
+        </option>
+
+        <option value="1000">
+          1000 Ticks
+        </option>
+
       </select>
+
     </div>
 
     <div class="field">
+
       <label>Analysis</label>
+
       <select id="sample">
-        <option value="100">100</option>
-        <option value="300">300</option>
-        <option value="500" selected>500</option>
-        <option value="1000">1000</option>
-        <option value="2000">2000</option>
+
+        <option value="100">
+          100
+        </option>
+
+        <option value="300">
+          300
+        </option>
+
+        <option value="500" selected>
+          500
+        </option>
+
+        <option value="1000">
+          1000
+        </option>
+
+        <option value="2000">
+          2000
+        </option>
+
       </select>
+
     </div>
 
     <button class="btn" id="mode">
@@ -651,6 +682,7 @@ select{
 </header>
 
 <div class="statusbar">
+
   <span class="pill connector" id="connector">
     ● Connecting
   </span>
@@ -658,6 +690,7 @@ select{
   <span class="pill risk">
     🛡 Risk Management
   </span>
+
 </div>
 
 <section class="market-card">
@@ -740,23 +773,40 @@ select{
 <section class="progress">
 
   <div class="prow">
-    <strong>Confidence</strong>
+
+    <strong>
+      Confidence
+    </strong>
+
     <div class="bar">
       <div class="fill" id="confidenceFill"></div>
     </div>
+
     <div class="pct" id="confidencePct">
       0%
     </div>
+
   </div>
 
   <div class="prow">
-    <strong>Data Progress</strong>
+
+    <strong>
+      Data Progress
+    </strong>
+
     <div class="bar">
-      <div class="fill data" id="dataFill"></div>
+
+      <div
+        class="fill data"
+        id="dataFill">
+      </div>
+
     </div>
+
     <div class="pct" id="dataPct">
       0%
     </div>
+
   </div>
 
 </section>
@@ -790,12 +840,18 @@ select{
     </div>
 
     <div class="chartbox">
+
       <canvas id="frequencyChart"></canvas>
+
     </div>
 
     <div class="last">
+
       Last Digit:
-      <span id="lastDigitBig">-</span>
+      <span id="lastDigitBig">
+        -
+      </span>
+
     </div>
 
   </div>
@@ -807,7 +863,9 @@ select{
     </div>
 
     <div class="chartbox">
+
       <canvas id="patternChart"></canvas>
+
     </div>
 
   </div>
@@ -824,32 +882,44 @@ select{
 
     <div class="metric">
       <small>Status</small>
-      <b id="status">Waiting</b>
+      <b id="status">
+        Waiting
+      </b>
     </div>
 
     <div class="metric">
       <small>Tick Data</small>
-      <b id="tickCount">0</b>
+      <b id="tickCount">
+        0
+      </b>
     </div>
 
     <div class="metric">
       <small>Mode</small>
-      <b id="modeText">ANALYSIS</b>
+      <b id="modeText">
+        ANALYSIS
+      </b>
     </div>
 
     <div class="metric">
       <small>Pattern</small>
-      <b id="pattern">—</b>
+      <b id="pattern">
+        —
+      </b>
     </div>
 
     <div class="metric">
       <small>Best Digit</small>
-      <b id="bestDigit">—</b>
+      <b id="bestDigit">
+        —
+      </b>
     </div>
 
     <div class="metric">
       <small>Signal Confidence</small>
-      <b id="signalConfidence">0%</b>
+      <b id="signalConfidence">
+        0%
+      </b>
     </div>
 
   </div>
@@ -857,7 +927,12 @@ select{
   <div class="signal">
 
     <div class="signalbar">
-      <div class="signalfill" id="signalFill"></div>
+
+      <div
+        class="signalfill"
+        id="signalFill">
+      </div>
+
     </div>
 
     <div class="signaltext" id="signalText">
@@ -866,8 +941,14 @@ select{
 
   </div>
 
-  <div class="sub" id="message" style="margin-top:8px">
-    Connect to Deriv and collect historical ticks.
+  <div
+    class="sub"
+    id="message"
+    style="margin-top:8px">
+
+    Connect to Deriv and collect
+    historical ticks.
+
   </div>
 
 </section>
@@ -876,37 +957,76 @@ select{
 
   <div class="field">
 
-    <label>Analysis Ticks</label>
+    <label>
+      Analysis Ticks
+    </label>
 
     <select id="analysisTicks">
-      <option>100</option>
-      <option>300</option>
-      <option selected>500</option>
-      <option>1000</option>
-      <option>2000</option>
+
+      <option>
+        100
+      </option>
+
+      <option>
+        300
+      </option>
+
+      <option selected>
+        500
+      </option>
+
+      <option>
+        1000
+      </option>
+
+      <option>
+        2000
+      </option>
+
     </select>
 
   </div>
 
   <div class="field">
 
-    <label>Minimum Confidence</label>
+    <label>
+      Minimum Confidence
+    </label>
 
     <select id="threshold">
-      <option>55%</option>
-      <option>60%</option>
-      <option selected>65%</option>
-      <option>70%</option>
-      <option>75%</option>
+
+      <option>
+        55%
+      </option>
+
+      <option>
+        60%
+      </option>
+
+      <option selected>
+        65%
+      </option>
+
+      <option>
+        70%
+      </option>
+
+      <option>
+        75%
+      </option>
+
     </select>
 
   </div>
 
   <div class="field">
 
-    <label>Barrier</label>
+    <label>
+      Barrier
+    </label>
 
     <select id="barrier">
+
       <option>0</option>
       <option>1</option>
       <option>2</option>
@@ -917,13 +1037,19 @@ select{
       <option>7</option>
       <option>8</option>
       <option>9</option>
+
     </select>
 
   </div>
 
   <label class="check">
-    <input type="checkbox" id="auto">
+
+    <input
+      type="checkbox"
+      id="auto">
+
     Auto analysis every 30 seconds
+
   </label>
 
 </section>
@@ -931,8 +1057,10 @@ select{
 <div class="log" id="log"></div>
 
 <div class="footer">
+
   Expert Trader Analysis • Statistical analysis only.
   No automatic trading. No guaranteed results.
+
 </div>
 
 </div>
@@ -940,51 +1068,65 @@ select{
 <script>
 "use strict";
 
-/*
-  ============================================================
-  DERIV CONNECTION
-  ============================================================
-*/
+/* ==========================================================
+   DERIV CONNECTION
+   ========================================================== */
 
 const WS_URL =
   "wss://api.derivws.com/trading/v1/options/ws/public";
 
-const $ = id => document.getElementById(id);
+const $ = id =>
+  document.getElementById(id);
 
 const S = {
+
   ws:null,
+
   connected:false,
+
   manual:false,
+
   symbol:"",
+
   pip:null,
+
   markets:[],
+
   ticks:[],
+
   request:1,
+
   timer:null,
+
   polling:false,
+
   chart:null,
+
   patternChart:null,
+
   contract:"OVER",
+
   barrier:4,
+
   lastAnalysis:0
+
 };
 
 
-/*
-  ============================================================
-  HELPERS
-  ============================================================
-*/
+/* ==========================================================
+   HELPERS
+   ========================================================== */
 
 function log(msg,type=""){
 
-  const d=document.createElement("div");
+  const d =
+    document.createElement("div");
 
   d.className=type;
 
   d.textContent =
-    new Date().toLocaleTimeString() +
-    "  " +
+    new Date().toLocaleTimeString()+
+    "  "+
     msg;
 
   $("log").appendChild(d);
@@ -1004,12 +1146,14 @@ function clamp(x,a,b){
 }
 
 function symbolOf(x){
+
   return x.underlying_symbol ||
          x.symbol ||
          "";
 }
 
 function nameOf(x){
+
   return x.underlying_symbol_name ||
          x.display_name ||
          symbolOf(x);
@@ -1023,49 +1167,53 @@ function pipOf(x){
       x.pip
     );
 
-  return Number.isFinite(p) ? p : null;
+  return Number.isFinite(p)
+    ? p
+    : null;
 }
 
 
-/*
-  ============================================================
-  LAST DIGIT
-  ============================================================
-*/
+/* ==========================================================
+   LAST DIGIT
+   ========================================================== */
 
 function digitOf(quote,pip){
 
-  if(!Number.isFinite(Number(quote))){
+  if(
+    !Number.isFinite(
+      Number(quote)
+    )
+  ){
     return null;
   }
 
-  const n=Number(quote);
+  const n =
+    Number(quote);
 
   let decimals=null;
 
-  if(Number.isFinite(pip) && pip>0){
+  if(
+    Number.isFinite(pip) &&
+    pip>0
+  ){
 
     if(pip<1){
 
       decimals =
         Math.max(
           0,
-          Math.round(-Math.log10(pip))
+          Math.round(
+            -Math.log10(pip)
+          )
         );
 
-    }else if(pip>=1 && pip<=10){
-
-      decimals =
-        Math.max(
-          0,
-          Math.round(pip)
-        );
     }
   }
 
   if(decimals===null){
 
-    const t=String(quote);
+    const t =
+      String(quote);
 
     decimals =
       t.includes(".")
@@ -1077,19 +1225,22 @@ function digitOf(quote,pip){
     n.toFixed(decimals);
 
   const digits =
-    fixed.replace(/\D/g,"");
+    fixed.replace(
+      /\D/g,
+      ""
+    );
 
   return digits
-    ? Number(digits.at(-1))
+    ? Number(
+        digits.at(-1)
+      )
     : null;
 }
 
 
-/*
-  ============================================================
-  CONNECT
-  ============================================================
-*/
+/* ==========================================================
+   CONNECT
+   ========================================================== */
 
 function connect(){
 
@@ -1115,7 +1266,9 @@ function connect(){
   try{
 
     S.ws =
-      new WebSocket(WS_URL);
+      new WebSocket(
+        WS_URL
+      );
 
   }catch(e){
 
@@ -1144,9 +1297,13 @@ function connect(){
     );
 
     send({
+
       active_symbols:"brief",
+
       req_id:req()
+
     });
+
   };
 
   S.ws.onmessage=e=>{
@@ -1204,11 +1361,9 @@ function send(x){
 }
 
 
-/*
-  ============================================================
-  MESSAGE HANDLER
-  ============================================================
-*/
+/* ==========================================================
+   MESSAGE HANDLER
+   ========================================================== */
 
 function handle(raw){
 
@@ -1216,7 +1371,8 @@ function handle(raw){
 
   try{
 
-    d=JSON.parse(raw);
+    d =
+      JSON.parse(raw);
 
   }catch(e){
 
@@ -1227,9 +1383,15 @@ function handle(raw){
 
     log(
       "API: "+
-      (d.error.code || "ERROR")+
+      (
+        d.error.code ||
+        "ERROR"
+      )+
       " — "+
-      (d.error.message || "Unknown"),
+      (
+        d.error.message ||
+        "Unknown"
+      ),
       "err"
     );
 
@@ -1241,53 +1403,57 @@ function handle(raw){
   }
 
   if(
-    d.msg_type==="active_symbols"
+    d.msg_type===
+    "active_symbols"
   ){
-    return activeSymbols(d);
+
+    activeSymbols(d);
+
+    return;
   }
 
   if(
-    d.msg_type==="history"
+    d.msg_type===
+    "history"
   ){
-    return history(d);
+
+    history(d);
+
+    return;
   }
 
   if(
-    d.msg_type==="tick"
+    d.msg_type===
+    "tick"
   ){
-    return tick(d);
+
+    tick(d);
+
+    return;
   }
 }
 
 
-/*
-  ============================================================
-  ACTIVE MARKETS
-  ============================================================
-*/
+/* ==========================================================
+   ACTIVE SYMBOLS
+   ========================================================== */
 
 function activeSymbols(d){
 
   const list =
-    (d.active_symbols || [])
-    .filter(x=>symbolOf(x));
+    (
+      d.active_symbols ||
+      []
+    )
+    .filter(
+      x=>symbolOf(x)
+    );
 
   S.markets =
     list.sort(
-      (a,b)=>{
-
-        const sa =
-          scoreMarket(a);
-
-        const sb =
-          scoreMarket(b);
-
-        return (
-          sb-sa ||
-          nameOf(a)
-            .localeCompare(nameOf(b))
-        );
-      }
+      (a,b)=>
+        scoreMarket(b)-
+        scoreMarket(a)
     );
 
   const sel =
@@ -1298,7 +1464,9 @@ function activeSymbols(d){
   S.markets.forEach(m=>{
 
     const o =
-      document.createElement("option");
+      document.createElement(
+        "option"
+      );
 
     o.value =
       symbolOf(m);
@@ -1310,6 +1478,7 @@ function activeSymbols(d){
       ")";
 
     sel.appendChild(o);
+
   });
 
   if(!S.markets.length){
@@ -1349,13 +1518,6 @@ function scoreMarket(m){
     symbolOf(m)
       .toUpperCase();
 
-  const t =
-    (
-      m.underlying_symbol_type ||
-      m.symbol_type ||
-      ""
-    ).toLowerCase();
-
   let n=0;
 
   if(
@@ -1367,35 +1529,28 @@ function scoreMarket(m){
     n+=100;
   }
 
-  if(
-    t.includes("synthetic") ||
-    t.includes("index")
-  ){
-    n+=30;
-  }
-
   return n;
 }
 
 
-/*
-  ============================================================
-  MARKET SELECTION
-  ============================================================
-*/
+/* ==========================================================
+   MARKET SELECTION
+   ========================================================== */
 
 function chooseMarket(sym){
 
   const m =
     S.markets.find(
-      x=>symbolOf(x)===sym
+      x=>
+        symbolOf(x)===sym
     );
 
   if(!m)return;
 
   S.symbol=sym;
 
-  S.pip=pipOf(m);
+  S.pip=
+    pipOf(m);
 
   S.ticks=[];
 
@@ -1424,11 +1579,11 @@ function chooseMarket(sym){
 }
 
 
-/*
-  ============================================================
-  HISTORICAL DATA
-  ============================================================
-*/
+/* ==========================================================
+   HISTORICAL DATA
+   IMPORTANT:
+   No subscribe parameter here.
+   ========================================================== */
 
 function loadHistory(){
 
@@ -1477,15 +1632,30 @@ function loadHistory(){
     "..."
   );
 
+  /*
+     FIX:
+     subscribe is intentionally NOT included.
+  */
+
   send({
+
     ticks_history:S.symbol,
+
     end:"latest",
+
     count:count,
+
     style:"ticks",
-    subscribe:0,
+
     req_id:req()
+
   });
 }
+
+
+/* ==========================================================
+   HISTORY RESPONSE
+   ========================================================== */
 
 function history(d){
 
@@ -1509,24 +1679,26 @@ function history(d){
       Number(d.pip_size)
     )
   ){
+
     S.pip =
       Number(d.pip_size);
   }
 
-  const p =
+  const prices =
     d.history.prices;
 
-  const t =
-    d.history.times || [];
+  const times =
+    d.history.times ||
+    [];
 
   S.ticks =
-    p.map(
+    prices.map(
       (q,i)=>({
 
         quote:Number(q),
 
         epoch:Number(
-          t[i] || 0
+          times[i] || 0
         ),
 
         digit:
@@ -1539,7 +1711,9 @@ function history(d){
     )
     .filter(
       x=>
-        Number.isFinite(x.quote) &&
+        Number.isFinite(
+          x.quote
+        ) &&
         x.digit!==null
     );
 
@@ -1564,11 +1738,9 @@ function history(d){
 }
 
 
-/*
-  ============================================================
-  LIVE DATA
-  ============================================================
-*/
+/* ==========================================================
+   LIVE TICKS
+   ========================================================== */
 
 function startPolling(){
 
@@ -1609,17 +1781,14 @@ function pollTick(){
     return;
   }
 
-  /*
-    Use one-shot ticks rather than
-    subscribe:1. This prevents the
-    subscribe validation problem on
-    public endpoint implementations.
-  */
-
   send({
+
     ticks:S.symbol,
+
     subscribe:0,
+
     req_id:req()
+
   });
 }
 
@@ -1657,20 +1826,26 @@ function tick(d){
   if(digit===null)return;
 
   const item={
+
     quote:q,
+
     epoch:Number(
       t.epoch ||
       Date.now()/1000
     ),
+
     digit:digit
+
   };
 
   if(
     S.ticks.length &&
     S.ticks[
       S.ticks.length-1
-    ].epoch===item.epoch
+    ].epoch===
+    item.epoch
   ){
+
     return;
   }
 
@@ -1679,7 +1854,9 @@ function tick(d){
   if(
     S.ticks.length>5000
   ){
+
     S.ticks.shift();
+
   }
 
   $("price").textContent =
@@ -1703,7 +1880,7 @@ function tick(d){
     S.lastAnalysis>2000
   ){
 
-    S.lastAnalysis=
+    S.lastAnalysis =
       Date.now();
 
     analyze();
@@ -1733,11 +1910,9 @@ function formatPrice(q){
 }
 
 
-/*
-  ============================================================
-  HORIZON ANALYSIS
-  ============================================================
-*/
+/* ==========================================================
+   HORIZON ANALYSIS
+   ========================================================== */
 
 function horizonDigits(
   windowSize,
@@ -1777,6 +1952,7 @@ function horizonDigits(
           i+duration
         ].digit
       );
+
     }
   }
 
@@ -1784,15 +1960,13 @@ function horizonDigits(
 }
 
 
-/*
-  ============================================================
-  STATISTICS
-  ============================================================
-*/
+/* ==========================================================
+   STATISTICS
+   ========================================================== */
 
 function counts(a){
 
-  const c=
+  const c =
     Array(10).fill(0);
 
   a.forEach(x=>{
@@ -1801,7 +1975,9 @@ function counts(a){
       x>=0 &&
       x<=9
     ){
+
       c[x]++;
+
     }
 
   });
@@ -1818,7 +1994,8 @@ function probs(c){
     )+10;
 
   return c.map(
-    x=>(x+1)/total
+    x=>
+      (x+1)/total
   );
 }
 
@@ -1889,6 +2066,7 @@ function contractProb(
         (a,x)=>a+x,
         0
       );
+
   }
 
   if(type==="UNDER"){
@@ -1899,6 +2077,7 @@ function contractProb(
         (a,x)=>a+x,
         0
       );
+
   }
 
   if(type==="MATCH"){
@@ -1919,6 +2098,7 @@ function contractProb(
         (a,x)=>a+x,
         0
       );
+
   }
 
   return p
@@ -1983,25 +2163,13 @@ function bestDigit(
     ){
       allowed.push(i);
     }
+
   }
 
   return allowed.sort(
-    (a,c)=>p[c]-p[a]
+    (a,c)=>
+      p[c]-p[a]
   )[0] ?? b;
-}
-
-function entropy(p){
-
-  return -p.reduce(
-    (s,x)=>
-      s+
-      (
-        x>0
-        ?x*Math.log2(x)
-        :0
-      ),
-    0
-  );
 }
 
 function zscore(
@@ -2032,10 +2200,10 @@ function wilson(
 
   const z=1.96;
 
-  const p=
+  const p =
     success/n;
 
-  const d=
+  const d =
     1+
     z*z/n;
 
@@ -2053,11 +2221,9 @@ function wilson(
 }
 
 
-/*
-  ============================================================
-  WALK-FORWARD VALIDATION
-  ============================================================
-*/
+/* ==========================================================
+   WALK-FORWARD VALIDATION
+   ========================================================== */
 
 function validation(
   type,
@@ -2078,6 +2244,7 @@ function validation(
   }
 
   let tested=0;
+
   let correct=0;
 
   const begin =
@@ -2097,13 +2264,14 @@ function validation(
 
     const train =
       S.ticks.slice(
-        Math.max(0,i-300),
+        Math.max(
+          0,
+          i-300
+        ),
         i
       );
 
-    if(
-      train.length<50
-    ){
+    if(train.length<50){
       continue;
     }
 
@@ -2121,11 +2289,13 @@ function validation(
         p,
         type,
         b
-      )<=baseline(
+      )<=
+      baseline(
         type,
         b
       )
     ){
+
       continue;
     }
 
@@ -2147,25 +2317,27 @@ function validation(
         b
       )
     ){
+
       correct++;
+
     }
   }
 
   return tested
-    ?{
-      accuracy:
-        correct/tested,
-      samples:tested
-    }
-    :null;
+    ? {
+        accuracy:
+          correct/tested,
+
+        samples:
+          tested
+      }
+    : null;
 }
 
 
-/*
-  ============================================================
-  MAIN ANALYSIS
-  ============================================================
-*/
+/* ==========================================================
+   MAIN ANALYSIS
+   ========================================================== */
 
 function analyze(){
 
@@ -2222,6 +2394,7 @@ function analyze(){
   ){
 
     windows.push(sample);
+
   }
 
   if(!windows.length){
@@ -2267,31 +2440,42 @@ function analyze(){
           ).length;
 
         return {
+
           w,
+
           ds,
+
           p,
+
           cp,
+
           base,
+
           edge:
             (cp-base)*100,
+
           z:
             zscore(
               cp,
               base,
               ds.length
             ),
+
           lower:
             wilson(
               wins,
               ds.length
             ),
+
           best:
             bestDigit(
               p,
               type,
               b
             )
+
         };
+
       }
     );
 
@@ -2335,30 +2519,39 @@ function analyze(){
 
   const confidence =
     clamp(
+
       (
-        sampleFactor*.15+
+
+        sampleFactor*.15 +
+
         clamp(
           primary.edge/10,
           0,
           1
-        )*.2+
+        )*.2 +
+
         clamp(
           primary.z/3,
           0,
           1
-        )*.2+
-        agrees/100*.2+
-        positives/100*.15+
+        )*.2 +
+
+        agrees/100*.2 +
+
+        positives/100*.15 +
+
         (
           val
-          ?clamp(
-             val.accuracy,
-             0,
-             1
-           )
-          :.5
+          ? clamp(
+              val.accuracy,
+              0,
+              1
+            )
+          : .5
         )*.1
+
       )*100,
+
       0,
       95
     );
@@ -2367,7 +2560,10 @@ function analyze(){
     Number(
       $("threshold")
         .value
-        .replace("%","")
+        .replace(
+          "%",
+          ""
+        )
     );
 
   const signal =
@@ -2380,25 +2576,32 @@ function analyze(){
   renderAnalysis({
 
     type,
+
     b,
+
     duration,
+
     primary,
+
     results,
+
     agrees,
+
     positives,
+
     val,
+
     confidence,
+
     signal
 
   });
 }
 
 
-/*
-  ============================================================
-  RENDER ANALYSIS
-  ============================================================
-*/
+/* ==========================================================
+   RENDER
+   ========================================================== */
 
 function renderAnalysis(a){
 
@@ -2452,17 +2655,19 @@ function renderAnalysis(a){
 
   $("message").textContent =
     signal
+
     ?
+
     `Statistical filters passed for ${type} ${b}. Agreement ${agrees.toFixed(0)}%, multi-window support ${positives.toFixed(0)}%.`
+
     :
+
     `No strong signal. Edge ${primary.edge.toFixed(2)}%, z-score ${primary.z.toFixed(2)}, agreement ${agrees.toFixed(0)}%.`;
 
   $("signalText").textContent =
     signal
-    ?
-    `${type} ${b} • ${confidence.toFixed(0)}%`
-    :
-    "No signal";
+    ? `${type} ${b} • ${confidence.toFixed(0)}%`
+    : "No signal";
 
   $("signalText").style.background =
     signal
@@ -2486,16 +2691,16 @@ function renderAnalysis(a){
 
   log(
     `Analysis ${signal?"SIGNAL":"NO SIGNAL"} • ${type} • best digit ${bd} • confidence ${confidence.toFixed(1)}%`,
-    signal ? "ok" : ""
+    signal
+    ? "ok"
+    : ""
   );
 }
 
 
-/*
-  ============================================================
-  DIGIT BUTTONS
-  ============================================================
-*/
+/* ==========================================================
+   DIGITS
+   ========================================================== */
 
 function renderDigits(p){
 
@@ -2511,6 +2716,7 @@ function renderDigits(p){
     );
 
   over.innerHTML="";
+
   under.innerHTML="";
 
   for(
@@ -2545,9 +2751,11 @@ function renderDigits(p){
           $("barrier").value=i;
 
           analyze();
+
         };
 
         parent.appendChild(x);
+
       };
 
     make(
@@ -2559,15 +2767,14 @@ function renderDigits(p){
       under,
       i<b
     );
+
   }
 }
 
 
-/*
-  ============================================================
-  FREQUENCY CHART
-  ============================================================
-*/
+/* ==========================================================
+   FREQUENCY CHART
+   ========================================================== */
 
 function makeFrequencyChart(){
 
@@ -2575,69 +2782,89 @@ function makeFrequencyChart(){
     new Chart(
       $("frequencyChart"),
       {
+
         type:"bar",
 
         data:{
+
           labels:[
             0,1,2,3,4,
             5,6,7,8,9
           ],
 
-          datasets:[
-            {
-              data:
-                Array(10).fill(10),
+          datasets:[{
 
-              backgroundColor:[
-                "#62cbe7",
-                "#3dbedc",
-                "#4bbdd9",
-                "#4baed8",
-                "#5f8eea",
-                "#7669e8",
-                "#7b5ee2",
-                "#7458dc",
-                "#7a50d4",
-                "#8b4fd0"
-              ],
+            data:
+              Array(10).fill(10),
 
-              borderRadius:5
-            }
-          ]
+            backgroundColor:[
+
+              "#62cbe7",
+              "#3dbedc",
+              "#4bbdd9",
+              "#4baed8",
+              "#5f8eea",
+              "#7669e8",
+              "#7b5ee2",
+              "#7458dc",
+              "#7a50d4",
+              "#8b4fd0"
+
+            ],
+
+            borderRadius:5
+
+          }]
+
         },
 
         options:{
+
           responsive:true,
+
           maintainAspectRatio:false,
 
           plugins:{
+
             legend:{
               display:false
             }
+
           },
 
           scales:{
+
             y:{
+
               beginAtZero:true,
+
               max:30,
 
               ticks:{
+
                 callback:
                   v=>v+"%"
+
               },
 
               grid:{
                 color:"#e5e9f6"
               }
+
             },
 
             x:{
+
               grid:{
                 display:false
               }
+
             }
+
           }
+
         }
+
       }
     );
 }
@@ -2645,7 +2872,9 @@ function makeFrequencyChart(){
 function renderFrequency(p){
 
   if(!S.chart){
+
     makeFrequencyChart();
+
   }
 
   S.chart
@@ -2660,11 +2889,9 @@ function renderFrequency(p){
 }
 
 
-/*
-  ============================================================
-  LIVE PATTERN CHART
-  ============================================================
-*/
+/* ==========================================================
+   PATTERN CHART
+   ========================================================== */
 
 function makePatternChart(){
 
@@ -2672,45 +2899,56 @@ function makePatternChart(){
     new Chart(
       $("patternChart"),
       {
+
         type:"line",
 
         data:{
+
           labels:[],
 
-          datasets:[
-            {
-              data:[],
+          datasets:[{
 
-              borderColor:"#6757e8",
+            data:[],
 
-              backgroundColor:
-                "rgba(103,87,232,.10)",
+            borderColor:
+              "#6757e8",
 
-              fill:true,
+            backgroundColor:
+              "rgba(103,87,232,.10)",
 
-              tension:.3,
+            fill:true,
 
-              pointRadius:3,
+            tension:.3,
 
-              pointBackgroundColor:
-                "#20b7dd"
-            }
-          ]
+            pointRadius:3,
+
+            pointBackgroundColor:
+              "#20b7dd"
+
+          }]
+
         },
 
         options:{
+
           responsive:true,
+
           maintainAspectRatio:false,
 
           plugins:{
+
             legend:{
               display:false
             }
+
           },
 
           scales:{
+
             y:{
+
               min:0,
+
               max:9,
 
               ticks:{
@@ -2720,15 +2958,21 @@ function makePatternChart(){
               grid:{
                 color:"#e6e9f6"
               }
+
             },
 
             x:{
+
               grid:{
                 color:"#edf0f8"
               }
+
             }
+
           }
+
         }
+
       }
     );
 }
@@ -2736,7 +2980,9 @@ function makePatternChart(){
 function updatePatternChart(){
 
   if(!S.patternChart){
+
     makePatternChart();
+
   }
 
   const last =
@@ -2765,11 +3011,9 @@ function updatePatternChart(){
 }
 
 
-/*
-  ============================================================
-  PROGRESS
-  ============================================================
-*/
+/* ==========================================================
+   PROGRESS
+   ========================================================== */
 
 function updateProgress(){
 
@@ -2799,11 +3043,9 @@ function updateProgress(){
 }
 
 
-/*
-  ============================================================
-  CONTRACT SELECTION
-  ============================================================
-*/
+/* ==========================================================
+   CONTRACT SELECTION
+   ========================================================== */
 
 function setContract(c){
 
@@ -2817,10 +3059,12 @@ function setContract(c){
     )
     .forEach(
       b=>{
+
         b.style.transform =
           b.dataset.contract===c
           ? "translateY(-2px)"
           : "";
+
       }
     );
 
@@ -2828,11 +3072,9 @@ function setContract(c){
 }
 
 
-/*
-  ============================================================
-  START / STOP
-  ============================================================
-*/
+/* ==========================================================
+   START / STOP
+   ========================================================== */
 
 function start(){
 
@@ -2873,28 +3115,32 @@ function stop(){
 function toggleStart(){
 
   if(S.polling){
+
     stop();
+
   }else{
+
     start();
+
   }
 }
 
 
-/*
-  ============================================================
-  EVENTS
-  ============================================================
-*/
+/* ==========================================================
+   EVENTS
+   ========================================================== */
 
 $("market").onchange =
-  e=>chooseMarket(
-    e.target.value
-  );
+  e=>
+    chooseMarket(
+      e.target.value
+    );
 
 $("contract").onchange =
-  e=>setContract(
-    e.target.value
-  );
+  e=>
+    setContract(
+      e.target.value
+    );
 
 $("duration").onchange =
   loadHistory;
@@ -2922,12 +3168,11 @@ document
     "[data-contract]"
   )
   .forEach(
-    b=>{
+    b=>
       b.onclick=()=>
         setContract(
           b.dataset.contract
-        );
-    }
+        )
   );
 
 $("mode").onclick=()=>{
@@ -2935,6 +3180,7 @@ $("mode").onclick=()=>{
   alert(
     "Analysis mode only. No automatic trading is enabled."
   );
+
 };
 
 $("logout").onclick=()=>{
@@ -2944,7 +3190,9 @@ $("logout").onclick=()=>{
   stop();
 
   if(S.ws){
+
     S.ws.close();
+
   }
 
   $("connector").textContent =
@@ -2953,6 +3201,7 @@ $("logout").onclick=()=>{
   log(
     "Disconnected by user."
   );
+
 };
 
 $("auto").onchange=e=>{
@@ -2966,21 +3215,25 @@ $("auto").onchange=e=>{
     window.autoTimer =
       setInterval(
         ()=>{
+
           if(S.connected){
+
             loadHistory();
+
           }
+
         },
         30000
       );
+
   }
+
 };
 
 
-/*
-  ============================================================
-  INITIALIZE
-  ============================================================
-*/
+/* ==========================================================
+   INITIALIZE
+   ========================================================== */
 
 renderDigits(
   Array(10).fill(.1)
