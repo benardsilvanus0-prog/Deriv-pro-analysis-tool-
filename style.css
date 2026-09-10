@@ -1,1390 +1,652 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
 * {
     box-sizing: border-box;
 }
 
 html {
-    width: 100%;
-    min-height: 100%;
+    background: #e9edf3;
 }
 
 body {
     margin: 0;
-    min-height: 100vh;
-
-    font-family: Inter, Arial, sans-serif;
-
-    background:
-        radial-gradient(
-            circle at 20% 0%,
-            rgba(112, 44, 255, 0.22),
-            transparent 35%
-        ),
-        radial-gradient(
-            circle at 100% 20%,
-            rgba(0, 209, 255, 0.10),
-            transparent 30%
-        ),
-        #070817;
-
-    color: #f5f5ff;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #e9edf3;
+    color: #172033;
 }
 
+button,
+select {
+    font: inherit;
+}
 
-/* =====================================================
-   APP
-===================================================== */
+button {
+    cursor: pointer;
+}
 
 .app {
     width: 100%;
-    max-width: 600px;
-
+    max-width: 430px;
+    min-height: 100vh;
     margin: 0 auto;
-
-    padding:
-        12px
-        12px
-        30px;
+    background: #f5f7fa;
+    padding: 14px;
 }
 
 
-/* =====================================================
+/* =========================
    HEADER
-===================================================== */
+========================= */
 
-.topbar {
+.app-header {
     display: flex;
-
-    align-items: center;
     justify-content: space-between;
-
-    margin-bottom: 12px;
-
-    padding:
-        6px
-        4px;
+    align-items: center;
+    margin-bottom: 14px;
 }
 
 .brand {
     display: flex;
-
     align-items: center;
-
     gap: 10px;
 }
 
-.logo {
+.brand-icon {
     width: 42px;
     height: 42px;
-
+    border-radius: 13px;
+    background: linear-gradient(135deg, #126bff, #6038e8);
+    color: white;
     display: flex;
-
-    align-items: center;
     justify-content: center;
-
-    border-radius: 14px;
-
-    font-size: 21px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #31e9ff,
-            #8b5cff
-        );
-
-    box-shadow:
-        0 0 25px
-        rgba(93, 78, 255, 0.35);
+    align-items: center;
+    font-size: 13px;
+    font-weight: 800;
 }
 
 .brand h1 {
     margin: 0;
-
-    font-size: 17px;
-
-    font-weight: 800;
+    font-size: 18px;
 }
 
-.brand p {
-    margin: 3px 0 0;
-
-    color: #8585a8;
-
-    font-size: 9px;
-
-    letter-spacing: 1.5px;
+.brand span {
+    color: #7c8799;
+    font-size: 11px;
 }
-
-
-/* =====================================================
-   CONNECTION DOT
-===================================================== */
 
 .connection-dot {
-    width: 13px;
-    height: 13px;
-
+    width: 12px;
+    height: 12px;
+    background: #ff4d4d;
     border-radius: 50%;
-
-    background: #ff4d6d;
+    box-shadow: 0 0 0 4px rgba(255, 77, 77, .12);
 }
 
-.connection-dot.offline {
-    background: #ff4d6d;
-
-    box-shadow:
-        0 0 14px
-        rgba(255, 77, 109, 0.75);
-}
-
-.connection-dot.online {
-    background: #28e5a1;
-
-    box-shadow:
-        0 0 16px
-        rgba(40, 229, 161, 0.85);
-}
-
-.connection-dot.connecting {
-    background: #ffc107;
-
-    box-shadow:
-        0 0 16px
-        rgba(255, 193, 7, 0.75);
-
-    animation:
-        pulseConnection 1s infinite;
-}
-
-@keyframes pulseConnection {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: .35;
-    }
+.connection-dot.connected {
+    background: #20bd67;
+    box-shadow: 0 0 0 4px rgba(32, 189, 103, .12);
 }
 
 
-/* =====================================================
-   COMMON CARDS
-===================================================== */
+/* =========================
+   CARDS
+========================= */
 
-.settings-card,
+.market-card,
+.analysis-card,
 .scanner-card,
-.live-card,
 .digits-card,
-.recent-card {
-
-    position: relative;
-
-    width: 100%;
-
-    margin-bottom: 12px;
-
+.recent-card,
+.settings-card {
+    background: white;
+    border-radius: 17px;
     padding: 16px;
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.07);
-
-    border-radius: 21px;
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(27, 28, 60, 0.96),
-            rgba(13, 14, 34, 0.98)
-        );
-
-    box-shadow:
-        0 15px 40px
-        rgba(0, 0, 0, 0.28);
+    margin-bottom: 13px;
+    box-shadow: 0 3px 15px rgba(28, 45, 75, .07);
 }
 
-
-/* =====================================================
-   SETTINGS
-===================================================== */
-
-.setting {
-    margin-bottom: 12px;
-}
-
-.setting:last-child {
-    margin-bottom: 0;
-}
-
-.setting label,
-.barrier-box label {
-
-    display: block;
-
-    margin-bottom: 6px;
-
-    color: #9898ba;
-
-    font-size: 10px;
-
-    font-weight: 800;
-
-    text-transform: uppercase;
-
-    letter-spacing: 1px;
-}
-
-.setting-row {
-
-    display: grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
-    gap: 9px;
-}
-
-
-/* =====================================================
-   SELECT / INPUT
-===================================================== */
-
-select,
-input[type="number"],
-input[type="text"] {
-
-    width: 100%;
-
-    min-height: 43px;
-
-    padding:
-        10px
-        12px;
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.08);
-
-    border-radius: 12px;
-
-    outline: none;
-
-    background:
-        #101126;
-
-    color: #ffffff;
-
-    font-family: inherit;
-
-    font-size: 12px;
-
-    font-weight: 600;
-
-    transition:
-        border-color .2s,
-        box-shadow .2s;
-}
-
-select:focus,
-input:focus {
-
-    border-color:
-        rgba(125, 92, 255, .7);
-
-    box-shadow:
-        0 0 0 3px
-        rgba(125, 92, 255, .10);
-}
-
-
-/* =====================================================
-   BUTTON BASE
-===================================================== */
-
-button {
-
-    font-family: inherit;
-
-    cursor: pointer;
-
-    border: none;
-
-    color: white;
-
-    transition:
-        transform .15s,
-        opacity .15s,
-        filter .15s;
-}
-
-button:active {
-    transform: scale(.98);
-}
-
-button:disabled {
-    cursor: not-allowed;
-
-    opacity: .65;
-}
-
-
-/* =====================================================
-   CONNECT BUTTON
-===================================================== */
-
-.connect-button {
-
-    width: 100%;
-
-    min-height: 45px;
-
-    padding:
-        12px
-        15px;
-
-    border-radius: 13px;
-
-    font-size: 13px;
-
-    font-weight: 800;
-
-    background:
-        linear-gradient(
-            90deg,
-            #25d8ff,
-            #7357ff
-        );
-
-    box-shadow:
-        0 8px 22px
-        rgba(89, 74, 255, 0.30);
-}
-
-
-/* =====================================================
-   MAIN SIGNAL CARD
-===================================================== */
-
-.main-signal {
-
-    width: 100%;
-
-    margin-bottom: 12px;
-
-    padding: 17px;
-
-    border:
-        1px solid
-        rgba(72, 255, 193, 0.16);
-
-    border-radius: 22px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #172b3d,
-            #0c1628
-        );
-
-    box-shadow:
-        inset 0 1px
-        rgba(255,255,255,0.05),
-
-        0 18px 45px
-        rgba(0,0,0,.32);
-}
-
-
-/* =====================================================
-   SIGNAL HEADER
-===================================================== */
-
-.signal-header {
-
+.market-top {
     display: flex;
-
-    align-items: flex-start;
     justify-content: space-between;
+    align-items: center;
+}
 
+.small-label {
+    display: block;
+    color: #929bad;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .7px;
+    margin-bottom: 5px;
+}
+
+#marketSelect {
+    border: 0;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 700;
+    color: #202a3b;
+    max-width: 230px;
+    outline: none;
+}
+
+.live-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #eaf9f0;
+    color: #159653;
+    padding: 5px 8px;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.live-pill span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #20bd67;
+}
+
+.price-row {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+}
+
+.price-row strong {
+    display: block;
+    font-size: 20px;
+    margin-top: 2px;
+}
+
+.digit-box {
+    text-align: right;
+}
+
+.digit-box span {
+    color: #929bad;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.digit-box strong {
+    font-size: 28px;
+    color: #1769ff;
+}
+
+
+/* =========================
+   OVER / UNDER
+========================= */
+
+.direction-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
+    margin-bottom: 13px;
 }
 
-.eyebrow {
-
-    color: #61f0b3;
-
-    font-size: 9px;
-
-    font-weight: 800;
-
-    letter-spacing: 1.7px;
-}
-
-.signal-header h2 {
-
-    margin:
-        5px 0 0;
-
-    font-size: 18px;
-
-    line-height: 1.2;
-}
-
-.live-badge {
-
-    flex-shrink: 0;
-
-    padding:
-        6px
-        9px;
-
-    border-radius: 20px;
-
-    background:
-        rgba(255,255,255,0.06);
-
-    color: #9696b8;
-
-    font-size: 9px;
-
-    font-weight: 800;
-
-    letter-spacing: .5px;
-}
-
-.live-badge.live {
-
-    color: #2ce6a2;
-
-    background:
-        rgba(44,230,162,0.13);
-
-    box-shadow:
-        0 0 15px
-        rgba(44,230,162,.08);
-}
-
-
-/* =====================================================
-   SIGNAL BODY
-===================================================== */
-
-.signal-body {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 15px;
-
-    margin:
-        20px 0;
-}
-
-.signal-digit {
-
-    flex-shrink: 0;
-
-    width: 84px;
-    height: 84px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 21px;
-
-    font-size: 43px;
-
-    font-weight: 800;
-
-    background:
-        linear-gradient(
-            145deg,
-            #36e69e,
-            #22b878
-        );
-
-    box-shadow:
-        0 0 30px
-        rgba(47,225,151,0.22);
-}
-
-.signal-info {
-
-    flex: 1;
-
-    min-width: 0;
-}
-
-.confidence-label {
-
-    color: #8b8ca8;
-
-    font-size: 9px;
-
-    font-weight: 800;
-
-    letter-spacing: 1.7px;
-}
-
-.confidence-number {
-
-    margin-top: 4px;
-
-    font-size: 32px;
-
-    line-height: 1;
-
-    font-weight: 800;
-}
-
-.confidence-number span {
-    color: #ffffff;
-}
-
-
-/* =====================================================
-   CONFIDENCE PROGRESS
-===================================================== */
-
-.progress {
-
-    width: 100%;
-
-    height: 8px;
-
-    margin-top: 10px;
-
-    overflow: hidden;
-
-    border-radius: 20px;
-
-    background:
-        #090b18;
-}
-
-.progress-fill {
-
-    width: 0%;
-
-    height: 100%;
-
-    border-radius: 20px;
-
-    transition:
-        width .5s ease;
-
-    background:
-        linear-gradient(
-            90deg,
-            #36e69e,
-            #42e6d5
-        );
-}
-
-
-/* =====================================================
-   EXPLANATION
-===================================================== */
-
-.signal-explanation {
-
-    color: #9293ae;
-
-    font-size: 11px;
-
-    line-height: 1.55;
-}
-
-
-/* =====================================================
-   ENTRY STATUS
-===================================================== */
-
-.entry-status {
-
-    margin-top: 13px;
-
-    padding: 11px;
-
-    text-align: center;
-
+.direction-btn {
+    border: 0;
     border-radius: 12px;
-
-    font-size: 10px;
-
+    padding: 13px;
+    color: white;
+    font-size: 14px;
     font-weight: 800;
-
-    letter-spacing: .8px;
+    box-shadow: 0 4px 9px rgba(0,0,0,.08);
 }
 
-.waiting {
-
-    background:
-        rgba(255, 193, 7, 0.08);
-
-    color: #ffc107;
-
-    border:
-        1px solid
-        rgba(255,193,7,.08);
+.direction-btn span {
+    margin-right: 5px;
 }
 
-.ready {
+.direction-btn.over {
+    background: linear-gradient(135deg, #19ae5c, #098944);
+}
 
-    background:
-        rgba(43, 230, 161, 0.12);
+.direction-btn.under {
+    background: linear-gradient(135deg, #ef5c40, #d72d15);
+}
 
-    color: #35e9a4;
-
-    border:
-        1px solid
-        rgba(43,230,161,.13);
+.direction-btn.active {
+    transform: scale(.98);
+    box-shadow: 0 0 0 3px rgba(25, 110, 255, .18);
 }
 
 
-/* =====================================================
-   SECTION TITLE
-===================================================== */
+/* =========================
+   ANALYSIS
+========================= */
 
 .section-title {
-
     display: flex;
-
     align-items: center;
+    gap: 10px;
+    margin-bottom: 13px;
+}
+
+.section-title h2 {
+    margin: 0;
+    font-size: 15px;
+}
+
+.section-title p {
+    margin: 3px 0 0;
+    color: #9099aa;
+    font-size: 10px;
+}
+
+.ai-symbol {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: #edf3ff;
+    color: #256df4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+}
+
+.info-card {
+    display: flex;
+    gap: 11px;
+    padding: 12px;
+    border: 1px solid #edf0f5;
+    border-radius: 12px;
+    margin-bottom: 9px;
+}
+
+.info-icon {
+    min-width: 31px;
+    height: 31px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 13px;
+}
+
+.trend-icon {
+    background: #edf8f1;
+    color: #149454;
+}
+
+.confidence-icon {
+    background: #eef3ff;
+    color: #276cf3;
+}
+
+.pattern-icon {
+    background: #fff5e9;
+    color: #d98a20;
+}
+
+.info-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.info-content > span {
+    display: block;
+    font-size: 10px;
+    color: #8993a5;
+    margin-bottom: 3px;
+}
+
+.info-content strong {
+    display: block;
+    font-size: 13px;
+}
+
+.info-content p {
+    margin: 5px 0 0;
+    color: #697486;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+
+/* =========================
+   CONFIDENCE
+========================= */
+
+.confidence-track {
+    height: 6px;
+    background: #edf0f4;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 7px;
+}
+
+.confidence-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #2874ef, #27b867);
+    transition: width .4s ease;
+}
+
+
+/* =========================
+   RECOMMENDATION
+========================= */
+
+.recommendation {
+    margin-top: 12px;
+    padding: 13px;
+    background: #f7f9fc;
+    border: 1px solid #e8ecf2;
+    border-radius: 13px;
+}
+
+.recommendation-title {
+    color: #657084;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.recommendation-title span {
+    color: #20ae61;
+    margin-right: 4px;
+}
+
+.recommendation-text {
+    margin-top: 8px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #4d596c;
+}
+
+.signal-result {
+    margin-top: 8px;
+    font-size: 17px;
+    font-weight: 900;
+    color: #1769ff;
+}
+
+.signal-confidence {
+    margin-top: 5px;
+    display: flex;
     justify-content: space-between;
-
-    margin-bottom: 11px;
-
-    color: #f2f2ff;
-
-    font-size: 12px;
-
-    font-weight: 800;
-}
-
-.section-title span:last-child {
-
-    color: #777896;
-
-    font-size: 9px;
-
-    font-weight: 600;
+    font-size: 10px;
+    color: #7c8798;
 }
 
 
-/* =====================================================
-   MODE BUTTONS
-===================================================== */
+/* =========================
+   SCANNER
+========================= */
 
-.mode-buttons {
+.scanner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
+.scanner-header h2 {
+    margin: 0;
+    font-size: 15px;
+}
+
+#tickStatus {
+    font-size: 10px;
+    color: #8a94a5;
+}
+
+.mode-switch {
     display: grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
-    gap: 8px;
-
-    margin-bottom: 10px;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    background: #edf1f6;
+    padding: 4px;
+    border-radius: 11px;
+    margin-top: 13px;
 }
 
 .mode {
-
-    min-height: 42px;
-
-    padding:
-        10px;
-
-    border-radius: 12px;
-
-    background:
-        #11122a;
-
-    color: #8586a5;
-
+    border: 0;
+    border-radius: 8px;
+    padding: 9px;
+    background: transparent;
+    color: #7c8799;
     font-size: 11px;
-
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .mode.active {
-
-    background:
-        linear-gradient(
-            135deg,
-            #2ce59f,
-            #23b7a7
-        );
-
-    color: #07151a;
-
-    box-shadow:
-        0 7px 18px
-        rgba(44,229,159,.16);
+    background: #1769ff;
+    color: white;
 }
 
-
-/* =====================================================
-   SIGNAL TYPES
-===================================================== */
-
-.signal-buttons {
-
+.type-buttons {
     display: grid;
-
-    grid-template-columns:
-        repeat(3, 1fr);
-
-    gap: 7px;
-
-    margin-bottom: 13px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    margin-top: 10px;
 }
 
 .type-button {
-
-    min-width: 0;
-
-    min-height: 38px;
-
-    padding:
-        9px 5px;
-
-    border-radius: 11px;
-
-    background:
-        #111229;
-
-    color: #9999b7;
-
+    border: 1px solid #e3e7ee;
+    background: white;
+    color: #697487;
+    padding: 8px 2px;
+    border-radius: 8px;
     font-size: 9px;
-
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .type-button.active {
-
-    background:
-        linear-gradient(
-            135deg,
-            #7d5cff,
-            #b553ff
-        );
-
-    color: white;
-
-    box-shadow:
-        0 7px 17px
-        rgba(139,83,255,.16);
+    background: #edf3ff;
+    color: #1769ff;
+    border-color: #bfd3ff;
 }
 
-
-/* =====================================================
-   BARRIER
-===================================================== */
-
-.barrier-box {
-
-    margin-bottom: 12px;
-}
-
-.barrier-box input {
-
-    width: 100%;
-
-    min-height: 42px;
-}
-
-
-/* =====================================================
-   AUTO SCAN
-===================================================== */
-
-.auto-scan {
-
+.barrier-row {
     display: flex;
-
+    justify-content: space-between;
     align-items: center;
-
-    gap: 9px;
-
-    margin-bottom: 12px;
-
-    color: #9899b4;
-
-    font-size: 10px;
-
-    font-weight: 600;
+    margin-top: 13px;
 }
 
-.auto-scan input {
-
-    width: 16px;
-    height: 16px;
-
-    margin: 0;
-
-    accent-color:
-        #7d5cff;
+.barrier-row label {
+    color: #717c8e;
+    font-size: 11px;
 }
 
-
-/* =====================================================
-   SCAN BUTTON
-===================================================== */
+#barrier {
+    border: 1px solid #e1e5eb;
+    background: white;
+    border-radius: 8px;
+    padding: 6px 10px;
+}
 
 .scan-button {
-
     width: 100%;
-
-    min-height: 45px;
-
-    padding:
-        12px;
-
-    border-radius: 13px;
-
+    margin-top: 13px;
+    border: 0;
+    border-radius: 10px;
+    padding: 12px;
+    background: #1769ff;
+    color: white;
+    font-weight: 800;
     font-size: 12px;
-
-    font-weight: 800;
-
-    background:
-        linear-gradient(
-            90deg,
-            #8057ff,
-            #b653ff
-        );
-
-    box-shadow:
-        0 9px 25px
-        rgba(139,83,255,.25);
 }
 
-
-/* =====================================================
-   LIVE MARKET CARD
-===================================================== */
-
-.live-card {
-
-    padding: 17px;
-}
-
-
-/* =====================================================
-   LIVE MARKET TITLE
-===================================================== */
-
-.live-card .section-title {
-    margin-bottom: 13px;
-}
-
-
-/* =====================================================
-   LIVE PRICE FEATURE
-===================================================== */
-
-.live-price-panel {
-
-    width: 100%;
-
-    padding:
-        18px
-        12px;
-
-    margin-bottom: 10px;
-
-    text-align: center;
-
-    border-radius: 17px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #101a2a,
-            #0a1020
-        );
-
-    border:
-        1px solid
-        rgba(255,255,255,.05);
-}
-
-.live-price {
-
-    font-size: 28px;
-
-    line-height: 1.1;
-
-    font-weight: 800;
-
-    letter-spacing: .5px;
-
-    color: #ffffff;
-}
-
-.live-price-label {
-
-    margin-top: 6px;
-
-    color: #35e9a4;
-
+.auto-scan {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
     font-size: 9px;
-
-    font-weight: 800;
-
-    letter-spacing: 1px;
+    color: #8a94a5;
 }
 
 
-/* =====================================================
-   LIVE GRID
-===================================================== */
-
-.live-grid {
-
-    display: grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
-    gap: 8px;
-}
-
-.live-grid div {
-
-    min-width: 0;
-
-    padding:
-        13px;
-
-    border-radius: 14px;
-
-    background:
-        #0e1024;
-
-    border:
-        1px solid
-        rgba(255,255,255,.035);
-}
-
-.live-grid span {
-
-    display: block;
-
-    color: #777895;
-
-    font-size: 8px;
-
-    font-weight: 800;
-
-    text-transform: uppercase;
-
-    letter-spacing: .7px;
-}
-
-.live-grid strong {
-
-    display: block;
-
-    margin-top: 6px;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
-
-    font-size: 18px;
-
-    color: #37e6aa;
-}
-
-
-/* =====================================================
-   DIGIT STATISTICS
-===================================================== */
-
-.digits-card {
-    padding: 16px;
-}
+/* =========================
+   DIGITS
+========================= */
 
 .digit-grid {
-
     display: grid;
-
-    grid-template-columns:
-        repeat(5, 1fr);
-
+    grid-template-columns: repeat(5, 1fr);
     gap: 7px;
 }
 
 .digit-item {
-
-    min-width: 0;
-
-    padding:
-        10px 4px;
-
     text-align: center;
+    padding: 10px 4px;
+    border: 1px solid #e9edf2;
+    border-radius: 10px;
+    background: #fafbfd;
+}
 
-    border-radius: 11px;
+.digit-item strong {
+    display: block;
+    font-size: 15px;
+}
 
-    background:
-        #0e1024;
-
-    border:
-        1px solid
-        rgba(255,255,255,0.04);
-
-    transition:
-        transform .15s,
-        border-color .2s;
+.digit-item span {
+    display: block;
+    margin-top: 3px;
+    color: #8993a4;
+    font-size: 9px;
 }
 
 .digit-item.hot {
-
-    border-color:
-        rgba(53,233,164,0.5);
-
-    background:
-        rgba(53,233,164,0.08);
-
-    box-shadow:
-        inset 0 0 15px
-        rgba(53,233,164,.03);
+    background: #eef8f2;
+    border-color: #bce7cd;
 }
 
-.digit-number {
-
-    font-size: 19px;
-
-    line-height: 1;
-
-    font-weight: 800;
-}
-
-.digit-percent {
-
-    margin-top: 4px;
-
-    color: #8586a4;
-
-    font-size: 8px;
-
-    font-weight: 600;
+.digit-item.hot strong {
+    color: #139451;
 }
 
 
-/* =====================================================
-   RECENT DIGITS
-===================================================== */
+/* =========================
+   RECENT
+========================= */
 
-.recent-card {
-    padding: 16px;
+.recent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 9px;
+}
+
+.recent-header h2 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.recent-header span {
+    color: #929bad;
+    font-size: 9px;
 }
 
 .recent-digits {
-
     display: flex;
-
-    flex-wrap: wrap;
-
-    gap: 6px;
+    gap: 5px;
+    overflow: hidden;
 }
 
-.recent-digit {
-
-    width: 31px;
-    height: 31px;
-
+.recent-digits span {
+    min-width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    background: #edf2f8;
     display: flex;
-
     align-items: center;
     justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+}
 
-    border-radius: 9px;
 
-    background:
-        #101229;
+/* =========================
+   SETTINGS
+========================= */
 
-    color: #c4c4dc;
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
 
+.setting-row label {
+    color: #687386;
     font-size: 11px;
-
-    font-weight: 800;
-
-    border:
-        1px solid
-        rgba(255,255,255,.035);
 }
 
-
-/* =====================================================
-   SCANNER CARD
-===================================================== */
-
-.scanner-card {
-    padding: 16px;
+.setting-row select {
+    border: 1px solid #e0e5ec;
+    border-radius: 8px;
+    padding: 6px 8px;
+    background: white;
+    font-size: 10px;
 }
 
-
-/* =====================================================
-   STATUS TEXT
-===================================================== */
-
-#statusText {
-
-    color: #8586a5;
-
-    font-size: 9px;
-
+.connect-button {
+    width: 100%;
+    border: 0;
+    border-radius: 10px;
+    padding: 11px;
+    background: #172033;
+    color: white;
     font-weight: 700;
+    font-size: 11px;
 }
 
 
-/* =====================================================
-   TICK STATUS
-===================================================== */
-
-#tickStatus {
-
-    color: #777895;
-
-    font-size: 9px;
-
-    font-weight: 600;
-}
-
-
-/* =====================================================
-   MARKET NAME
-===================================================== */
-
-#marketName {
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
-
-    color: #ffffff;
-
-    font-size: 12px;
-
-    font-weight: 800;
-}
-
-
-/* =====================================================
-   SPECIAL NO-TRADE STATE
-===================================================== */
-
-.no-trade {
-    background:
-        rgba(255, 77, 109, .08);
-
-    color:
-        #ff718a;
-}
-
-.no-trade-bar {
-
-    background:
-        linear-gradient(
-            90deg,
-            #ff4d6d,
-            #ff8b5c
-        );
-}
-
-
-/* =====================================================
-   STRONG SIGNAL
-===================================================== */
-
-.strong-signal {
-    border-color:
-        rgba(53,233,164,.35);
-
-    box-shadow:
-        0 0 30px
-        rgba(53,233,164,.06);
-}
-
-
-/* =====================================================
-   MODERATE SIGNAL
-===================================================== */
-
-.moderate-signal {
-    border-color:
-        rgba(255,193,7,.25);
-}
-
-
-/* =====================================================
+/* =========================
    FOOTER
-===================================================== */
+========================= */
 
 footer {
-
     text-align: center;
+    padding: 10px 5px 20px;
+    color: #929bad;
+    font-size: 9px;
+}
 
-    color: #555670;
+footer div {
+    font-weight: 700;
+    margin-bottom: 5px;
+}
 
-    font-size: 8px;
+.footer-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: #20bd67;
+    border-radius: 50%;
+    margin-right: 4px;
+}
 
-    line-height: 1.6;
-
-    padding:
-        8px
-        15px;
+footer p {
+    margin: 0;
 }
 
 
-/* =====================================================
-   SCROLLBAR
-===================================================== */
-
-::-webkit-scrollbar {
-    width: 5px;
-}
-
-::-webkit-scrollbar-track {
-    background:
-        #070817;
-}
-
-::-webkit-scrollbar-thumb {
-
-    border-radius: 10px;
-
-    background:
-        #282945;
-}
-
-
-/* =====================================================
+/* =========================
    MOBILE
-===================================================== */
+========================= */
 
-@media (max-width: 380px) {
+@media (max-width: 360px) {
 
     .app {
-        padding:
-            9px
-            9px
-            25px;
+        padding: 10px;
     }
 
     .brand h1 {
-        font-size: 15px;
-    }
-
-    .brand p {
-        font-size: 8px;
-    }
-
-    .main-signal {
-        padding: 14px;
-    }
-
-    .signal-digit {
-
-        width: 74px;
-        height: 74px;
-
-        border-radius: 18px;
-
-        font-size: 38px;
-    }
-
-    .confidence-number {
-        font-size: 28px;
-    }
-
-    .signal-body {
-        gap: 11px;
+        font-size: 16px;
     }
 
     .type-button {
         font-size: 8px;
     }
 
-    .live-price {
-        font-size: 24px;
-    }
-
-    .recent-digit {
-        width: 29px;
-        height: 29px;
-    }
-}
-
-
-/* =====================================================
-   VERY SMALL PHONES
-===================================================== */
-
-@media (max-width: 320px) {
-
-    .signal-body {
-        gap: 9px;
-    }
-
-    .signal-digit {
-
-        width: 66px;
-        height: 66px;
-
-        font-size: 33px;
-    }
-
-    .confidence-number {
-        font-size: 25px;
-    }
-
-    .digit-grid {
-        gap: 5px;
-    }
-
-    .digit-item {
-        padding: 8px 2px;
-    }
-}
-
-
-/* =====================================================
-   DESKTOP
-===================================================== */
-
-@media (min-width: 700px) {
-
-    .app {
-        padding-top: 25px;
-    }
-
-    .main-signal {
-        padding: 22px;
-    }
-
-    .signal-digit {
-
-        width: 100px;
-        height: 100px;
-
-        font-size: 52px;
-    }
-
-    .confidence-number {
-        font-size: 38px;
-    }
 }
