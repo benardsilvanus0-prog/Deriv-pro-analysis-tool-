@@ -1,52 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>AI Market Analyzer</title>
 
-    <meta
-        name="theme-color"
-        content="#070817"
-    >
-
-    <title>Expert Trader - Deriv Analysis</title>
-
-    <link rel="stylesheet" href="style.css">
-
+    <link rel="stylesheet" href="css/style.css">
 </head>
-
 
 <body>
 
 <div class="app">
 
-
-    <!-- =================================================
-         HEADER
-    ================================================== -->
-
-    <header class="topbar">
-
+    <!-- HEADER -->
+    <header class="app-header">
         <div class="brand">
-
-            <div class="logo">
-                ◉
-            </div>
+            <div class="brand-icon">AI</div>
 
             <div>
+                <h1>AI Market Analyzer</h1>
+                <span id="statusText">Connecting...</span>
+            </div>
+        </div>
 
-                <h1>
-                    Expert Trader
-                </h1>
+        <div id="connectionDot" class="connection-dot"></div>
+    </header>
 
-                <p>
-                    DERIV ANALYSIS TOOL
+
+    <!-- MARKET -->
+    <section class="market-card">
+
+        <div class="market-top">
+            <div>
+                <span class="small-label">MARKET</span>
+
+                <select id="marketSelect">
+                    <option value="R_10">Volatility 10 Index</option>
+                    <option value="R_25">Volatility 25 Index</option>
+                    <option value="R_50">Volatility 50 Index</option>
+                    <option value="R_75">Volatility 75 Index</option>
+                    <option value="R_100">Volatility 100 Index</option>
+
+                    <option value="1HZ10V">Volatility 10 (1s)</option>
+                    <option value="1HZ25V">Volatility 25 (1s)</option>
+                    <option value="1HZ50V">Volatility 50 (1s)</option>
+                    <option value="1HZ75V">Volatility 75 (1s)</option>
+                    <option value="1HZ100V">Volatility 100 (1s)</option>
+                </select>
+            </div>
+
+            <div class="live-pill">
+                <span></span>
+                LIVE
+            </div>
+        </div>
+
+        <div class="price-row">
+
+            <div>
+                <span class="small-label">CURRENT PRICE</span>
+                <strong id="livePrice">--</strong>
+            </div>
+
+            <div class="digit-box">
+                <span>LAST DIGIT</span>
+                <strong id="lastDigit">-</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- OVER / UNDER -->
+    <section class="direction-buttons">
+
+        <button class="direction-btn over"
+                id="overBtn"
+                onclick="selectAnalysisType('OVER')">
+            <span>↑</span>
+            OVER
+        </button>
+
+        <button class="direction-btn under"
+                id="underBtn"
+                onclick="selectAnalysisType('UNDER')">
+            <span>↓</span>
+            UNDER
+        </button>
+
+    </section>
+
+
+    <!-- AI ANALYSIS -->
+    <section class="analysis-card">
+
+        <div class="section-title">
+            <span class="ai-symbol">✦</span>
+            <div>
+                <h2>AI Market Analyzer</h2>
+                <p>Statistical market analysis</p>
+            </div>
+        </div>
+
+
+        <!-- TREND -->
+        <div class="info-card">
+
+            <div class="info-icon trend-icon">↗</div>
+
+            <div class="info-content">
+                <span>Current Trend</span>
+                <strong id="currentTrend">Analyzing...</strong>
+            </div>
+
+        </div>
+
+
+        <!-- CONFIDENCE -->
+        <div class="info-card">
+
+            <div class="info-icon confidence-icon">%</div>
+
+            <div class="info-content">
+
+                <span>Confidence Level</span>
+
+                <strong id="confidenceText">
+                    0%
+                </strong>
+
+                <div class="confidence-track">
+                    <div id="confidenceBar"
+                         class="confidence-fill"
+                         style="width:0%">
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PATTERN -->
+        <div class="info-card">
+
+            <div class="info-icon pattern-icon">◆</div>
+
+            <div class="info-content">
+
+                <span>Pattern Detected</span>
+
+                <strong id="patternDetected">
+                    Analyzing market...
+                </strong>
+
+                <p id="signalExplanation">
+                    Waiting for sufficient tick data.
                 </p>
 
             </div>
@@ -54,239 +166,47 @@
         </div>
 
 
-        <div
-            id="connectionDot"
-            class="connection-dot offline"
-            title="Connection status"
-        ></div>
+        <!-- RECOMMENDATION -->
+        <div class="recommendation">
 
-    </header>
-
-
-
-    <!-- =================================================
-         CONNECTION / ACCOUNT STYLE BAR
-    ================================================== -->
-
-    <section class="settings-card">
-
-        <div class="setting">
-
-            <label>
-                Market
-            </label>
-
-            <select id="marketSelect">
-
-                <option value="">
-                    Connect to load markets
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <div class="setting-row">
-
-            <div class="setting">
-
-                <label>
-                    Tick History
-                </label>
-
-                <select id="tickCount">
-
-                    <option value="100">
-                        100 ticks
-                    </option>
-
-                    <option value="300">
-                        300 ticks
-                    </option>
-
-                    <option value="500">
-                        500 ticks
-                    </option>
-
-                    <option
-                        value="1000"
-                        selected
-                    >
-                        1000 ticks
-                    </option>
-
-                    <option value="2000">
-                        2000 ticks
-                    </option>
-
-                    <option value="5000">
-                        5000 ticks
-                    </option>
-
-                </select>
-
+            <div class="recommendation-title">
+                <span>●</span>
+                Recommended Opportunity
             </div>
 
-
-            <div class="setting">
-
-                <label>
-                    Entry Level
-                </label>
-
-                <select id="threshold">
-
-                    <option value="55">
-                        55%
-                    </option>
-
-                    <option value="60">
-                        60%
-                    </option>
-
-                    <option
-                        value="65"
-                        selected
-                    >
-                        65%
-                    </option>
-
-                    <option value="70">
-                        70%
-                    </option>
-
-                    <option value="75">
-                        75%
-                    </option>
-
-                    <option value="80">
-                        80%
-                    </option>
-
-                </select>
-
+            <div id="entryStatus"
+                 class="recommendation-text">
+                Waiting for analysis...
             </div>
 
-        </div>
+            <div id="signalTitle"
+                 class="signal-result">
+                NO SIGNAL
+            </div>
 
+            <div class="signal-confidence">
+                <span id="bestDigit">-</span>
 
-        <button
-            id="connectBtn"
-            class="connect-button"
-            type="button"
-        >
-            ⚡ Connect Scanner
-        </button>
-
-    </section>
-
-
-
-    <!-- =================================================
-         MAIN SIGNAL
-    ================================================== -->
-
-    <section
-        id="mainSignal"
-        class="main-signal"
-    >
-
-        <div class="signal-header">
-
-            <div>
-
-                <span class="eyebrow">
-                    ⚡ RECOMMENDED SIGNAL
+                <span>
+                    Confidence:
+                    <strong id="bestConfidence">0%</strong>
                 </span>
-
-                <h2 id="signalTitle">
-                    Waiting for market
-                </h2>
-
             </div>
 
-
-            <span
-                id="liveBadge"
-                class="live-badge"
-            >
-                OFFLINE
-            </span>
-
-        </div>
-
-
-        <div class="signal-body">
-
-            <div
-                id="bestDigit"
-                class="signal-digit"
-            >
-                -
-            </div>
-
-
-            <div class="signal-info">
-
-                <div class="confidence-label">
-                    CONFIDENCE
-                </div>
-
-
-                <div class="confidence-number">
-
-                    <span id="bestConfidence">
-                        0.0
-                    </span>%
-
-                </div>
-
-
-                <div class="progress">
-
-                    <div
-                        id="confidenceBar"
-                        class="progress-fill"
-                    ></div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <p
-            id="signalExplanation"
-            class="signal-explanation"
-        >
-            Connect to Deriv and scan the market.
-        </p>
-
-
-        <div
-            id="entryStatus"
-            class="entry-status waiting"
-        >
-            ⏳ WAITING FOR DATA
         </div>
 
     </section>
 
 
-
-    <!-- =================================================
-         ANALYSIS CONTROLS
-    ================================================== -->
-
+    <!-- MATCH / DIFFER -->
     <section class="scanner-card">
 
-        <div class="section-title">
+        <div class="scanner-header">
 
-            <span>
-                📊 Strategy
-            </span>
+            <div>
+                <span class="small-label">DIGIT ANALYSIS</span>
+                <h2>Pattern Scanner</h2>
+            </div>
 
             <span id="tickStatus">
                 0 ticks
@@ -295,607 +215,243 @@
         </div>
 
 
-        <!-- MODE -->
+        <div class="mode-switch">
 
-        <div class="mode-buttons">
-
-            <button
-                class="mode active"
-                data-mode="match"
-                type="button"
-            >
-                🎯 Matches
+            <button class="mode active"
+                    data-mode="match">
+                Matches
             </button>
 
-
-            <button
-                class="mode"
-                data-mode="diff"
-                type="button"
-            >
-                🔄 Differs
+            <button class="mode"
+                    data-mode="diff">
+                Differs
             </button>
 
         </div>
 
 
         <!-- CONTRACT TYPES -->
+        <div class="type-buttons">
 
-        <div class="signal-buttons">
-
-            <button
-                class="type-button active"
-                data-type="MATCH"
-                type="button"
-            >
-                MATCH
+            <button class="type-button active"
+                    data-type="MATCH">
+                Match
             </button>
 
-
-            <button
-                class="type-button"
-                data-type="OVER"
-                type="button"
-            >
-                OVER
+            <button class="type-button"
+                    data-type="OVER">
+                Over
             </button>
 
-
-            <button
-                class="type-button"
-                data-type="UNDER"
-                type="button"
-            >
-                UNDER
+            <button class="type-button"
+                    data-type="UNDER">
+                Under
             </button>
 
-
-            <button
-                class="type-button"
-                data-type="EVEN"
-                type="button"
-            >
-                EVEN
+            <button class="type-button"
+                    data-type="EVEN">
+                Even
             </button>
 
-
-            <button
-                class="type-button"
-                data-type="ODD"
-                type="button"
-            >
-                ODD
+            <button class="type-button"
+                    data-type="ODD">
+                Odd
             </button>
 
         </div>
 
 
         <!-- BARRIER -->
+        <div class="barrier-row">
 
-        <div class="barrier-box">
-
-            <label>
+            <label for="barrier">
                 Barrier / Digit
             </label>
 
             <select id="barrier">
 
-                <option value="0">
-                    0
-                </option>
-
-                <option value="1">
-                    1
-                </option>
-
-                <option value="2">
-                    2
-                </option>
-
-                <option value="3">
-                    3
-                </option>
-
-                <option value="4">
-                    4
-                </option>
-
-                <option
-                    value="5"
-                    selected
-                >
-                    5
-                </option>
-
-                <option value="6">
-                    6
-                </option>
-
-                <option value="7">
-                    7
-                </option>
-
-                <option value="8">
-                    8
-                </option>
-
-                <option value="9">
-                    9
-                </option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5" selected>5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
 
             </select>
 
         </div>
 
 
-        <!-- DURATION -->
+        <!-- SCAN -->
+        <button id="scanBtn" class="scan-button">
+            Analyze Market
+        </button>
 
-        <div class="setting">
-
-            <label>
-                Duration
-            </label>
-
-            <select id="duration">
-
-                <option
-                    value="1"
-                    selected
-                >
-                    1 Tick
-                </option>
-
-                <option value="5">
-                    5 Ticks
-                </option>
-
-                <option value="10">
-                    10 Ticks
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <!-- RISK DISPLAY -->
-
-        <div class="setting">
-
-            <label>
-                Analysis Risk
-            </label>
-
-            <select id="riskLevel">
-
-                <option value="conservative">
-                    Conservative
-                </option>
-
-                <option
-                    value="balanced"
-                    selected
-                >
-                    Balanced
-                </option>
-
-                <option value="aggressive">
-                    Aggressive
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <!-- AUTO SCAN -->
 
         <label class="auto-scan">
-
-            <input
-                type="checkbox"
-                id="autoScan"
-                checked
-            >
-
-            <span>
-                Auto-analysis
-            </span>
-
+            <input type="checkbox" id="autoScan" checked>
+            Auto analysis every 30 seconds
         </label>
 
+    </section>
 
-        <!-- START / STOP -->
+
+    <!-- DIGIT STATISTICS -->
+    <section class="digits-card">
+
+        <div class="section-title">
+
+            <div class="ai-symbol">#</div>
+
+            <div>
+                <h2>Digit Statistics</h2>
+                <p id="marketName">Market</p>
+            </div>
+
+        </div>
+
+
+        <div id="digitGrid" class="digit-grid">
+
+            <div class="digit-item">
+                <strong>0</strong>
+                <span>0%</span>
+            </div>
+
+            <div class="digit-item">
+                <strong>1</strong>
+                <span>0%</span>
+            </div>
+
+            <div class="digit-item">
+                <strong>2</strong>
+                <span>0%</span>
+            </div>
+
+            <div class="digit-item">
+                <strong>3</strong>
+                <span>0%</span>
+            </div>
+
+            <div class="digit-item">
+                <strong>4</strong>
+                <span>0%</span>
+            </div>
+
+            <div class="digit-item">
+                <strong>5</strong>
+                <span>0%</span>
+            </div>
+
+            <div class="digit-item">
+                <strong>6</strong>
+                <span>0%</span>
+            </div>
+
+            <div class="digit-item">
+                <strong>7</strong>
+                <span>0%</span>
+            </div>
+
+            <div class="digit-item">
+                <strong>8</strong>
+                <span>0%</span>
+            </div>
+
+            <div class="digit-item">
+                <strong>9</strong>
+                <span>0%</span>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- RECENT DIGITS -->
+    <section class="recent-card">
+
+        <div class="recent-header">
+            <h2>Recent Digits</h2>
+
+            <span id="recentCount">
+                Live
+            </span>
+        </div>
+
+        <div id="recentDigits"
+             class="recent-digits">
+        </div>
+
+    </section>
+
+
+    <!-- SETTINGS -->
+    <section class="settings-card">
 
         <div class="setting-row">
 
-            <button
-                id="startAnalysisBtn"
-                class="scan-button"
-                type="button"
-            >
-                ▶ Start Analysis
-            </button>
+            <label for="tickCount">
+                Analysis Ticks
+            </label>
 
+            <select id="tickCount">
 
-            <button
-                id="stopAnalysisBtn"
-                class="scan-button"
-                type="button"
-                style="
-                    background:
-                    linear-gradient(
-                        90deg,
-                        #ff4d6d,
-                        #ff7a59
-                    );
-                "
-            >
-                ■ Stop Analysis
-            </button>
+                <option value="100">100</option>
+                <option value="300">300</option>
+                <option value="500">500</option>
+                <option value="1000" selected>1000</option>
+
+            </select>
 
         </div>
 
 
-        <!-- REFRESH -->
+        <div class="setting-row">
 
-        <button
-            id="scanBtn"
-            class="scan-button"
-            type="button"
-            style="margin-top:8px;"
-        >
-            🔄 Refresh Analysis
+            <label for="threshold">
+                Minimum Confidence
+            </label>
+
+            <select id="threshold">
+
+                <option value="55">55%</option>
+                <option value="60">60%</option>
+                <option value="65" selected>65%</option>
+                <option value="70">70%</option>
+                <option value="75">75%</option>
+
+            </select>
+
+        </div>
+
+
+        <button id="connectBtn"
+                class="connect-button">
+            Connect to Deriv
         </button>
 
     </section>
 
 
-
-    <!-- =================================================
-         LIVE MARKET
-    ================================================== -->
-
-    <section class="live-card">
-
-        <div class="section-title">
-
-            <span>
-                📡 Live Market
-            </span>
-
-            <span
-                id="statusText"
-                class="status-text"
-            >
-                Disconnected
-            </span>
-
-        </div>
-
-
-        <!-- LARGE PRICE -->
-
-        <div class="live-price-panel">
-
-            <div
-                id="livePriceLarge"
-                class="live-price"
-            >
-                -
-            </div>
-
-            <div class="live-price-label">
-                ● LIVE DATA
-            </div>
-
-        </div>
-
-
-        <div class="live-grid">
-
-            <div>
-
-                <span>
-                    LIVE PRICE
-                </span>
-
-                <strong id="livePrice">
-                    -
-                </strong>
-
-            </div>
-
-
-            <div>
-
-                <span>
-                    LAST DIGIT
-                </span>
-
-                <strong id="lastDigit">
-                    -
-                </strong>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =================================================
-         MARKET INFORMATION
-    ================================================== -->
-
-    <section class="settings-card">
-
-        <div class="section-title">
-
-            <span>
-                📈 Market Information
-            </span>
-
-        </div>
-
-
-        <div class="live-grid">
-
-            <div>
-
-                <span>
-                    MARKET
-                </span>
-
-                <strong
-                    id="marketName"
-                >
-                    -
-                </strong>
-
-            </div>
-
-
-            <div>
-
-                <span>
-                    DURATION
-                </span>
-
-                <strong
-                    id="durationDisplay"
-                >
-                    1 Tick
-                </strong>
-
-            </div>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =================================================
-         STRATEGY SELECTOR
-    ================================================== -->
-
-    <section class="settings-card">
-
-        <div class="section-title">
-
-            <span>
-                🧠 Strategy Selector
-            </span>
-
-            <span>
-                ANALYSIS ONLY
-            </span>
-
-        </div>
-
-
-        <div class="strategy-list">
-
-            <button
-                class="strategy-option active"
-                data-strategy="balanced"
-                type="button"
-            >
-
-                <span>
-                    🎯
-                </span>
-
-                <div>
-
-                    <strong>
-                        Balanced Scanner
-                    </strong>
-
-                    <small>
-                        Multi-window confirmation
-                    </small>
-
-                </div>
-
-            </button>
-
-
-            <button
-                class="strategy-option"
-                data-strategy="recent"
-                type="button"
-            >
-
-                <span>
-                    ⚡
-                </span>
-
-                <div>
-
-                    <strong>
-                        Recent Momentum
-                    </strong>
-
-                    <small>
-                        Gives more weight to recent ticks
-                    </small>
-
-                </div>
-
-            </button>
-
-
-            <button
-                class="strategy-option"
-                data-strategy="conservative"
-                type="button"
-            >
-
-                <span>
-                    🛡️
-                </span>
-
-                <div>
-
-                    <strong>
-                        Conservative
-                    </strong>
-
-                    <small>
-                        Strong confirmation required
-                    </small>
-
-                </div>
-
-            </button>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =================================================
-         DIGIT STATISTICS
-    ================================================== -->
-
-    <section class="digits-card">
-
-        <div class="section-title">
-
-            <span>
-                🔢 Digit Statistics
-            </span>
-
-            <span>
-                LAST DIGITS
-            </span>
-
-        </div>
-
-
-        <div
-            id="digitGrid"
-            class="digit-grid"
-        ></div>
-
-    </section>
-
-
-
-    <!-- =================================================
-         RECENT DIGITS
-    ================================================== -->
-
-    <section class="recent-card">
-
-        <div class="section-title">
-
-            <span>
-                🕒 Recent Digits
-            </span>
-
-            <span>
-                LAST 20
-            </span>
-
-        </div>
-
-
-        <div
-            id="recentDigits"
-            class="recent-digits"
-        ></div>
-
-    </section>
-
-
-
-    <!-- =================================================
-         ANALYSIS INFORMATION
-    ================================================== -->
-
-    <section class="settings-card">
-
-        <div class="section-title">
-
-            <span>
-                🔍 Analysis Status
-            </span>
-
-        </div>
-
-
-        <div class="signal-explanation">
-
-            <p>
-                The scanner compares recent,
-                medium and long-term tick data
-                before producing a signal.
-            </p>
-
-            <p>
-                A signal is shown only when the
-                evidence meets the configured
-                confirmation requirements.
-            </p>
-
-            <p>
-                Statistical analysis does not
-                guarantee the next digit or a
-                profitable trade.
-            </p>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =================================================
-         FOOTER
-    ================================================== -->
-
+    <!-- FOOTER -->
     <footer>
 
-        <strong>
-            Expert Trader
-        </strong>
+        <div>
+            <span class="footer-dot"></span>
+            Analysis Engine Active
+        </div>
 
-        <br>
-
-        Statistical analysis only.
-        No automatic trading.
-
-        <br>
-
-        Signals do not guarantee future results.
+        <p>
+            Statistical analysis only.
+            No automatic trading. No guaranteed results.
+        </p>
 
     </footer>
-
 
 </div>
 
@@ -903,5 +459,4 @@
 <script src="app.js"></script>
 
 </body>
-
 </html>
