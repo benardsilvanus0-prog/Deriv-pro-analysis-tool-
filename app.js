@@ -1,86 +1,132 @@
+```javascript
 "use strict";
 
 /*
 =========================================================
-DERIV MATCHES SIGNAL SCANNER
-ANALYSIS ONLY - NO AUTOMATIC TRADING
+DERIV MATCHES / OVER / UNDER SIGNAL SCANNER
+ANALYSIS ONLY — NO AUTOMATIC TRADING
 
-Uses Deriv's current public WebSocket API.
-No account login/token is required for public market data.
+Public market data only.
+No account token/login is required.
+
+Features:
+- Live Deriv markets
+- Historical ticks
+- Live tick stream
+- MATCH
+- DIFFERS
+- OVER
+- UNDER
+- EVEN
+- ODD
+- Digit statistics
+- Recent digits
+- Confidence calculation
+- Entry threshold
+- Automatic reconnect
+- Safe subscription handling
+
+IMPORTANT:
+This is an analysis/statistics tool.
+It does NOT guarantee profitable trades.
 =========================================================
 */
 
 
 /* =====================================================
-   CONFIG
+   CONFIGURATION
 ===================================================== */
 
+/*
+Current public Deriv market-data WebSocket.
+No authentication is required for market data.
+*/
 const DERIV_WS =
     "wss://api.derivws.com/trading/v1/options/ws/public";
 
+/*
+Legacy public endpoint used only as a fallback if the
+new public endpoint cannot establish/use the connection.
+*/
+const LEGACY_DERIV_WS =
+    "wss://ws.binaryws.com/websockets/v3";
+
+
 const DEFAULT_TICK_COUNT = 1000;
 const MAX_TICK_COUNT = 5000;
+
 const RECONNECT_DELAY = 5000;
+const CONNECTION_TIMEOUT = 10000;
+
+const PING_INTERVAL = 12000;
 
 
-/*
-Fallback markets.
+/* =====================================================
+   FALLBACK MARKETS
+===================================================== */
 
-These are only used if Deriv returns no symbols.
-The application will still attempt to request live
-data from Deriv.
-*/
 const FALLBACK_MARKETS = [
+
     {
         symbol: "1HZ10V",
         name: "Volatility 10 (1s)",
         pip: 2
     },
+
     {
         symbol: "1HZ25V",
         name: "Volatility 25 (1s)",
         pip: 2
     },
+
     {
         symbol: "1HZ50V",
         name: "Volatility 50 (1s)",
         pip: 2
     },
+
     {
         symbol: "1HZ75V",
         name: "Volatility 75 (1s)",
         pip: 2
     },
+
     {
         symbol: "1HZ100V",
         name: "Volatility 100 (1s)",
         pip: 2
     },
+
     {
         symbol: "R_10",
         name: "Volatility 10",
         pip: 3
     },
+
     {
         symbol: "R_25",
         name: "Volatility 25",
         pip: 3
     },
+
     {
         symbol: "R_50",
         name: "Volatility 50",
         pip: 4
     },
+
     {
         symbol: "R_75",
         name: "Volatility 75",
         pip: 4
     },
+
     {
         symbol: "R_100",
         name: "Volatility 100",
         pip: 2
     }
+
 ];
 
 
@@ -92,10 +138,12 @@ let ws = null;
 
 let connected = false;
 let connecting = false;
+
 let manualDisconnect = false;
 
 let reconnectTimer = null;
 let pingTimer = null;
+let connectionTimer = null;
 let autoScanTimer = null;
 
 let requestId = 1;
@@ -112,61 +160,129 @@ let ticks = [];
 let currentMode = "match";
 let currentType = "MATCH";
 
+let websocketEndpoint =
+    DERIV_WS;
+
+let usingFallbackEndpoint = false;
+
+let activeRequestId = null;
+let historyRequestId = null;
+let tickRequestId = null;
+
 
 /* =====================================================
-   DOM
+   DOM HELPERS
 ===================================================== */
 
-const $ = id => document.getElementById(id);
+const $ = id =>
+    document.getElementById(id);
 
-const marketSelect = $("marketSelect");
-const tickCount = $("tickCount");
-const threshold = $("threshold");
-const barrier = $("barrier");
 
-const connectBtn = $("connectBtn");
-const scanBtn = $("scanBtn");
-const autoScan = $("autoScan");
+/* Main controls */
 
-const connectionDot = $("connectionDot");
-const statusText = $("statusText");
+const marketSelect =
+    $("marketSelect");
 
-const liveBadge = $("liveBadge");
+const tickCount =
+    $("tickCount");
 
-const signalTitle = $("signalTitle");
-const bestDigit = $("bestDigit");
-const bestConfidence = $("bestConfidence");
-const confidenceBar = $("confidenceBar");
+const threshold =
+    $("threshold");
 
-const signalExplanation = $("signalExplanation");
-const entryStatus = $("entryStatus");
+const barrier =
+    $("barrier");
 
-const tickStatus = $("tickStatus");
+const connectBtn =
+    $("connectBtn");
 
-const livePrice = $("livePrice");
-const lastDigit = $("lastDigit");
+const scanBtn =
+    $("scanBtn");
 
-const marketName = $("marketName");
+const autoScan =
+    $("autoScan");
 
-const digitGrid = $("digitGrid");
-const recentDigits = $("recentDigits");
+
+/* Connection */
+
+const connectionDot =
+    $("connectionDot");
+
+const statusText =
+    $("statusText");
+
+const liveBadge =
+    $("liveBadge");
+
+
+/* Signal */
+
+const signalTitle =
+    $("signalTitle");
+
+const bestDigit =
+    $("bestDigit");
+
+const bestConfidence =
+    $("bestConfidence");
+
+const confidenceBar =
+    $("confidenceBar");
+
+const signalExplanation =
+    $("signalExplanation");
+
+const entryStatus =
+    $("entryStatus");
+
+
+/* Tick */
+
+const tickStatus =
+    $("tickStatus");
+
+const livePrice =
+    $("livePrice");
+
+const lastDigit =
+    $("lastDigit");
+
+const marketName =
+    $("marketName");
+
+
+/* Digit UI */
+
+const digitGrid =
+    $("digitGrid");
+
+const recentDigits =
+    $("recentDigits");
 
 
 /* =====================================================
    BASIC HELPERS
 ===================================================== */
 
-function setText(element, value) {
+function setText(
+    element,
+    value
+) {
 
     if (element) {
-        element.textContent = value;
+
+        element.textContent =
+            value;
     }
 }
 
 
-function number(value, fallback = 0) {
+function number(
+    value,
+    fallback = 0
+) {
 
-    const n = Number(value);
+    const n =
+        Number(value);
 
     return Number.isFinite(n)
         ? n
@@ -231,21 +347,34 @@ function getBarrier() {
 
 
 /* =====================================================
-   PIP / PRICE
+   PRICE / PIP FUNCTIONS
 ===================================================== */
 
-function decimalPlacesFromPip(pip) {
+function decimalPlacesFromPip(
+    pip
+) {
 
-    const p = Number(pip);
+    const p =
+        Number(pip);
 
     if (
         !Number.isFinite(p) ||
         p <= 0
     ) {
+
         return 2;
     }
 
+    /*
+    pip_size can be supplied as:
+    0.01
+    0.001
+    0.0001
+    etc.
+    */
+
     if (p >= 1) {
+
         return 0;
     }
 
@@ -258,7 +387,9 @@ function decimalPlacesFromPip(pip) {
 }
 
 
-function formatPrice(price) {
+function formatPrice(
+    price
+) {
 
     const places =
         decimalPlacesFromPip(
@@ -272,43 +403,82 @@ function formatPrice(price) {
 
 
 /*
-Get last digit using the market's pip size.
+Extract the final digit from the displayed
+price according to the market's pip size.
 */
-function getLastDigit(price) {
+function getLastDigit(
+    price
+) {
+
+    const numericPrice =
+        Number(price);
+
+    if (
+        !Number.isFinite(
+            numericPrice
+        )
+    ) {
+
+        return null;
+    }
+
 
     const places =
         decimalPlacesFromPip(
             pipSize
         );
 
+
     const formatted =
-        Number(price).toFixed(
+        numericPrice.toFixed(
             places
         );
 
-    const decimal =
-        formatted.split(".")[1];
 
-    if (!decimal) {
+    /*
+    If there is a decimal part,
+    use the last decimal digit.
+    */
+    if (
+        formatted.includes(".")
+    ) {
 
-        const integer =
-            formatted.replace(
-                /\D/g,
-                ""
-            );
+        const parts =
+            formatted.split(".");
 
-        return integer
-            ? Number(
-                integer[
-                    integer.length - 1
+        const decimals =
+            parts[1] || "";
+
+        if (decimals.length) {
+
+            return Number(
+                decimals[
+                    decimals.length - 1
                 ]
-            )
-            : null;
+            );
+        }
     }
 
+
+    /*
+    Fallback for integer prices.
+    */
+    const digits =
+        formatted.replace(
+            /\D/g,
+            ""
+        );
+
+
+    if (!digits.length) {
+
+        return null;
+    }
+
+
     return Number(
-        decimal[
-            decimal.length - 1
+        digits[
+            digits.length - 1
         ]
     );
 }
@@ -331,7 +501,10 @@ function updateConnectionUI(
             "connecting"
         );
 
-        if (state === "online") {
+
+        if (
+            state === "online"
+        ) {
 
             connectionDot.classList.add(
                 "online"
@@ -380,10 +553,12 @@ function updateConnectionUI(
 
 
 /* =====================================================
-   SEND MESSAGE
+   WEBSOCKET SEND
 ===================================================== */
 
-function send(data) {
+function send(
+    data
+) {
 
     if (
         !ws ||
@@ -392,7 +567,7 @@ function send(data) {
     ) {
 
         console.warn(
-            "WebSocket not open:",
+            "WebSocket is not open.",
             data
         );
 
@@ -406,12 +581,17 @@ function send(data) {
             JSON.stringify(data)
         );
 
+        console.log(
+            "Deriv SEND:",
+            data
+        );
+
         return true;
 
     } catch (error) {
 
         console.error(
-            "Send error:",
+            "WebSocket send error:",
             error
         );
 
@@ -430,11 +610,13 @@ function connectDeriv() {
         connecting ||
         connected
     ) {
+
         return;
     }
 
 
     manualDisconnect = false;
+
     connecting = true;
 
 
@@ -458,7 +640,8 @@ function connectDeriv() {
 
     if (connectBtn) {
 
-        connectBtn.disabled = true;
+        connectBtn.disabled =
+            true;
 
         connectBtn.textContent =
             "⏳ Connecting...";
@@ -466,8 +649,8 @@ function connectDeriv() {
 
 
     console.log(
-        "Opening Deriv WebSocket:",
-        DERIV_WS
+        "Opening WebSocket:",
+        websocketEndpoint
     );
 
 
@@ -475,7 +658,7 @@ function connectDeriv() {
 
         ws =
             new WebSocket(
-                DERIV_WS
+                websocketEndpoint
             );
 
 
@@ -502,6 +685,44 @@ function connectDeriv() {
             handleClose
         );
 
+
+        /*
+        Protect against a connection that hangs
+        without producing open/error/close.
+        */
+        clearConnectionTimer();
+
+
+        connectionTimer =
+            setTimeout(
+                () => {
+
+                    if (
+                        connecting &&
+                        !connected
+                    ) {
+
+                        console.warn(
+                            "Connection timeout."
+                        );
+
+
+                        try {
+
+                            ws?.close();
+
+                        } catch (error) {
+
+                            console.warn(
+                                error
+                            );
+                        }
+                    }
+
+                },
+                CONNECTION_TIMEOUT
+            );
+
     } catch (error) {
 
         console.error(
@@ -509,12 +730,15 @@ function connectDeriv() {
             error
         );
 
+
         connecting = false;
+
 
         updateConnectionUI(
             "offline",
             "Connection failed"
         );
+
 
         resetConnectButton();
     }
@@ -527,10 +751,7 @@ function connectDeriv() {
 
 function handleOpen() {
 
-    console.log(
-        "CONNECTED:",
-        DERIV_WS
-    );
+    clearConnectionTimer();
 
 
     connected = true;
@@ -545,7 +766,8 @@ function handleOpen() {
 
     if (connectBtn) {
 
-        connectBtn.disabled = false;
+        connectBtn.disabled =
+            false;
 
         connectBtn.textContent =
             "🔌 Disconnect";
@@ -568,10 +790,15 @@ function handleOpen() {
 
 
     /*
-    Current Deriv API:
-    active_symbols does not need
-    product_type.
+    Current public market-data API.
+
+    Important:
+    Do NOT send product_type here when using
+    the newer API endpoint.
     */
+    activeRequestId =
+        nextRequestId();
+
 
     send({
 
@@ -579,7 +806,7 @@ function handleOpen() {
             "brief",
 
         req_id:
-            nextRequestId()
+            activeRequestId
     });
 }
 
@@ -609,7 +836,7 @@ function startPing() {
                 }
 
             },
-            12000
+            PING_INTERVAL
         );
 }
 
@@ -628,10 +855,12 @@ function stopPing() {
 
 
 /* =====================================================
-   MESSAGE
+   MESSAGE HANDLER
 ===================================================== */
 
-function handleMessage(event) {
+function handleMessage(
+    event
+) {
 
     let data;
 
@@ -646,7 +875,7 @@ function handleMessage(event) {
     } catch (error) {
 
         console.error(
-            "Invalid JSON:",
+            "Invalid JSON from Deriv:",
             event.data
         );
 
@@ -655,14 +884,16 @@ function handleMessage(event) {
 
 
     console.log(
-        "Deriv:",
+        "Deriv RECEIVE:",
         data
     );
 
 
-    /* -----------------------------------------
-       API ERROR
-    ----------------------------------------- */
+    /*
+    -----------------------------------------
+    API ERROR
+    -----------------------------------------
+    */
 
     if (data.error) {
 
@@ -674,9 +905,11 @@ function handleMessage(event) {
     }
 
 
-    /* -----------------------------------------
-       ACTIVE SYMBOLS
-    ----------------------------------------- */
+    /*
+    -----------------------------------------
+    ACTIVE SYMBOLS
+    -----------------------------------------
+    */
 
     if (
         data.msg_type ===
@@ -691,9 +924,11 @@ function handleMessage(event) {
     }
 
 
-    /* -----------------------------------------
-       HISTORY
-    ----------------------------------------- */
+    /*
+    -----------------------------------------
+    HISTORY
+    -----------------------------------------
+    */
 
     if (
         data.msg_type ===
@@ -708,9 +943,11 @@ function handleMessage(event) {
     }
 
 
-    /* -----------------------------------------
-       TICK
-    ----------------------------------------- */
+    /*
+    -----------------------------------------
+    TICK
+    -----------------------------------------
+    */
 
     if (
         data.msg_type ===
@@ -725,9 +962,11 @@ function handleMessage(event) {
     }
 
 
-    /* -----------------------------------------
-       PING
-    ----------------------------------------- */
+    /*
+    -----------------------------------------
+    PING
+    -----------------------------------------
+    */
 
     if (
         data.msg_type ===
@@ -739,8 +978,9 @@ function handleMessage(event) {
 
 
     /*
-    Some API versions may return
-    subscription information separately.
+    -----------------------------------------
+    SUBSCRIPTION
+    -----------------------------------------
     */
 
     if (
@@ -750,6 +990,7 @@ function handleMessage(event) {
 
         currentSubscriptionId =
             data.subscription.id;
+
 
         console.log(
             "Subscription ID:",
@@ -763,48 +1004,151 @@ function handleMessage(event) {
    API ERROR
 ===================================================== */
 
-function handleApiError(data) {
+function handleApiError(
+    data
+) {
 
-    console.error(
-        "DERIV API ERROR:",
-        data.error
-    );
+    const error =
+        data.error || {};
 
 
-    const errorCode =
-        data.error.code ||
+    const code =
+        error.code ||
         "API_ERROR";
 
 
-    const errorMessage =
-        data.error.message ||
-        "Deriv API error";
+    const message =
+        error.message ||
+        "Unknown Deriv API error";
+
+
+    console.error(
+        "DERIV API ERROR:",
+        error
+    );
 
 
     setText(
         statusText,
-        `${errorCode}: ${errorMessage}`
+        `${code}: ${message}`
     );
 
 
     setText(
         signalExplanation,
-        `${errorCode}: ${errorMessage}`
+        `${code}: ${message}`
     );
 
 
     /*
-    Only use fallback when market request
-    itself failed.
+    If the active-symbol request failed,
+    try the legacy endpoint once.
     */
+    const request =
+        data.echo_req || {};
+
 
     if (
-        data.echo_req &&
-        data.echo_req.active_symbols
+        request.active_symbols &&
+        !usingFallbackEndpoint
     ) {
 
-        loadFallbackMarkets();
+        console.warn(
+            "Active symbols failed on new endpoint. Trying legacy endpoint..."
+        );
+
+
+        switchToLegacyEndpoint();
+
+        return;
     }
+
+
+    /*
+    If history/ticks fail, show a useful message.
+    */
+    if (
+        request.ticks_history ||
+        request.ticks
+    ) {
+
+        setText(
+            tickStatus,
+            "Data request failed"
+        );
+    }
+}
+
+
+/* =====================================================
+   SWITCH TO LEGACY ENDPOINT
+===================================================== */
+
+function switchToLegacyEndpoint() {
+
+    if (
+        usingFallbackEndpoint
+    ) {
+
+        return;
+    }
+
+
+    usingFallbackEndpoint =
+        true;
+
+
+    websocketEndpoint =
+        LEGACY_DERIV_WS;
+
+
+    console.warn(
+        "Switching to legacy Deriv WebSocket:",
+        websocketEndpoint
+    );
+
+
+    try {
+
+        ws?.close();
+
+    } catch (error) {
+
+        console.warn(
+            error
+        );
+    }
+
+
+    connected = false;
+    connecting = false;
+
+
+    setText(
+        signalTitle,
+        "Retrying connection..."
+    );
+
+
+    setText(
+        signalExplanation,
+        "Trying Deriv's compatible public market-data endpoint..."
+    );
+
+
+    setTimeout(
+        () => {
+
+            if (
+                !manualDisconnect
+            ) {
+
+                connectDeriv();
+            }
+
+        },
+        1000
+    );
 }
 
 
@@ -812,7 +1156,9 @@ function handleApiError(data) {
    ACTIVE SYMBOLS
 ===================================================== */
 
-function handleActiveSymbols(data) {
+function handleActiveSymbols(
+    data
+) {
 
     const symbols =
         Array.isArray(
@@ -823,7 +1169,7 @@ function handleActiveSymbols(data) {
 
 
     console.log(
-        "Markets received:",
+        "Active symbols received:",
         symbols.length
     );
 
@@ -831,10 +1177,15 @@ function handleActiveSymbols(data) {
     if (!symbols.length) {
 
         console.warn(
-            "Deriv returned zero active markets."
+            "Deriv returned an empty active_symbols array."
         );
 
 
+        /*
+        Do not immediately pretend these are live
+        markets. Show fallback choices but clearly
+        identify them as fallback.
+        */
         loadFallbackMarkets();
 
         return;
@@ -851,16 +1202,28 @@ function handleActiveSymbols(data) {
    NORMALIZE MARKET
 ===================================================== */
 
-function normalizeMarket(item) {
+function normalizeMarket(
+    item
+) {
 
     if (!item) {
+
         return null;
     }
 
 
     /*
-    New API field names.
-    Legacy names are retained for compatibility.
+    New API:
+      underlying_symbol
+      underlying_symbol_name
+      underlying_symbol_type
+      pip_size
+
+    Legacy API:
+      symbol
+      display_name
+      symbol_type
+      pip
     */
 
     const symbol =
@@ -870,6 +1233,7 @@ function normalizeMarket(item) {
 
 
     if (!symbol) {
+
         return null;
     }
 
@@ -913,7 +1277,13 @@ function normalizeMarket(item) {
             item.subgroup || "",
 
         submarket:
-            item.submarket || ""
+            item.submarket || "",
+
+        exchangeOpen:
+            item.exchange_is_open,
+
+        suspended:
+            item.is_trading_suspended
     };
 }
 
@@ -922,7 +1292,9 @@ function normalizeMarket(item) {
    LOAD MARKETS
 ===================================================== */
 
-function loadMarkets(symbols) {
+function loadMarkets(
+    symbols
+) {
 
     const normalized =
         symbols
@@ -940,8 +1312,10 @@ function loadMarkets(symbols) {
 
     /*
     Prefer synthetic indices.
-    */
 
+    We retain all symbols if the API doesn't
+    return identifiable synthetic symbols.
+    */
     let markets =
         normalized.filter(
             market => {
@@ -952,25 +1326,62 @@ function loadMarkets(symbols) {
                 const type =
                     market.type.toLowerCase();
 
+                const marketName =
+                    market.name.toLowerCase();
+
+
                 return (
+
                     type.includes(
                         "synthetic"
-                    ) ||
+                    )
+
+                    ||
+
+                    type.includes(
+                        "derived"
+                    )
+
+                    ||
 
                     /^R_\d+/i.test(
                         symbol
-                    ) ||
+                    )
+
+                    ||
 
                     /^1HZ\d+/i.test(
                         symbol
-                    ) ||
+                    )
+
+                    ||
 
                     /^BOOM/i.test(
                         symbol
-                    ) ||
+                    )
+
+                    ||
 
                     /^CRASH/i.test(
                         symbol
+                    )
+
+                    ||
+
+                    marketName.includes(
+                        "volatility"
+                    )
+
+                    ||
+
+                    marketName.includes(
+                        "boom"
+                    )
+
+                    ||
+
+                    marketName.includes(
+                        "crash"
                     )
                 );
             }
@@ -978,10 +1389,9 @@ function loadMarkets(symbols) {
 
 
     /*
-    If synthetic filtering returns
-    nothing, show all markets.
+    If filtering produces nothing,
+    use all available symbols.
     */
-
     if (!markets.length) {
 
         markets =
@@ -998,9 +1408,39 @@ function loadMarkets(symbols) {
 
 
     /*
+    Remove duplicates.
+    */
+    const unique =
+        new Map();
+
+
+    markets.forEach(
+        market => {
+
+            if (
+                !unique.has(
+                    market.symbol
+                )
+            ) {
+
+                unique.set(
+                    market.symbol,
+                    market
+                );
+            }
+        }
+    );
+
+
+    markets =
+        Array.from(
+            unique.values()
+        );
+
+
+    /*
     Sort alphabetically.
     */
-
     markets.sort(
         (a, b) =>
             a.name.localeCompare(
@@ -1017,13 +1457,13 @@ function loadMarkets(symbols) {
 
 
 /* =====================================================
-   FALLBACK
+   FALLBACK MARKETS
 ===================================================== */
 
 function loadFallbackMarkets() {
 
     console.warn(
-        "Using fallback markets."
+        "Using fallback synthetic markets."
     );
 
 
@@ -1054,7 +1494,7 @@ function loadFallbackMarkets() {
 
 
 /* =====================================================
-   MARKET SELECT
+   POPULATE MARKET SELECT
 ===================================================== */
 
 function populateMarketSelect(
@@ -1063,6 +1503,11 @@ function populateMarketSelect(
 ) {
 
     if (!marketSelect) {
+
+        console.error(
+            "marketSelect element not found."
+        );
+
         return;
     }
 
@@ -1077,7 +1522,8 @@ function populateMarketSelect(
         );
 
 
-    placeholder.value = "";
+    placeholder.value =
+        "";
 
 
     placeholder.textContent =
@@ -1116,6 +1562,10 @@ function populateMarketSelect(
                 market.pip || "";
 
 
+            option.dataset.type =
+                market.type || "";
+
+
             marketSelect.appendChild(
                 option
             );
@@ -1128,8 +1578,7 @@ function populateMarketSelect(
 
 
     console.log(
-        "Markets loaded:",
-        count
+        `Markets loaded: ${count}`
     );
 
 
@@ -1146,6 +1595,13 @@ function populateMarketSelect(
             "No markets"
         );
 
+
+        setText(
+            signalExplanation,
+            "Deriv returned no usable markets."
+        );
+
+
         return;
     }
 
@@ -1159,21 +1615,19 @@ function populateMarketSelect(
     setText(
         signalExplanation,
         fallback
-            ? "Deriv returned no market list. Testing the fallback synthetic markets."
+
+            ? "Deriv returned no usable market list. Fallback synthetic markets are shown."
+            
             : "Choose a market to begin analysis."
     );
 
 
     /*
-    Select first market automatically.
+    Automatically select first available market.
     */
+    marketSelect.selectedIndex =
+        1;
 
-    marketSelect.selectedIndex = 1;
-
-
-    /*
-    Start it automatically.
-    */
 
     handleMarketChange();
 }
@@ -1186,6 +1640,7 @@ function populateMarketSelect(
 function handleMarketChange() {
 
     if (!marketSelect) {
+
         return;
     }
 
@@ -1195,6 +1650,7 @@ function handleMarketChange() {
 
 
     if (!symbol) {
+
         return;
     }
 
@@ -1230,6 +1686,10 @@ function handleMarketChange() {
     };
 
 
+    /*
+    Use pip supplied by active_symbols
+    when available.
+    */
     if (
         Number.isFinite(
             selectedPip
@@ -1242,6 +1702,9 @@ function handleMarketChange() {
     }
 
 
+    /*
+    Clear previous market data.
+    */
     ticks = [];
 
 
@@ -1279,10 +1742,12 @@ function handleMarketChange() {
 
 
 /* =====================================================
-   SUBSCRIBE
+   SUBSCRIBE TO MARKET
 ===================================================== */
 
-function subscribeToMarket(symbol) {
+function subscribeToMarket(
+    symbol
+) {
 
     if (
         !connected ||
@@ -1292,34 +1757,29 @@ function subscribeToMarket(symbol) {
     ) {
 
         console.warn(
-            "Cannot subscribe: not connected."
+            "Cannot subscribe — WebSocket is not open."
         );
+
+
+        setText(
+            statusText,
+            "Not connected"
+        );
+
 
         return;
     }
 
 
     /*
-    Forget previous subscription.
+    Cancel previous tick subscription.
     */
-
-    if (currentSubscriptionId) {
-
-        send({
-
-            forget:
-                currentSubscriptionId,
-
-            req_id:
-                nextRequestId()
-        });
+    forgetCurrentSubscription();
 
 
-        currentSubscriptionId =
-            null;
-    }
-
-
+    /*
+    Reset tick state.
+    */
     ticks = [];
 
 
@@ -1328,8 +1788,14 @@ function subscribeToMarket(symbol) {
 
 
     /*
-    HISTORY
+    -----------------------------------------
+    HISTORY REQUEST
+    -----------------------------------------
     */
+
+    historyRequestId =
+        nextRequestId();
+
 
     const historyRequest = {
 
@@ -1346,7 +1812,7 @@ function subscribeToMarket(symbol) {
             "ticks",
 
         req_id:
-            nextRequestId()
+            historyRequestId
     };
 
 
@@ -1356,14 +1822,25 @@ function subscribeToMarket(symbol) {
     );
 
 
-    send(
-        historyRequest
-    );
+    if (
+        !send(
+            historyRequest
+        )
+    ) {
+
+        return;
+    }
 
 
     /*
-    LIVE SUBSCRIPTION
+    -----------------------------------------
+    LIVE TICK SUBSCRIPTION
+    -----------------------------------------
     */
+
+    tickRequestId =
+        nextRequestId();
+
 
     const tickRequest = {
 
@@ -1374,7 +1851,7 @@ function subscribeToMarket(symbol) {
             1,
 
         req_id:
-            nextRequestId()
+            tickRequestId
     };
 
 
@@ -1397,15 +1874,46 @@ function subscribeToMarket(symbol) {
 
 
 /* =====================================================
+   FORGET SUBSCRIPTION
+===================================================== */
+
+function forgetCurrentSubscription() {
+
+    if (
+        currentSubscriptionId &&
+        ws &&
+        ws.readyState ===
+            WebSocket.OPEN
+    ) {
+
+        send({
+
+            forget:
+                currentSubscriptionId,
+
+            req_id:
+                nextRequestId()
+        });
+    }
+
+
+    currentSubscriptionId =
+        null;
+}
+
+
+/* =====================================================
    HISTORY
 ===================================================== */
 
-function processHistory(data) {
+function processHistory(
+    data
+) {
 
     if (!data.history) {
 
         console.warn(
-            "No history object:",
+            "History response has no history object:",
             data
         );
 
@@ -1427,6 +1935,42 @@ function processHistory(data) {
         )
             ? data.history.times
             : [];
+
+
+    /*
+    New API may provide pip_size in the
+    history response.
+    */
+    const historyPip =
+        Number(
+            data.pip_size ??
+            data.history.pip_size
+        );
+
+
+    if (
+        Number.isFinite(
+            historyPip
+        ) &&
+        historyPip > 0
+    ) {
+
+        /*
+        Some API versions represent pip_size
+        as decimal precision while others may
+        provide the actual price increment.
+
+        Only use it if it looks like a valid
+        decimal price increment.
+        */
+        if (
+            historyPip < 1
+        ) {
+
+            pipSize =
+                historyPip;
+        }
+    }
 
 
     console.log(
@@ -1473,6 +2017,7 @@ function processHistory(data) {
                 price
             )
         ) {
+
             continue;
         }
 
@@ -1484,8 +2029,11 @@ function processHistory(data) {
 
 
         if (
-            digit === null
+            digit === null ||
+            digit < 0 ||
+            digit > 9
         ) {
+
             continue;
         }
 
@@ -1517,7 +2065,7 @@ function processHistory(data) {
 
     setText(
         statusText,
-        `Live • ${ticks.length} ticks`
+        `LIVE • ${ticks.length} historical ticks`
     );
 
 
@@ -1532,16 +2080,15 @@ function processHistory(data) {
    LIVE TICK
 ===================================================== */
 
-function processTick(data) {
+function processTick(
+    data
+) {
 
     if (!data.tick) {
+
         return;
     }
 
-
-    /*
-    New API / legacy compatibility.
-    */
 
     const price =
         Number(
@@ -1556,7 +2103,7 @@ function processTick(data) {
     ) {
 
         console.warn(
-            "Invalid tick:",
+            "Invalid tick price:",
             data.tick
         );
 
@@ -1565,9 +2112,8 @@ function processTick(data) {
 
 
     /*
-    Update pip size when supplied.
+    Get pip size if supplied by tick.
     */
-
     const tickPip =
         Number(
             data.tick.pip_size ??
@@ -1576,8 +2122,11 @@ function processTick(data) {
 
 
     if (
-        Number.isFinite(tickPip) &&
-        tickPip > 0
+        Number.isFinite(
+            tickPip
+        ) &&
+        tickPip > 0 &&
+        tickPip < 1
     ) {
 
         pipSize =
@@ -1594,6 +2143,22 @@ function processTick(data) {
     if (
         digit === null
     ) {
+
+        return;
+    }
+
+
+    /*
+    Make sure this tick belongs to
+    the currently selected symbol.
+    */
+    if (
+        data.tick.symbol &&
+        currentSymbol &&
+        data.tick.symbol !==
+            currentSymbol
+    ) {
+
         return;
     }
 
@@ -1620,7 +2185,6 @@ function processTick(data) {
     /*
     Capture subscription ID.
     */
-
     if (
         data.subscription &&
         data.subscription.id
@@ -1666,7 +2230,7 @@ function limitTicks() {
 
 
 /* =====================================================
-   ANALYSIS
+   ANALYSIS ENGINE
 ===================================================== */
 
 function analyze() {
@@ -1682,9 +2246,11 @@ function analyze() {
     let result;
 
 
+    /*
+    DIFFERS mode.
+    */
     if (
-        currentMode === "diff" &&
-        currentType === "MATCH"
+        currentMode === "diff"
     ) {
 
         result =
@@ -1751,6 +2317,7 @@ function analyze() {
 
 
     if (!result) {
+
         return;
     }
 
@@ -1798,6 +2365,9 @@ function analyze() {
     );
 
 
+    /*
+    Entry threshold.
+    */
     const required =
         getThreshold();
 
@@ -1854,25 +2424,38 @@ function calculateMatch() {
     ticks.forEach(
         tick => {
 
+            const digit =
+                Number(
+                    tick.digit
+                );
+
+
             if (
                 Number.isInteger(
-                    tick.digit
-                )
+                    digit
+                ) &&
+                digit >= 0 &&
+                digit <= 9
             ) {
 
-                counts[
-                    tick.digit
-                ]++;
+                counts[digit]++;
             }
         }
     );
 
 
-    let bestDigitValue = 0;
+    /*
+    IMPORTANT:
+    Start at digit 0.
+    The old version incorrectly started
+    at digit 1.
+    */
+    let bestDigitValue =
+        0;
 
 
     for (
-        let digit = 1;
+        let digit = 0;
         digit <= 9;
         digit++
     ) {
@@ -1888,13 +2471,17 @@ function calculateMatch() {
     }
 
 
+    const total =
+        ticks.length;
+
+
     const confidence =
-        ticks.length
+        total
             ? (
                 counts[
                     bestDigitValue
                 ] /
-                ticks.length
+                total
             ) * 100
             : 0;
 
@@ -1913,7 +2500,7 @@ function calculateMatch() {
             confidence,
 
         explanation:
-            `Digit ${bestDigitValue} occurred ${counts[bestDigitValue]} times in the last ${ticks.length} ticks.`
+            `Digit ${bestDigitValue} occurred ${counts[bestDigitValue]} times in the last ${total} ticks.`
     };
 }
 
@@ -2134,6 +2721,7 @@ function calculateOdd() {
 function updateDigitGrid() {
 
     if (!digitGrid) {
+
         return;
     }
 
@@ -2145,15 +2733,21 @@ function updateDigitGrid() {
     ticks.forEach(
         tick => {
 
+            const digit =
+                Number(
+                    tick.digit
+                );
+
+
             if (
                 Number.isInteger(
-                    tick.digit
-                )
+                    digit
+                ) &&
+                digit >= 0 &&
+                digit <= 9
             ) {
 
-                counts[
-                    tick.digit
-                ]++;
+                counts[digit]++;
             }
         }
     );
@@ -2210,6 +2804,10 @@ function updateDigitGrid() {
             <div class="digit-percent">
                 ${percentage.toFixed(1)}%
             </div>
+
+            <div class="digit-count">
+                ${counts[digit]} ticks
+            </div>
         `;
 
 
@@ -2227,6 +2825,7 @@ function updateDigitGrid() {
 function updateRecentDigits() {
 
     if (!recentDigits) {
+
         return;
     }
 
@@ -2271,6 +2870,7 @@ function updateRecentDigits() {
 function updateDisplay() {
 
     if (!ticks.length) {
+
         return;
     }
 
@@ -2310,7 +2910,7 @@ function updateDisplay() {
 
 
 /* =====================================================
-   CLEAR
+   CLEAR SIGNAL
 ===================================================== */
 
 function clearSignalOnly() {
@@ -2334,6 +2934,10 @@ function clearSignalOnly() {
     }
 }
 
+
+/* =====================================================
+   CLEAR ANALYSIS
+===================================================== */
 
 function clearAnalysis() {
 
@@ -2431,10 +3035,34 @@ function stopAutoScan() {
 
 
 /* =====================================================
+   CONNECTION TIMER
+===================================================== */
+
+function clearConnectionTimer() {
+
+    if (connectionTimer) {
+
+        clearTimeout(
+            connectionTimer
+        );
+
+        connectionTimer = null;
+    }
+}
+
+
+/* =====================================================
    CLOSE
 ===================================================== */
 
-function handleClose(event) {
+function handleClose(
+    event
+) {
+
+    clearConnectionTimer();
+
+    stopPing();
+
 
     console.warn(
         "Deriv WebSocket closed:",
@@ -2446,9 +3074,6 @@ function handleClose(event) {
 
     connected = false;
     connecting = false;
-
-
-    stopPing();
 
 
     currentSubscriptionId =
@@ -2506,7 +3131,10 @@ function handleClose(event) {
 
 function scheduleReconnect() {
 
-    if (reconnectTimer) {
+    if (
+        reconnectTimer
+    ) {
+
         return;
     }
 
@@ -2535,10 +3163,12 @@ function scheduleReconnect() {
 
 
 /* =====================================================
-   ERROR
+   WEBSOCKET ERROR
 ===================================================== */
 
-function handleError(error) {
+function handleError(
+    error
+) {
 
     console.error(
         "Deriv WebSocket error:",
@@ -2554,23 +3184,25 @@ function handleError(error) {
 
     setText(
         signalExplanation,
-        "Unable to establish the Deriv WebSocket connection. Check the browser console."
+        "WebSocket connection error. The scanner will retry automatically."
     );
 }
 
 
 /* =====================================================
-   RESET BUTTON
+   RESET CONNECT BUTTON
 ===================================================== */
 
 function resetConnectButton() {
 
     if (!connectBtn) {
+
         return;
     }
 
 
-    connectBtn.disabled = false;
+    connectBtn.disabled =
+        false;
 
 
     connectBtn.textContent =
@@ -2590,39 +3222,26 @@ function disconnectDeriv() {
 
 
     stopAutoScan();
+
     stopPing();
 
+    clearConnectionTimer();
 
-    if (reconnectTimer) {
+
+    if (
+        reconnectTimer
+    ) {
 
         clearTimeout(
             reconnectTimer
         );
 
-        reconnectTimer = null;
+        reconnectTimer =
+            null;
     }
 
 
-    if (
-        currentSubscriptionId &&
-        ws &&
-        ws.readyState ===
-            WebSocket.OPEN
-    ) {
-
-        send({
-
-            forget:
-                currentSubscriptionId,
-
-            req_id:
-                nextRequestId()
-        });
-    }
-
-
-    currentSubscriptionId =
-        null;
+    forgetCurrentSubscription();
 
 
     if (ws) {
@@ -2637,6 +3256,7 @@ function disconnectDeriv() {
         } catch (error) {
 
             console.warn(
+                "Close error:",
                 error
             );
         }
@@ -2644,6 +3264,7 @@ function disconnectDeriv() {
 
 
     ws = null;
+
 
     connected = false;
     connecting = false;
@@ -2675,12 +3296,25 @@ if (connectBtn) {
 
             } else {
 
+                /*
+                Start with the current endpoint.
+                */
+                websocketEndpoint =
+                    DERIV_WS;
+
+                usingFallbackEndpoint =
+                    false;
+
                 connectDeriv();
             }
         }
     );
 }
 
+
+/* =====================================================
+   MARKET SELECT
+===================================================== */
 
 if (marketSelect) {
 
@@ -2690,6 +3324,10 @@ if (marketSelect) {
     );
 }
 
+
+/* =====================================================
+   SCAN BUTTON
+===================================================== */
 
 if (scanBtn) {
 
@@ -2713,6 +3351,10 @@ if (scanBtn) {
     );
 }
 
+
+/* =====================================================
+   AUTO SCAN
+===================================================== */
 
 if (autoScan) {
 
@@ -2824,7 +3466,7 @@ document
 
 
 /* =====================================================
-   SETTINGS
+   THRESHOLD
 ===================================================== */
 
 if (threshold) {
@@ -2834,12 +3476,17 @@ if (threshold) {
         analyze
     );
 
+
     threshold.addEventListener(
         "change",
         analyze
     );
 }
 
+
+/* =====================================================
+   BARRIER
+===================================================== */
 
 if (barrier) {
 
@@ -2848,12 +3495,17 @@ if (barrier) {
         analyze
     );
 
+
     barrier.addEventListener(
         "change",
         analyze
     );
 }
 
+
+/* =====================================================
+   TICK COUNT
+===================================================== */
 
 if (tickCount) {
 
@@ -2870,34 +3522,71 @@ if (tickCount) {
                     currentSymbol
                 );
             }
+
         }
     );
 }
 
 
 /* =====================================================
-   INITIALIZE
+   PAGE VISIBILITY
+===================================================== */
+
+document.addEventListener(
+    "visibilitychange",
+    () => {
+
+        /*
+        When the browser tab becomes visible
+        again, make sure the connection is alive.
+        */
+
+        if (
+            document.visibilityState ===
+            "visible"
+        ) {
+
+            if (
+                !connected &&
+                !connecting &&
+                !manualDisconnect
+            ) {
+
+                connectDeriv();
+            }
+        }
+    }
+);
+
+
+/* =====================================================
+   INITIALIZATION
 ===================================================== */
 
 console.log(
-    "======================================"
+    "=========================================="
 );
 
 console.log(
-    "MATCHES SIGNAL SCANNER"
+    "DERIV MATCHES SIGNAL SCANNER"
 );
 
 console.log(
-    "Analysis only - NO AUTOMATIC TRADING"
+    "Analysis only — NO automatic trading"
 );
 
 console.log(
-    "Deriv endpoint:",
+    "Primary endpoint:",
     DERIV_WS
 );
 
 console.log(
-    "======================================"
+    "Fallback endpoint:",
+    LEGACY_DERIV_WS
+);
+
+console.log(
+    "=========================================="
 );
 
 
@@ -2905,3 +3594,10 @@ updateConnectionUI(
     "offline",
     "Ready to connect"
 );
+
+
+/*
+Do not automatically connect on page load.
+The user presses Connect Scanner.
+*/
+```
