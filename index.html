@@ -669,6 +669,14 @@ select{
 
     </div>
 
+    <div class="field">
+      <label>Bot</label>
+      <select id="botMode">
+        <option value="AUTO" selected>Auto Signal</option>
+        <option value="OFF">Manual</option>
+      </select>
+    </div>
+
     <button class="btn" id="mode">
       Analysis ▼
     </button>
@@ -953,6 +961,25 @@ select{
 
 </section>
 
+<section class="card" id="botCard" style="margin-top:16px">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+    <div>
+      <div class="title" style="margin-bottom:4px">🤖 Automatic Signal Generator</div>
+      <div class="sub">Live statistical signal from the selected tick stream. It is descriptive analysis, not a guaranteed prediction.</div>
+    </div>
+    <span class="pill" id="botBadge" style="background:#7650e9;padding:7px 10px">AUTO BOT</span>
+  </div>
+  <div class="status-grid" style="margin-top:12px">
+    <div class="metric"><small>Signal</small><b id="botSignal">WAIT</b></div>
+    <div class="metric"><small>Digit / Barrier</small><b id="botDigit">—</b></div>
+    <div class="metric"><small>Observed Rate</small><b id="botStrength">—</b></div>
+    <div class="metric"><small>Ticks Since Signal</small><b id="botAge">—</b></div>
+    <div class="metric"><small>Next Refresh</small><b id="botNext">—</b></div>
+    <div class="metric"><small>Contract</small><b id="botType">—</b></div>
+  </div>
+  <div id="signalHistory" class="log" style="margin-top:12px;max-height:120px"></div>
+</section>
+
 <section class="card settings">
 
   <div class="field">
@@ -1108,7 +1135,12 @@ const S = {
 
   barrier:4,
 
-  lastAnalysis:0
+  lastAnalysis:0,
+  subId:null,
+  autoLastTick:0,
+  autoLastSignature:"",
+  signalHistory:[],
+  signalEvery:5
 
 };
 
@@ -1552,7 +1584,12 @@ function chooseMarket(sym){
   S.pip=
     pipOf(m);
 
+  stopPolling();
   S.ticks=[];
+  S.autoLastTick=0;
+  S.autoLastSignature="";
+  S.signalHistory=[];
+  renderSignalHistory();
 
   $("marketName").textContent =
     nameOf(m);
@@ -1744,171 +1781,94 @@ function history(d){
 
 function startPolling(){
 
-  if(S.polling)return;
+  if(!S.connected || !S.symbol)return;
 
+  stopPolling();
   S.polling=true;
 
-  clearInterval(
-    S.timer
-  );
+  // Subscribe to the live tick stream instead of polling once per second.
+  send({
+    ticks:S.symbol,
+    subscribe:1,
+    req_id:req()
+  });
 
-  pollTick();
-
-  S.timer =
-    setInterval(
-      pollTick,
-      1000
-    );
+  $("status").textContent="Live";
+  $("message").textContent="Live tick stream active. Waiting for updates…";
+  log("Subscribed to live ticks for "+S.symbol,"ok");
 }
 
 function stopPolling(){
 
   S.polling=false;
 
-  clearInterval(
-    S.timer
-  );
+  if(S.subId){
+    send({forget:S.subId,req_id:req()});
+    S.subId=null;
+  }
 
+  clearInterval(S.timer);
   S.timer=null;
 }
 
 function pollTick(){
-
-  if(
-    !S.connected ||
-    !S.symbol
-  ){
-    return;
-  }
-
-  send({
-
-    ticks:S.symbol,
-
-    subscribe:0,
-
-    req_id:req()
-
-  });
+  // Kept for compatibility with the existing controls.
+  if(!S.polling) return;
 }
 
 function tick(d){
 
   const t=d.tick;
-
   if(!t)return;
 
-  const q =
-    Number(t.quote);
-
-  if(
-    !Number.isFinite(q)
-  ){
-    return;
+  if(d.subscription && d.subscription.id){
+    S.subId=d.subscription.id;
   }
 
-  if(
-    Number.isFinite(
-      Number(t.pip_size)
-    )
-  ){
+  const q=Number(t.quote);
+  if(!Number.isFinite(q))return;
 
-    S.pip =
-      Number(t.pip_size);
-  }
+  if(Number.isFinite(Number(t.pip_size))) S.pip=Number(t.pip_size);
 
-  const digit =
-    digitOf(
-      q,
-      S.pip
-    );
-
+  const digit=digitOf(q,S.pip);
   if(digit===null)return;
 
   const item={
-
     quote:q,
-
-    epoch:Number(
-      t.epoch ||
-      Date.now()/1000
-    ),
-
-    digit:digit
-
+    epoch:Number(t.epoch || Date.now()/1000),
+    digit
   };
 
-  if(
-    S.ticks.length &&
-    S.ticks[
-      S.ticks.length-1
-    ].epoch===
-    item.epoch
-  ){
-
-    return;
-  }
+  if(S.ticks.length && S.ticks[S.ticks.length-1].epoch===item.epoch)return;
 
   S.ticks.push(item);
+  if(S.ticks.length>5000)S.ticks.shift();
 
-  if(
-    S.ticks.length>5000
-  ){
+  $("price").textContent=formatPrice(q);
+  $("lastDigit").textContent=digit;
+  $("lastDigitBig").textContent=digit;
+  $("tickCount").textContent=S.ticks.length;
 
-    S.ticks.shift();
-
-  }
-
-  $("price").textContent =
-    formatPrice(q);
-
-  $("lastDigit").textContent =
-    digit;
-
-  $("lastDigitBig").textContent =
-    digit;
-
-  $("tickCount").textContent =
-    S.ticks.length;
-
+  S.autoLastTick=S.ticks.length;
   updateProgress();
-
   updatePatternChart();
 
-  if(
-    Date.now()-
-    S.lastAnalysis>2000
-  ){
-
-    S.lastAnalysis =
-      Date.now();
-
+  if(Date.now()-S.lastAnalysis>1000){
+    S.lastAnalysis=Date.now();
     analyze();
   }
+
+  generateAutoSignal(false);
+  updateBotAge();
 }
 
 function formatPrice(q){
-
-  if(
-    Number.isFinite(S.pip) &&
-    S.pip>0 &&
-    S.pip<1
-  ){
-
-    const d =
-      Math.max(
-        0,
-        Math.round(
-          -Math.log10(S.pip)
-        )
-      );
-
+  if(Number.isFinite(S.pip) && S.pip>0 && S.pip<1){
+    const d=Math.max(0,Math.round(-Math.log10(S.pip)));
     return q.toFixed(d);
   }
-
   return String(q);
 }
-
 
 /* ==========================================================
    HORIZON ANALYSIS
@@ -3044,6 +3004,97 @@ function updateProgress(){
 
 
 /* ==========================================================
+   AUTOMATIC SIGNAL GENERATOR
+   ========================================================== */
+
+function observedRate(type,b,digits){
+  if(!digits.length)return 0;
+  let hits=0;
+  for(const d of digits){
+    if(type==="MATCH") hits += d===b ? 1:0;
+    else if(type==="DIFF") hits += d!==b ? 1:0;
+    else if(type==="OVER") hits += d>b ? 1:0;
+    else if(type==="UNDER") hits += d<b ? 1:0;
+    else if(type==="EVEN") hits += d%2===0 ? 1:0;
+    else if(type==="ODD") hits += d%2===1 ? 1:0;
+  }
+  return hits/digits.length*100;
+}
+
+function generateAutoSignal(force=false){
+  if($("botMode").value!=="AUTO" || !S.polling)return;
+  const minTicks=Math.max(50,Number($("analysisTicks").value)||500);
+  if(S.ticks.length<minTicks)return;
+
+  if(!force && S.ticks.length-S.autoLastTick < S.signalEvery)return;
+  S.autoLastTick=S.ticks.length;
+
+  const type=$("contract").value;
+  const sample=Math.min(Number($("analysisTicks").value)||500,S.ticks.length);
+  const digits=S.ticks.slice(-sample).map(x=>x.digit);
+  const c=counts(digits);
+  let barrier=Number($("barrier").value);
+  let digit=barrier;
+  let rate=0;
+
+  if(type==="MATCH"){
+    digit=c.indexOf(Math.max(...c));
+    barrier=digit;
+    rate=observedRate(type,barrier,digits);
+  }else if(type==="DIFF"){
+    digit=c.indexOf(Math.min(...c));
+    barrier=digit;
+    rate=observedRate(type,barrier,digits);
+  }else if(type==="OVER" || type==="UNDER"){
+    let best=-1;
+    for(let b=0;b<=9;b++){
+      const r=observedRate(type,b,digits);
+      if(r>best){best=r;barrier=b;}
+    }
+    digit=barrier;
+    rate=best;
+  }else{
+    rate=observedRate(type,barrier,digits);
+    digit=barrier;
+  }
+
+  const signature=type+":"+barrier+":"+Math.round(rate);
+  $("botSignal").textContent=type;
+  $("botDigit").textContent=(type==="EVEN"||type==="ODD")?type:String(digit);
+  $("botStrength").textContent=rate.toFixed(1)+"%";
+  $("botType").textContent=type;
+  $("botNext").textContent="5 ticks";
+  $("signalText").textContent=type+" "+(type==="OVER"||type==="UNDER"||type==="MATCH"||type==="DIFF"?barrier:"")+" • "+rate.toFixed(0)+"%";
+
+  if(signature!==S.autoLastSignature || force){
+    S.autoLastSignature=signature;
+    S.signalHistory.unshift({time:new Date().toLocaleTimeString(),type,digit:barrier,rate});
+    S.signalHistory=S.signalHistory.slice(0,10);
+    renderSignalHistory();
+    log("AUTO SIGNAL • "+type+" • "+barrier+" • observed "+rate.toFixed(1)+"%","ok");
+  }
+}
+
+function renderSignalHistory(){
+  const box=$("signalHistory");
+  if(!S.signalHistory.length){box.textContent="Waiting for enough live ticks…";return;}
+  box.innerHTML=S.signalHistory.map(x=>
+    `${x.time}  •  ${x.type} ${x.digit}  •  observed ${x.rate.toFixed(1)}%`
+  ).join("<br>");
+}
+
+function updateBotAge(){
+  if($("botMode").value!=="AUTO" || !S.polling){
+    $("botAge").textContent="—";
+    $("botNext").textContent="—";
+    return;
+  }
+  const age=Math.max(0,S.ticks.length-S.autoLastTick);
+  $("botAge").textContent=age;
+  $("botNext").textContent=Math.max(0,S.signalEvery-age)+" ticks";
+}
+
+/* ==========================================================
    CONTRACT SELECTION
    ========================================================== */
 
@@ -3069,6 +3120,7 @@ function setContract(c){
     );
 
   analyze();
+  generateAutoSignal(true);
 }
 
 
@@ -3204,6 +3256,21 @@ $("logout").onclick=()=>{
 
 };
 
+$("botMode").onchange=e=>{
+  const on=e.target.value==="AUTO";
+  $("botBadge").textContent=on?"AUTO BOT":"MANUAL";
+  $("botBadge").style.background=on?"#7650e9":"#7180a3";
+  if(on){
+    generateAutoSignal(true);
+  }else{
+    $("botSignal").textContent="MANUAL";
+    $("botDigit").textContent="—";
+    $("botStrength").textContent="—";
+    $("botAge").textContent="—";
+    $("botNext").textContent="—";
+  }
+};
+
 $("auto").onchange=e=>{
 
   clearInterval(
@@ -3242,6 +3309,7 @@ renderDigits(
 makeFrequencyChart();
 
 makePatternChart();
+renderSignalHistory();
 
 connect();
 
