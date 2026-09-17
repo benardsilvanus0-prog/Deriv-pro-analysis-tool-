@@ -336,15 +336,35 @@ select{
   width:62px;
   height:62px;
   border-radius:50%;
-  display:grid;
-  place-items:center;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:1px;
   font-size:22px;
+  line-height:22px;
   font-weight:900;
   color:#fff;
   background:linear-gradient(135deg,#7c42d9,#20b4d5);
   box-shadow:
     0 0 0 5px #d9dcff,
-    0 8px 20px #7e75d955
+    0 8px 20px #7e75d955;
+  transition:transform .2s ease,box-shadow .2s ease
+}
+
+.center-digit small{
+  font-size:9px;
+  line-height:10px;
+  font-weight:900;
+  letter-spacing:.2px;
+  opacity:.96
+}
+
+.match-confidence-hint{
+  margin-top:9px;
+  font-size:11px;
+  font-weight:800;
+  color:#59617a
 }
 
 .grid{
@@ -828,7 +848,8 @@ select{
     </button>
 
     <div class="center-digit" id="centerDigit">
-      —
+      <span id="centerDigitValue">—</span>
+      <small id="centerDigitConfidence">—%</small>
     </div>
 
     <button class="matchbtn">
@@ -837,6 +858,14 @@ select{
 
   </div>
 
+  <div class="match-confidence-hint" id="matchConfidenceHint">MATCH confidence: —</div>
+
+</section>
+
+<section class="card" id="matchRunPlannerCard" style="margin-top:16px">
+  <div class="cardtitle">🎯 MATCH Run Planner</div>
+  <div class="sub">Shows the strongest different MATCH digits, their observed confidence, and a model-estimated maximum number of consecutive attempts. This is statistical guidance, not a guarantee.</div>
+  <div id="matchRunPlanner" style="margin-top:12px"></div>
 </section>
 
 <section class="grid">
@@ -980,23 +1009,98 @@ select{
   <div id="signalHistory" class="log" style="margin-top:12px;max-height:120px"></div>
 </section>
 
-<section class="card" id="volatilityScanCard" style="margin-top:16px">
+
+
+<section class="card" id="accuracyEngineCard" style="margin-top:16px">
+  <div class="cardtitle">🧠 Advanced Accuracy Engine</div>
+  <div class="sub">Multi-window frequency, recency weighting, time-block stability, conditional sequence evidence and walk-forward validation.</div>
+  <div id="accuracyEngineGrid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px">
+    <div class="accuracy-metric"><b>Multi-window</b><span id="accWindow">—</span></div>
+    <div class="accuracy-metric"><b>Stability</b><span id="accStability">—</span></div>
+    <div class="accuracy-metric"><b>Sequence</b><span id="accSequence">—</span></div>
+    <div class="accuracy-metric"><b>Validation</b><span id="accValidation">—</span></div>
+  </div>
+  <div id="accuracyEngineMessage" class="sub" style="margin-top:10px"></div>
+</section>
+<style>
+.accuracy-metric{border:1px solid #e3e8fb;border-radius:12px;padding:11px;background:#fbfcff;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.accuracy-metric span{font-size:17px;font-weight:800}
+@media(max-width:760px){#accuracyEngineGrid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}}
+@media(max-width:420px){#accuracyEngineGrid{grid-template-columns:1fr !important}}
+</style>
+
+<section class="card" id="contractConfidenceCard" style="margin-top:16px">
+  <div class="cardtitle">🎯 Even / Odd / Over / Under Analysis</div>
+  <div class="sub">Confidence is calculated from the current historical digit sample. Over/Under barriers are evaluated automatically.</div>
+
+  <div id="contractConfidenceGrid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px">
+    <div class="contract-confidence-card" id="evenConfidenceCard"></div>
+    <div class="contract-confidence-card" id="oddConfidenceCard"></div>
+    <div class="contract-confidence-card" id="overConfidenceCard"></div>
+    <div class="contract-confidence-card" id="underConfidenceCard"></div>
+  </div>
+
+  <div id="contractConfidenceSummary" class="sub" style="margin-top:10px"></div>
+</section>
+
+<style>
+.contract-confidence-card{
+  border:1px solid #e3e8fb;border-radius:12px;padding:12px;background:#fbfcff;min-height:108px;
+}
+.contract-confidence-card .cc-head{
+  display:flex;justify-content:space-between;align-items:center;gap:6px;
+}
+.contract-confidence-card .cc-value{font-size:21px;font-weight:800}
+.contract-confidence-card .cc-bar{
+  height:8px;background:#edf0fb;border-radius:8px;overflow:hidden;margin:9px 0 7px;
+}
+.contract-confidence-card .cc-fill{
+  height:100%;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px;
+}
+@media(max-width:760px){
+  #contractConfidenceGrid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+}
+@media(max-width:420px){
+  #contractConfidenceGrid{grid-template-columns:1fr !important}
+}
+</style>
+
+<section class="card" id="volatilityMatchDashboard" style="margin-top:16px;min-height:330px">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
     <div>
-      <div class="title" style="margin-bottom:4px">📊 Best MATCH Volatility Scanner</div>
-      <div class="sub">Scans available Volatility indices and ranks the strongest observed MATCH digit using multiple statistical checks.</div>
+      <div class="cardtitle">📊 Volatility MATCH Intelligence</div>
+      <div class="sub">Combines the Volatility scanner with digit-by-digit MATCH confidence so you can see the strongest observed markets and digits in one place.</div>
     </div>
     <button class="btn" id="scanVolatility">Scan Volatility</button>
   </div>
+
   <div id="volatilityScanStatus" class="sub" style="margin-top:10px">Ready to scan available Volatility markets.</div>
-  <div id="volatilityScanList" style="margin-top:12px"></div>
+
+  <div class="volatility-match-grid" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:14px;align-items:stretch">
+    <div style="border:1px solid #e3e8fb;border-radius:14px;padding:14px;background:#fff">
+      <div class="title" style="margin-bottom:4px">Best Volatility MATCH</div>
+      <div class="sub">Markets are ordered by the statistical confidence score. The score describes historical evidence, not a guaranteed next-tick outcome.</div>
+      <div id="volatilityScanList" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card" id="matchConfidenceCard" style="margin:0;box-shadow:none">
+      <div class="title" style="margin-bottom:4px">MATCH Digit Confidence</div>
+      <div class="sub" id="matchConfidenceSub">Digit-by-digit statistical confidence for the selected market.</div>
+      <div id="bestScannedMatch" style="margin-top:10px"></div>
+      <div id="matchConfidenceList" style="margin-top:12px"></div>
+    </div>
+  </div>
 </section>
 
-<section class="card" id="matchConfidenceCard" style="display:none">
-  <div class="cardtitle">MATCH Digit Confidence</div>
-  <div class="sub">Confidence is calculated from observed frequency, statistical edge, window agreement and validation. It is not a guarantee of the next tick.</div>
-  <div id="matchConfidenceList" style="margin-top:12px"></div>
-</section>
+<style>
+.volatility-match-grid > div{min-height:280px;box-sizing:border-box}
+.volatility-match-grid #volatilityScanList{max-height:205px;overflow-y:auto;padding-right:4px}
+.volatility-match-grid #matchConfidenceList{max-height:170px;overflow-y:auto;padding-right:4px}
+.volatility-match-grid .scan-summary{font-size:12px}
+@media (max-width: 760px){
+  .volatility-match-grid{grid-template-columns:1fr !important}
+}
+</style>
 
 <section class="card settings">
 
@@ -1619,6 +1723,34 @@ function scannerValidation(series,duration,digit){
   return tested?{accuracy:correct/tested,samples:tested}:null;
 }
 
+
+function scannerDigitConfidence(results,series,duration,digit){
+  const primary=results.find(x=>x.w===Number($("sample").value))||results.at(-1);
+  const p=primary.p[digit]||0;
+  const agreement=results.filter(r=>r.best===digit).length/results.length;
+  const positive=results.filter(r=>(r.p[digit]||0)>0.1).length/results.length;
+  const val=p>0.1 ? scannerValidation(series,duration,digit) : null;
+  const lower=wilson(Math.round(p*primary.ds.length),primary.ds.length);
+  const sampleFactor=clamp(primary.ds.length/500,0,1);
+  const lift=clamp((p-0.1)/0.12,0,1);
+  const zPart=clamp(zscore(p,0.1,primary.ds.length)/2.5,0,1);
+  const lowerPart=clamp((lower-0.1)/0.08,0,1);
+  const stability=agreement*.6+positive*.4;
+  const validationPart=val?clamp(val.accuracy,0,1):0.5;
+  const confidence=clamp((sampleFactor*.10+lift*.25+zPart*.20+lowerPart*.15+stability*.20+validationPart*.10)*100,0,95);
+  return {
+    digit,
+    rate:p*100,
+    edge:(p-0.1)*100,
+    lower:lower*100,
+    agreement:agreement*100,
+    positive:positive*100,
+    confidence,
+    samples:primary.ds.length,
+    validation:val
+  };
+}
+
 function scannerMatchResult(series,duration,sample){
   if(series.length<Math.max(100,duration+30))return null;
   const windows=[30,100,300,500,1000].filter(w=>w+duration<series.length);
@@ -1636,35 +1768,179 @@ function scannerMatchResult(series,duration,sample){
 
   const primary=results.find(x=>x.w===sample)||results.at(-1);
   const digit=primary.best;
-  const agreement=results.filter(r=>r.best===digit).length/results.length;
-  const positive=results.filter(r=>(r.p[digit]||0)>0.1).length/results.length;
-  const val=scannerValidation(series,duration,digit);
-  const p=primary.p[digit]||0;
-  const lower=wilson(Math.round(p*primary.ds.length),primary.ds.length);
-  const sampleFactor=clamp(primary.ds.length/500,0,1);
-  const lift=clamp((p-0.1)/0.12,0,1);
-  const zPart=clamp(zscore(p,0.1,primary.ds.length)/2.5,0,1);
-  const lowerPart=clamp((lower-0.1)/0.08,0,1);
-  const stability=agreement*.6+positive*.4;
-  const validationPart=val?clamp(val.accuracy,0,1):0.5;
-  const confidence=clamp((sampleFactor*.10+lift*.25+zPart*.20+lowerPart*.15+stability*.20+validationPart*.10)*100,0,95);
+  const candidates=[];
+  for(let d=0;d<10;d++) candidates.push(scannerDigitConfidence(results,series,duration,d));
+  const best=candidates.find(x=>x.digit===digit)||candidates.slice().sort((a,b)=>b.confidence-a.confidence)[0];
 
-  return {digit,rate:p*100,edge:(p-0.1)*100,lower:lower*100,agreement:agreement*100,positive:positive*100,confidence,samples:primary.ds.length,validation:val};
+  return {
+    digit,
+    rate:best.rate,
+    edge:best.edge,
+    lower:best.lower,
+    agreement:best.agreement,
+    positive:best.positive,
+    confidence:best.confidence,
+    samples:best.samples,
+    validation:best.validation,
+    digits:candidates.sort((a,b)=>b.confidence-a.confidence)
+  };
+}
+
+
+function contractOutcomeConfidence(ds){
+  if(!ds || ds.length<30)return null;
+  const n=ds.length;
+
+  function calc(p,baseline){
+    const z=zscore(p,baseline,n);
+    const lower=wilson(Math.round(p*n),n);
+    const sample=clamp(n/500,0,1);
+    const lift=clamp((p-baseline)/Math.max(0.08,1-baseline),0,1);
+    const zPart=clamp(z/2.5,0,1);
+    const lowerPart=clamp((lower-baseline)/Math.max(0.05,1-baseline),0,1);
+    const confidence=clamp((sample*.15+lift*.35+zPart*.25+lowerPart*.25)*100,0,95);
+    return {
+      rate:p*100,
+      edge:(p-baseline)*100,
+      lower:lower*100,
+      confidence
+    };
+  }
+
+  const evenP=ds.filter(d=>d%2===0).length/n;
+  const oddP=1-evenP;
+  const even=calc(evenP,.5);
+  const odd=calc(oddP,.5);
+
+  let bestOver=null,bestUnder=null;
+
+  // OVER barrier b means digit > b. Neutral baseline is (9-b)/10.
+  for(let b=0;b<=8;b++){
+    const p=ds.filter(d=>d>b).length/n;
+    const x={barrier:b,...calc(p,(9-b)/10)};
+    if(!bestOver || x.confidence>bestOver.confidence)bestOver=x;
+  }
+
+  // UNDER barrier b means digit < b. Neutral baseline is b/10.
+  for(let b=1;b<=9;b++){
+    const p=ds.filter(d=>d<b).length/n;
+    const x={barrier:b,...calc(p,b/10)};
+    if(!bestUnder || x.confidence>bestUnder.confidence)bestUnder=x;
+  }
+
+  return {n,even,odd,bestOver,bestUnder};
+}
+
+function renderContractOutcomeConfidence(){
+  const ids=["evenConfidenceCard","oddConfidenceCard","overConfidenceCard","underConfidenceCard"];
+  const ds=(S.ticks||[]).map(x=>x.digit).filter(x=>Number.isInteger(x));
+
+  if(ds.length<30){
+    ids.forEach(id=>$(id).innerHTML='<div class="sub">Collecting ticks…</div>');
+    $("contractConfidenceSummary").textContent=`Need at least 30 usable digits (${ds.length}/30 currently).`;
+    return;
+  }
+
+  const x=contractOutcomeConfidence(ds);
+  if(!x)return;
+
+  function draw(id,title,stat,detail){
+    $(id).innerHTML=`
+      <div class="cc-head"><b>${title}</b><span class="sub">${detail}</span></div>
+      <div class="cc-value">${stat.confidence.toFixed(0)}%</div>
+      <div class="cc-bar"><div class="cc-fill" style="width:${stat.confidence.toFixed(1)}%"></div></div>
+      <div class="sub">${stat.rate.toFixed(1)}% observed • edge ${stat.edge>=0?"+":""}${stat.edge.toFixed(1)}pp</div>`;
+  }
+
+  draw("evenConfidenceCard","EVEN",x.even,"50% baseline");
+  draw("oddConfidenceCard","ODD",x.odd,"50% baseline");
+  draw("overConfidenceCard",`OVER ${x.bestOver.barrier}`,x.bestOver,`barrier ${x.bestOver.barrier}`);
+  draw("underConfidenceCard",`UNDER ${x.bestUnder.barrier}`,x.bestUnder,`barrier ${x.bestUnder.barrier}`);
+
+  const candidates=[
+    {name:"EVEN",...x.even},
+    {name:"ODD",...x.odd},
+    {name:`OVER ${x.bestOver.barrier}`,...x.bestOver},
+    {name:`UNDER ${x.bestUnder.barrier}`,...x.bestUnder}
+  ].sort((a,b)=>b.confidence-a.confidence);
+
+  const lead=candidates[0];
+  $("contractConfidenceSummary").innerHTML=
+    `Strongest observed contract pattern: <b>${lead.name}</b> • `+
+    `<b>${lead.confidence.toFixed(0)}%</b> statistical confidence • `+
+    `${lead.rate.toFixed(1)}% observed rate.`;
 }
 
 function renderVolatilityScan(){
   const box=$("volatilityScanList");
   const rows=S.volatilityScan.results.slice().sort((a,b)=>b.confidence-a.confidence);
-  if(!rows.length){box.innerHTML="";return;}
-  box.innerHTML=rows.map((x,i)=>`
-    <div style="display:grid;grid-template-columns:28px 1fr 52px 72px 72px 72px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #edf0f7">
-      <b>${i+1}</b>
-      <div><b>${x.name}</b><div class="sub">${x.symbol} • MATCH ${x.digit} • ${x.samples} ticks</div></div>
-      <b>${x.confidence.toFixed(0)}%</b>
-      <span class="sub">${x.rate.toFixed(1)}% hit</span>
-      <span class="sub">edge ${x.edge.toFixed(1)}%</span>
-      <span class="sub">agree ${x.agreement.toFixed(0)}%</span>
-    </div>`).join("");
+  if(!rows.length){
+    box.innerHTML=`<div class="sub" style="padding:12px 0">Run <b>Scan Volatility</b> to compare the available Volatility markets.</div>`;
+    renderBestScannedMatch();
+    return;
+  }
+
+  box.innerHTML=rows.map((x,i)=>{
+    const top=(x.digits||[]).slice(0,3);
+    const chips=top.map((d,j)=>`
+      <span style="display:inline-flex;align-items:center;gap:4px;padding:5px 8px;border-radius:9px;background:#f2f0ff;border:1px solid #e4defc;font-size:12px">
+        <b>${d.digit}</b> ${d.confidence.toFixed(0)}%
+      </span>`).join("");
+
+    return `
+      <div style="border:1px solid #e3e8fb;border-radius:12px;padding:11px;margin:8px 0;background:#fbfcff">
+        <div style="display:grid;grid-template-columns:28px 1fr auto;gap:9px;align-items:center">
+          <div style="font-size:18px;font-weight:800">${i+1}</div>
+          <div>
+            <b>${x.name}</b>
+            <div class="sub">${x.symbol} • best MATCH ${x.digit} • ${x.samples} ticks</div>
+          </div>
+          <div style="text-align:right">
+            <b style="font-size:18px">${x.confidence.toFixed(0)}%</b>
+            <div class="sub">confidence</div>
+          </div>
+        </div>
+        <div style="height:8px;background:#edf0fb;border-radius:8px;overflow:hidden;margin:9px 0">
+          <div style="height:100%;width:${Math.min(100,x.confidence).toFixed(1)}%;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px"></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">${chips}</div>
+        <div class="sub scan-summary" style="margin-top:7px">Hit ${x.rate.toFixed(1)}% • edge ${x.edge.toFixed(1)}% • agreement ${x.agreement.toFixed(0)}%</div>
+      </div>`;
+  }).join("");
+
+  renderBestScannedMatch();
+}
+
+function renderBestScannedMatch(){
+  const box=$("bestScannedMatch");
+  const rows=S.volatilityScan.results.slice().sort((a,b)=>b.confidence-a.confidence);
+
+  if(!rows.length){
+    box.innerHTML="";
+    return;
+  }
+
+  const x=rows[0];
+  const top=(x.digits||[]).slice(0,5);
+
+  box.innerHTML=`
+    <div style="border-radius:12px;padding:11px;background:linear-gradient(135deg,#f8f2ff,#eef8ff);border:1px solid #e2d9fb">
+      <div class="sub">BEST SCANNED MARKET</div>
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:4px">
+        <div>
+          <b style="font-size:16px">${x.name}</b>
+          <div class="sub">${x.symbol}</div>
+        </div>
+        <div style="text-align:right">
+          <b style="font-size:22px">${x.confidence.toFixed(0)}%</b>
+          <div class="sub">model confidence</div>
+        </div>
+      </div>
+      <div style="margin-top:9px"><b>MATCH ${x.digit}</b> • ${x.rate.toFixed(1)}% observed hit rate</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px">
+        ${top.map((d,i)=>`<span style="padding:6px 8px;border-radius:9px;background:#fff;border:1px solid #ddd7f7;font-size:12px"><b>${i+1}. ${d.digit}</b> ${d.confidence.toFixed(0)}%</span>`).join("")}
+      </div>
+    </div>`;
 }
 
 function startVolatilityScan(){
@@ -1915,6 +2191,7 @@ function history(d){
   );
 
   analyze();
+  renderContractOutcomeConfidence();
 
   updateProgress();
 
@@ -1999,6 +2276,7 @@ function tick(d){
   S.autoLastTick=S.ticks.length;
   updateProgress();
   updatePatternChart();
+  renderContractOutcomeConfidence();
 
   if(Date.now()-S.lastAnalysis>1000){
     S.lastAnalysis=Date.now();
@@ -2442,244 +2720,189 @@ function validation(
 }
 
 
+
+/* ==========================================================
+   ADVANCED ACCURACY ENGINE
+   ========================================================== */
+
+function recencyProbs(ds){
+  if(!ds.length)return Array(10).fill(.1);
+  const half=Math.max(30,Math.min(250,ds.length*.35));
+  const weights=ds.map((_,i)=>Math.pow(.5,(ds.length-1-i)/half));
+  const c=Array(10).fill(1);
+  let total=10;
+  ds.forEach((d,i)=>{
+    if(Number.isInteger(d)&&d>=0&&d<=9){
+      c[d]+=weights[i];
+      total+=weights[i];
+    }
+  });
+  return c.map(x=>x/total);
+}
+
+function modelEventProb(p,type,b){
+  return contractProb(p,type,b);
+}
+
+function modelCandidateStats(type,b,duration){
+  const windows=[50,100,250,500,1000].filter(w=>w+duration<S.ticks.length);
+  if(!windows.length)return null;
+
+  const rows=windows.map(w=>{
+    const ds=horizonDigits(w,duration);
+    const p=probs(counts(ds));
+    const rp=recencyProbs(ds);
+    const cp=modelEventProb(p,type,b);
+    const rcp=modelEventProb(rp,type,b);
+    const base=baseline(type,b);
+    const wins=ds.filter(d=>event(d,type,b)).length;
+    return {w,ds,p,rp,cp,rcp,base,edge:(cp-base)*100,recencyEdge:(rcp-base)*100,z:zscore(cp,base,ds.length),lower:wilson(wins,ds.length)};
+  });
+
+  const primary=rows.find(x=>x.w===Number($("sample").value))||rows.at(-1);
+  const ds=primary.ds;
+  const blocks=[];
+  const blockSize=Math.max(20,Math.floor(ds.length/3));
+  for(let k=0;k<3;k++){
+    const part=ds.slice(k*blockSize,k===2?ds.length:(k+1)*blockSize);
+    if(part.length<15)continue;
+    const p=probs(counts(part));
+    const cp=modelEventProb(p,type,b);
+    blocks.push({cp,edge:(cp-primary.base)*100,n:part.length});
+  }
+  const blockPositive=blocks.filter(x=>x.edge>0).length;
+  const blockStrong=blocks.filter(x=>x.edge>=Math.max(.5,primary.base*100*.03)).length;
+  const stability=blocks.length ? (blockPositive/blocks.length*.6+blockStrong/blocks.length*.4) : .5;
+
+  const current=S.ticks.at(-1)?.digit;
+  let condTotal=0,condWins=0;
+  if(Number.isInteger(current)){
+    const start=Math.max(0,S.ticks.length-1500-duration);
+    for(let i=start;i<S.ticks.length-duration;i++){
+      if(S.ticks[i]?.digit!==current)continue;
+      const actual=S.ticks[i+duration]?.digit;
+      if(actual==null)continue;
+      condTotal++;
+      if(event(actual,type,b))condWins++;
+    }
+  }
+  const condRaw=condTotal?condWins/condTotal:primary.cp;
+  const condWeight=Math.min(1,condTotal/40);
+  const conditional=primary.cp*(1-condWeight)+condRaw*condWeight;
+
+  const vf=validation(type,b,duration);
+  const validationScore=vf?clamp(vf.accuracy,0,1):.5;
+
+  const multiWindow=rows.filter(r=>r.edge>0).length/rows.length;
+  const recencySupport=clamp((primary.recencyEdge/Math.max(1,Math.abs(primary.edge))+1)/2,0,1);
+  const condSupport=clamp((conditional-primary.base)/Math.max(.05,1-primary.base),0,1);
+  const lowerSupport=clamp((primary.lower-primary.base)/Math.max(.05,1-primary.base),0,1);
+  const zSupport=clamp(primary.z/2.5,0,1);
+  const sampleSupport=clamp(primary.ds.length/500,0,1);
+
+  const confidence=clamp((
+    multiWindow*.18+
+    stability*.17+
+    recencySupport*.12+
+    condSupport*.18+
+    lowerSupport*.12+
+    zSupport*.10+
+    validationScore*.13
+  )*100,0,95);
+
+  return {type,b,primary,rows,confidence,multiWindow:multiWindow*100,stability:stability*100,conditional,conditionalSamples:condTotal,validation:vf,sampleSupport:sampleSupport*100};
+}
+
+function bestCandidateForType(type,duration){
+  if(type==="EVEN"||type==="ODD"){
+    return modelCandidateStats(type,Number($("barrier").value)||0,duration);
+  }
+
+  const candidates=[];
+  if(type==="MATCH"||type==="DIFF"){
+    for(let d=0;d<10;d++){
+      const m=modelCandidateStats(type,d,duration);
+      if(m)candidates.push(m);
+    }
+  }else if(type==="OVER"){
+    for(let b=0;b<=8;b++){
+      const m=modelCandidateStats(type,b,duration);
+      if(m)candidates.push(m);
+    }
+  }else if(type==="UNDER"){
+    for(let b=1;b<=9;b++){
+      const m=modelCandidateStats(type,b,duration);
+      if(m)candidates.push(m);
+    }
+  }
+
+  if(!candidates.length)return null;
+  candidates.sort((a,b)=>{
+    const va=a.validation?.accuracy??.5;
+    const vb=b.validation?.accuracy??.5;
+    if(Math.abs(b.confidence-a.confidence)>1)return b.confidence-a.confidence;
+    if(Math.abs(vb-va)>.03)return vb-va;
+    return b.primary.edge-a.primary.edge;
+  });
+  return candidates[0];
+}
+
+function renderAccuracyEngine(m){
+  if(!m)return;
+  const set=(id,v)=>{if($(id))$(id).textContent=v;};
+  set("accWindow",m.multiWindow.toFixed(0)+"%");
+  set("accStability",m.stability.toFixed(0)+"%");
+  set("accSequence",m.conditionalSamples>=10 ? (m.conditional*100).toFixed(1)+"%" : "low data");
+  set("accValidation",m.validation ? (m.validation.accuracy*100).toFixed(0)+"%" : "not ready");
+  $("accuracyEngineMessage").innerHTML=
+    `Model evidence <b>${m.confidence.toFixed(0)}%</b> • sample ${m.primary.ds.length} ticks • conditional samples ${m.conditionalSamples}. `+
+    (m.validation ? `Walk-forward validation ${m.validation.samples} tests.` : `Collect more history for walk-forward validation.`);
+}
+
 /* ==========================================================
    MAIN ANALYSIS
    ========================================================== */
 
 function analyze(){
 
-  const duration =
-    Number(
-      $("duration").value
-    );
+  const duration=Number($("duration").value);
+  let type=$("contract").value;
 
-  const sample =
-    Number(
-      $("sample").value
-    );
-
-  const type =
-    S.contract =
-    $("contract").value;
-
-  const b =
-    Number(
-      $("barrier").value
-    );
-
-  if(
-    S.ticks.length<
-    duration+30
-  ){
-
-    $("status").textContent =
-      "Waiting";
-
-    $("message").textContent =
-      "Need more tick data ("+
-      S.ticks.length+
-      " / "+
-      (duration+30)+
-      ").";
-
+  if(S.ticks.length<Math.max(120,duration+80)){
+    $("status").textContent="Waiting";
+    $("message").textContent=`Need more tick data (${S.ticks.length} / ${Math.max(120,duration+80)}).`;
+    renderAccuracyEngine(null);
     return;
   }
 
-  const windows =
-    [30,100,300,1000]
-      .filter(
-        w=>
-          w+duration<
-          S.ticks.length
-      );
+  const model=bestCandidateForType(type,duration);
+  if(!model)return;
 
-  if(
-    sample &&
-    !windows.includes(sample) &&
-    sample+duration<
-    S.ticks.length
-  ){
-
-    windows.push(sample);
-
+  const b=model.b;
+  if(type==="MATCH"||type==="DIFF"||type==="OVER"||type==="UNDER"){
+    $("barrier").value=b;
   }
 
-  if(!windows.length){
-    return;
-  }
+  S.contract=type;
 
-  const results =
-    windows.map(
-      w=>{
+  const primary=model.primary;
+  const results=model.rows;
+  const agrees=results.filter(x=>x.best===bestDigit(x.p,type,b)).length/results.length*100;
+  const positives=results.filter(x=>x.edge>=1.5 && x.z>=1.25).length/results.length*100;
+  const val=model.validation;
+  const confidence=model.confidence;
+  const min=Number($("threshold").value.replace("%",""))||65;
 
-        const ds =
-          horizonDigits(
-            w,
-            duration
-          );
-
-        const p =
-          probs(
-            counts(ds)
-          );
-
-        const cp =
-          contractProb(
-            p,
-            type,
-            b
-          );
-
-        const base =
-          baseline(
-            type,
-            b
-          );
-
-        const wins =
-          ds.filter(
-            d=>
-              event(
-                d,
-                type,
-                b
-              )
-          ).length;
-
-        return {
-
-          w,
-
-          ds,
-
-          p,
-
-          cp,
-
-          base,
-
-          edge:
-            (cp-base)*100,
-
-          z:
-            zscore(
-              cp,
-              base,
-              ds.length
-            ),
-
-          lower:
-            wilson(
-              wins,
-              ds.length
-            ),
-
-          best:
-            bestDigit(
-              p,
-              type,
-              b
-            )
-
-        };
-
-      }
-    );
-
-  const primary =
-    results.find(
-      x=>x.w===sample
-    ) ||
-    results.at(-1);
-
-  const agrees =
-    results.filter(
-      x=>
-        x.best===
-        primary.best
-    ).length /
-    results.length *
-    100;
-
-  const positives =
-    results.filter(
-      x=>
-        x.edge>=1.5 &&
-        x.z>=1.25
-    ).length /
-    results.length *
-    100;
-
-  const val =
-    validation(
-      type,
-      b,
-      duration
-    );
-
-  const sampleFactor =
-    clamp(
-      primary.ds.length/500,
-      0,
-      1
-    );
-
-  const confidence =
-    type==="MATCH"
-    ? matchDigitConfidence(results, primary.best, val).confidence
-    : clamp(
-      (
-        sampleFactor*.15 +
-        clamp(primary.edge/10,0,1)*.2 +
-        clamp(primary.z/3,0,1)*.2 +
-        agrees/100*.2 +
-        positives/100*.15 +
-        (val ? clamp(val.accuracy,0,1) : .5)*.1
-      )*100,
-      0,
-      95
-    );
-
-  const min =
-    Number(
-      $("threshold")
-        .value
-        .replace(
-          "%",
-          ""
-        )
-    );
-
-  const signal =
+  const signal=
     confidence>=min &&
-    primary.edge>=1.5 &&
-    primary.z>=1.25 &&
-    agrees>=66 &&
-    positives>=50;
+    primary.edge>0 &&
+    model.multiWindow>=60 &&
+    model.stability>=60 &&
+    (model.conditionalSamples<10 || model.conditional>primary.base) &&
+    (!val || val.accuracy>=0.5);
 
-  renderAnalysis({
-
-    type,
-
-    b,
-
-    duration,
-
-    primary,
-
-    results,
-
-    agrees,
-
-    positives,
-
-    val,
-
-    confidence,
-
-    signal
-
-  });
+  renderAccuracyEngine(model);
+  renderAnalysis({type,b,duration,primary,results,agrees,positives,val,confidence,signal,model});
 }
 
 
@@ -2706,20 +2929,77 @@ function matchDigitConfidence(results, digit, val){
   return {digit,rate:primary.p*100,edge,lower:primary.lower*100,agreement:agreement*100,confidence};
 }
 
-function renderMatchConfidence(results,val){
-  const card=$("matchConfidenceCard");
+function matchRunAllowance(r){
+  const threshold=Number($("threshold").value.replace("%",""))||65;
+  if(!r || r.confidence<threshold || r.rate<=10 || r.agreement<50) return 0;
+  if(r.confidence>=threshold+20 && r.agreement>=80 && r.rate>=12) return 3;
+  if(r.confidence>=threshold+10 && r.agreement>=66) return 2;
+  return 1;
+}
+
+function renderMatchRunPlanner(results,val){
+  const box=$("matchRunPlanner");
   if($("contract").value!=="MATCH" || !results?.length){
-    card.style.display="none";
+    box.innerHTML='<div class="sub">Select MATCH and wait for enough tick data.</div>';
     return;
   }
+
+  const candidates=[];
+  for(let d=0;d<10;d++){
+    candidates.push(matchDigitConfidence(results,d,val));
+  }
+  candidates.sort((a,b)=>b.confidence-a.confidence);
+  const top=candidates.slice(0,4);
+  const threshold=Number($("threshold").value.replace("%",""))||65;
+
+  box.innerHTML=top.map((r,i)=>{
+    const attempts=matchRunAllowance(r);
+    const eligible=attempts>0;
+    const label=eligible?`${attempts} max attempt${attempts===1?'':'s'}`:'Wait / 0 attempts';
+    const status=eligible?'Eligible by model filters':'Below model threshold';
+    return `
+      <div style="border:1px solid #e3e8fb;border-radius:12px;padding:11px;margin:8px 0;background:#fbfcff">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+          <div><b>#${i+1} MATCH ${r.digit}</b><div class="sub">${r.rate.toFixed(1)}% observed hit • ${r.agreement.toFixed(0)}% window agreement</div></div>
+          <div style="text-align:right"><b>${r.confidence.toFixed(0)}%</b><div class="sub">run confidence</div></div>
+        </div>
+        <div style="height:8px;background:#edf0fb;border-radius:8px;overflow:hidden;margin:8px 0"><div style="height:100%;width:${Math.min(100,r.confidence).toFixed(1)}%;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px"></div></div>
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="sub">${status} • threshold ${threshold}%</span>
+          <b>${label}</b>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderMatchConfidence(results,val){
+  const card=$("matchConfidenceCard");
+  const sub=$("matchConfidenceSub");
+
   card.style.display="block";
+  renderBestScannedMatch();
+
+  if($("contract").value!=="MATCH" || !results?.length){
+    sub.textContent="Select MATCH and collect enough ticks to calculate digit-by-digit confidence for the selected market.";
+    $("matchConfidenceList").innerHTML=`
+      <div class="sub" style="padding:12px 0">
+        No current-market MATCH confidence is available yet.
+      </div>`;
+    return;
+  }
+
+  sub.textContent="Selected-market confidence is calculated from observed frequency, statistical edge, window agreement, sample size and validation.";
+
   const rows=[];
   for(let d=0;d<10;d++) rows.push(matchDigitConfidence(results,d,val));
   rows.sort((a,b)=>b.confidence-a.confidence);
+
   $("matchConfidenceList").innerHTML=rows.map((r,i)=>`
-    <div style="display:grid;grid-template-columns:28px 1fr 55px 70px;gap:8px;align-items:center;margin:7px 0">
+    <div style="display:grid;grid-template-columns:30px 1fr 55px 70px;gap:8px;align-items:center;margin:8px 0">
       <b>${r.digit}</b>
-      <div style="height:9px;background:#edf0fb;border-radius:8px;overflow:hidden"><div style="height:100%;width:${r.confidence.toFixed(1)}%;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px"></div></div>
+      <div style="height:10px;background:#edf0fb;border-radius:8px;overflow:hidden">
+        <div style="height:100%;width:${r.confidence.toFixed(1)}%;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px"></div>
+      </div>
       <b>${r.confidence.toFixed(0)}%</b>
       <span class="sub">${r.rate.toFixed(1)}% hit</span>
     </div>`).join("");
@@ -2738,17 +3018,38 @@ function renderAnalysis(a){
     type,
     b,
     agrees,
-    positives
+    positives,
+    results,
+    val,
+    model
   }=a;
 
-  const bd =
-    primary.best;
+  // Center circle shows the model-selected MATCH digit.
+  let confidentDigit = primary.best;
+  let confidentScore = confidence;
+
+  if(type==="MATCH"){
+    confidentDigit=Number(b);
+    confidentScore=confidence;
+  }
+
+  const bd = confidentDigit;
 
   $("bestDigit").textContent =
     bd;
 
-  $("centerDigit").textContent =
-    bd;
+  const matchIsActive = type === "MATCH";
+  const matchRate = matchIsActive ? ((primary.p[bd] || 0) * 100) : 0;
+
+  $("centerDigitValue").textContent = bd;
+  $("centerDigitConfidence").textContent = matchIsActive ? confidentScore.toFixed(0) + "%" : "";
+  $("centerDigit").title = matchIsActive
+    ? `Confident MATCH digit ${bd} • ${confidentScore.toFixed(0)}% statistical confidence • ${matchRate.toFixed(1)}% observed hit rate`
+    : `Selected digit ${bd}`;
+
+  $("matchConfidenceHint").textContent = matchIsActive
+    ? `Confident MATCH digit: ${bd} • confidence: ${confidentScore.toFixed(0)}% • observed hit rate: ${matchRate.toFixed(1)}% • window agreement: ${agrees.toFixed(0)}%`
+    : `Selected digit: ${bd}`;
 
   $("confidencePct").textContent =
     confidence.toFixed(0)+
@@ -2785,8 +3086,8 @@ function renderAnalysis(a){
     ?
 
     (type==="MATCH"
-      ? `MATCH digit ${primary.best} has ${confidence.toFixed(0)}% model confidence. Observed hit rate ${((primary.p[primary.best]||0)*100).toFixed(1)}%, agreement ${agrees.toFixed(0)}%.`
-      : `Statistical filters passed for ${type} ${b}. Agreement ${agrees.toFixed(0)}%, multi-window support ${positives.toFixed(0)}%.`)
+      ? `MATCH digit ${b} has ${confidence.toFixed(0)}% model-evidence confidence. Observed hit rate ${((primary.p[b]||0)*100).toFixed(1)}%, window support ${agrees.toFixed(0)}%.`
+      : `Model selected ${type} ${b} with ${confidence.toFixed(0)}% evidence. Window support ${agrees.toFixed(0)}%, stability ${model?.stability?.toFixed(0)??"—"}%.`)
 
     :
 
@@ -2816,6 +3117,8 @@ function renderAnalysis(a){
   );
 
   renderMatchConfidence(a.results,a.val);
+  renderContractOutcomeConfidence();
+  renderMatchRunPlanner(a.results,a.val);
   updatePatternChart();
 
   log(
@@ -3492,6 +3795,7 @@ makeFrequencyChart();
 
 makePatternChart();
 renderSignalHistory();
+renderVolatilityScan();
 
 connect();
 
