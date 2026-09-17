@@ -980,6 +980,12 @@ select{
   <div id="signalHistory" class="log" style="margin-top:12px;max-height:120px"></div>
 </section>
 
+<section class="card" id="matchConfidenceCard" style="display:none">
+  <div class="cardtitle">MATCH Digit Confidence</div>
+  <div class="sub">Confidence is calculated from observed frequency, statistical edge, window agreement and validation. It is not a guarantee of the next tick.</div>
+  <div id="matchConfidenceList" style="margin-top:12px"></div>
+</section>
+
 <section class="card settings">
 
   <div class="field">
@@ -2478,40 +2484,17 @@ function analyze(){
     );
 
   const confidence =
-    clamp(
-
+    type==="MATCH"
+    ? matchDigitConfidence(results, primary.best, val).confidence
+    : clamp(
       (
-
         sampleFactor*.15 +
-
-        clamp(
-          primary.edge/10,
-          0,
-          1
-        )*.2 +
-
-        clamp(
-          primary.z/3,
-          0,
-          1
-        )*.2 +
-
+        clamp(primary.edge/10,0,1)*.2 +
+        clamp(primary.z/3,0,1)*.2 +
         agrees/100*.2 +
-
         positives/100*.15 +
-
-        (
-          val
-          ? clamp(
-              val.accuracy,
-              0,
-              1
-            )
-          : .5
-        )*.1
-
+        (val ? clamp(val.accuracy,0,1) : .5)*.1
       )*100,
-
       0,
       95
     );
@@ -2558,6 +2541,47 @@ function analyze(){
   });
 }
 
+
+function matchDigitConfidence(results, digit, val){
+  const rows=results.map(r=>{
+    const p=r.p[digit]||0;
+    const edge=(p-0.1)*100;
+    const z=zscore(p,0.1,r.ds.length);
+    const lower=r.lowerForDigit!=null ? r.lowerForDigit : wilson(Math.round(p*r.ds.length),r.ds.length);
+    return {p,edge,z,lower};
+  });
+
+  const primary=rows.find((_,i)=>results[i].w===Number($("sample").value))||rows.at(-1);
+  const agreement=results.filter(r=>r.best===digit).length/results.length;
+  const positive=results.filter(r=>(r.p[digit]||0)>0.1).length/results.length;
+  const sampleFactor=clamp(primary.p>=0 ? results.find((r,i)=>r.w===Number($("sample").value))?.ds.length/500 || results.at(-1).ds.length/500 : 0,0,1);
+  const lift=clamp((primary.p-0.1)/0.12,0,1);
+  const zPart=clamp(primary.z/2.5,0,1);
+  const lowerPart=clamp((primary.lower-0.1)/0.08,0,1);
+  const stability=agreement*.6+positive*.4;
+  const validationPart=val?clamp(val.accuracy,0,1):0.5;
+  const confidence=clamp((sampleFactor*.10+lift*.25+zPart*.20+lowerPart*.15+stability*.20+validationPart*.10)*100,0,95);
+  return {digit,rate:primary.p*100,edge,lower:primary.lower*100,agreement:agreement*100,confidence};
+}
+
+function renderMatchConfidence(results,val){
+  const card=$("matchConfidenceCard");
+  if($("contract").value!=="MATCH" || !results?.length){
+    card.style.display="none";
+    return;
+  }
+  card.style.display="block";
+  const rows=[];
+  for(let d=0;d<10;d++) rows.push(matchDigitConfidence(results,d,val));
+  rows.sort((a,b)=>b.confidence-a.confidence);
+  $("matchConfidenceList").innerHTML=rows.map((r,i)=>`
+    <div style="display:grid;grid-template-columns:28px 1fr 55px 70px;gap:8px;align-items:center;margin:7px 0">
+      <b>${r.digit}</b>
+      <div style="height:9px;background:#edf0fb;border-radius:8px;overflow:hidden"><div style="height:100%;width:${r.confidence.toFixed(1)}%;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px"></div></div>
+      <b>${r.confidence.toFixed(0)}%</b>
+      <span class="sub">${r.rate.toFixed(1)}% hit</span>
+    </div>`).join("");
+}
 
 /* ==========================================================
    RENDER
@@ -2618,7 +2642,9 @@ function renderAnalysis(a){
 
     ?
 
-    `Statistical filters passed for ${type} ${b}. Agreement ${agrees.toFixed(0)}%, multi-window support ${positives.toFixed(0)}%.`
+    (type==="MATCH"
+      ? `MATCH digit ${primary.best} has ${confidence.toFixed(0)}% model confidence. Observed hit rate ${((primary.p[primary.best]||0)*100).toFixed(1)}%, agreement ${agrees.toFixed(0)}%.`
+      : `Statistical filters passed for ${type} ${b}. Agreement ${agrees.toFixed(0)}%, multi-window support ${positives.toFixed(0)}%.`)
 
     :
 
@@ -2647,6 +2673,7 @@ function renderAnalysis(a){
     primary.p
   );
 
+  renderMatchConfidence(results,val);
   updatePatternChart();
 
   log(
@@ -3058,20 +3085,31 @@ function generateAutoSignal(force=false){
     digit=barrier;
   }
 
-  const signature=type+":"+barrier+":"+Math.round(rate);
+  let confidence=rate;
+  if(type==="MATCH"){
+    const ws=[30,100,300,1000].filter(w=>w+Number($("duration").value)<S.ticks.length);
+    const results=ws.map(w=>{
+      const ds=horizonDigits(w,Number($("duration").value));
+      const p=probs(counts(ds));
+      return {w,ds,p,best:bestDigit(p,"MATCH",digit)};
+    });
+    const val=validation("MATCH",digit,Number($("duration").value));
+    if(results.length) confidence=matchDigitConfidence(results,digit,val).confidence;
+  }
+  const signature=type+":"+barrier+":"+Math.round(confidence);
   $("botSignal").textContent=type;
   $("botDigit").textContent=(type==="EVEN"||type==="ODD")?type:String(digit);
-  $("botStrength").textContent=rate.toFixed(1)+"%";
+  $("botStrength").textContent=confidence.toFixed(1)+"%";
   $("botType").textContent=type;
   $("botNext").textContent="5 ticks";
-  $("signalText").textContent=type+" "+(type==="OVER"||type==="UNDER"||type==="MATCH"||type==="DIFF"?barrier:"")+" • "+rate.toFixed(0)+"%";
+  $("signalText").textContent=type+" "+(type==="OVER"||type==="UNDER"||type==="MATCH"||type==="DIFF"?barrier:"")+" • "+confidence.toFixed(0)+"% confidence";
 
   if(signature!==S.autoLastSignature || force){
     S.autoLastSignature=signature;
-    S.signalHistory.unshift({time:new Date().toLocaleTimeString(),type,digit:barrier,rate});
+    S.signalHistory.unshift({time:new Date().toLocaleTimeString(),type,digit:barrier,rate,confidence});
     S.signalHistory=S.signalHistory.slice(0,10);
     renderSignalHistory();
-    log("AUTO SIGNAL • "+type+" • "+barrier+" • observed "+rate.toFixed(1)+"%","ok");
+    log("AUTO SIGNAL • "+type+" • "+barrier+" • confidence "+confidence.toFixed(1)+"% • observed "+rate.toFixed(1)+"%","ok");
   }
 }
 
@@ -3079,7 +3117,7 @@ function renderSignalHistory(){
   const box=$("signalHistory");
   if(!S.signalHistory.length){box.textContent="Waiting for enough live ticks…";return;}
   box.innerHTML=S.signalHistory.map(x=>
-    `${x.time}  •  ${x.type} ${x.digit}  •  observed ${x.rate.toFixed(1)}%`
+    `${x.time}  •  ${x.type} ${x.digit}  •  confidence ${x.confidence!=null?x.confidence.toFixed(1):x.rate.toFixed(1)}%  •  observed ${x.rate.toFixed(1)}%`
   ).join("<br>");
 }
 
