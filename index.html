@@ -980,6 +980,18 @@ select{
   <div id="signalHistory" class="log" style="margin-top:12px;max-height:120px"></div>
 </section>
 
+<section class="card" id="volatilityScanCard" style="margin-top:16px">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+    <div>
+      <div class="title" style="margin-bottom:4px">📊 Best MATCH Volatility Scanner</div>
+      <div class="sub">Scans available Volatility indices and ranks the strongest observed MATCH digit using multiple statistical checks.</div>
+    </div>
+    <button class="btn" id="scanVolatility">Scan Volatility</button>
+  </div>
+  <div id="volatilityScanStatus" class="sub" style="margin-top:10px">Ready to scan available Volatility markets.</div>
+  <div id="volatilityScanList" style="margin-top:12px"></div>
+</section>
+
 <section class="card" id="matchConfidenceCard" style="display:none">
   <div class="cardtitle">MATCH Digit Confidence</div>
   <div class="sub">Confidence is calculated from observed frequency, statistical edge, window agreement and validation. It is not a guarantee of the next tick.</div>
@@ -1146,7 +1158,8 @@ const S = {
   autoLastTick:0,
   autoLastSignature:"",
   signalHistory:[],
-  signalEvery:5
+  signalEvery:5,
+  volatilityScan:{active:false,queue:[],results:[],pending:{},total:0}
 
 };
 
@@ -1455,6 +1468,8 @@ function handle(raw){
     "history"
   ){
 
+    if(handleVolatilityScanHistory(d)) return;
+
     history(d);
 
     return;
@@ -1570,6 +1585,132 @@ function scoreMarket(m){
   return n;
 }
 
+
+/* ==========================================================
+   BEST MATCH VOLATILITY SCANNER
+   ========================================================== */
+
+function isVolatilityMarket(m){
+  const sym=String(symbolOf(m)||"").toUpperCase();
+  const name=String(nameOf(m)||"").toUpperCase();
+  return name.includes("VOLATILITY") || /1HZ(?:15|25|30|50|75|90|100)V/.test(sym) || /^(?:R_)?(?:15|25|30|50|75|90|100)V$/.test(sym);
+}
+
+function scannerDigitsFromHistory(d,m){
+  const pip=Number.isFinite(Number(d.pip_size)) ? Number(d.pip_size) : pipOf(m);
+  return (d.history?.prices||[]).map(Number).map(q=>digitOf(q,pip)).filter(x=>x!==null);
+}
+
+function scannerValidation(series,duration,digit){
+  const n=Math.min(120,series.length-duration-80);
+  if(n<30)return null;
+  let tested=0,correct=0;
+  const begin=Math.max(50,series.length-duration-n);
+  for(let i=begin;i<series.length-duration;i++){
+    const train=series.slice(Math.max(0,i-300),i);
+    if(train.length<50)continue;
+    const p=probs(counts(train));
+    if((p[digit]||0)<=0.1)continue;
+    const actual=series[i+duration];
+    if(actual==null)continue;
+    tested++;
+    if(actual===digit)correct++;
+  }
+  return tested?{accuracy:correct/tested,samples:tested}:null;
+}
+
+function scannerMatchResult(series,duration,sample){
+  if(series.length<Math.max(100,duration+30))return null;
+  const windows=[30,100,300,500,1000].filter(w=>w+duration<series.length);
+  if(sample && !windows.includes(sample) && sample+duration<series.length)windows.push(sample);
+  if(!windows.length)return null;
+
+  const results=windows.map(w=>{
+    const ds=series.slice(-w);
+    const p=probs(counts(ds));
+    const best=p.indexOf(Math.max(...p));
+    const cp=p[best]||0;
+    const wins=ds.filter(d=>d===best).length;
+    return {w,ds,p,best,edge:(cp-0.1)*100,z:zscore(cp,0.1,ds.length),lower:wilson(wins,ds.length)};
+  });
+
+  const primary=results.find(x=>x.w===sample)||results.at(-1);
+  const digit=primary.best;
+  const agreement=results.filter(r=>r.best===digit).length/results.length;
+  const positive=results.filter(r=>(r.p[digit]||0)>0.1).length/results.length;
+  const val=scannerValidation(series,duration,digit);
+  const p=primary.p[digit]||0;
+  const lower=wilson(Math.round(p*primary.ds.length),primary.ds.length);
+  const sampleFactor=clamp(primary.ds.length/500,0,1);
+  const lift=clamp((p-0.1)/0.12,0,1);
+  const zPart=clamp(zscore(p,0.1,primary.ds.length)/2.5,0,1);
+  const lowerPart=clamp((lower-0.1)/0.08,0,1);
+  const stability=agreement*.6+positive*.4;
+  const validationPart=val?clamp(val.accuracy,0,1):0.5;
+  const confidence=clamp((sampleFactor*.10+lift*.25+zPart*.20+lowerPart*.15+stability*.20+validationPart*.10)*100,0,95);
+
+  return {digit,rate:p*100,edge:(p-0.1)*100,lower:lower*100,agreement:agreement*100,positive:positive*100,confidence,samples:primary.ds.length,validation:val};
+}
+
+function renderVolatilityScan(){
+  const box=$("volatilityScanList");
+  const rows=S.volatilityScan.results.slice().sort((a,b)=>b.confidence-a.confidence);
+  if(!rows.length){box.innerHTML="";return;}
+  box.innerHTML=rows.map((x,i)=>`
+    <div style="display:grid;grid-template-columns:28px 1fr 52px 72px 72px 72px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #edf0f7">
+      <b>${i+1}</b>
+      <div><b>${x.name}</b><div class="sub">${x.symbol} • MATCH ${x.digit} • ${x.samples} ticks</div></div>
+      <b>${x.confidence.toFixed(0)}%</b>
+      <span class="sub">${x.rate.toFixed(1)}% hit</span>
+      <span class="sub">edge ${x.edge.toFixed(1)}%</span>
+      <span class="sub">agree ${x.agreement.toFixed(0)}%</span>
+    </div>`).join("");
+}
+
+function startVolatilityScan(){
+  if(!S.connected){$("volatilityScanStatus").textContent="Connect to Deriv before scanning.";return;}
+  const markets=S.markets.filter(isVolatilityMarket);
+  if(!markets.length){$("volatilityScanStatus").textContent="No Volatility markets were returned by Deriv.";return;}
+  S.volatilityScan={active:true,queue:markets.slice(),results:[],pending:{},total:markets.length};
+  $("scanVolatility").disabled=true;
+  $("volatilityScanStatus").textContent=`Scanning ${markets.length} Volatility markets…`;
+  $("volatilityScanList").innerHTML="";
+  requestNextVolatilityScan();
+}
+
+function requestNextVolatilityScan(){
+  const m=S.volatilityScan.queue.shift();
+  if(!m){
+    S.volatilityScan.active=false;
+    $("scanVolatility").disabled=false;
+    $("volatilityScanStatus").textContent=`Scan complete: ${S.volatilityScan.results.length} Volatility markets analyzed.`;
+    renderVolatilityScan();
+    return;
+  }
+  const symbol=symbolOf(m), id=req();
+  S.volatilityScan.pending[id]={symbol,market:m};
+  const count=Math.max(750,Number($("analysisTicks").value)||500);
+  send({ticks_history:symbol,end:"latest",count,style:"ticks",req_id:id});
+  $("volatilityScanStatus").textContent=`Scanning ${symbol}…`;
+}
+
+function handleVolatilityScanHistory(d){
+  const item=S.volatilityScan.pending[d.req_id];
+  if(!item)return false;
+  delete S.volatilityScan.pending[d.req_id];
+  if(d.error){
+    log(`Volatility scan failed for ${item.symbol}: ${d.error.message||"API error"}`,"err");
+    requestNextVolatilityScan();
+    return true;
+  }
+  const series=scannerDigitsFromHistory(d,item.market);
+  const result=scannerMatchResult(series,Number($("duration").value)||100,Number($("sample").value)||500);
+  if(result)S.volatilityScan.results.push({symbol:item.symbol,name:nameOf(item.market),...result});
+  else log(`Not enough usable ticks for ${item.symbol}.`);
+  renderVolatilityScan();
+  requestNextVolatilityScan();
+  return true;
+}
 
 /* ==========================================================
    MARKET SELECTION
@@ -2561,6 +2702,7 @@ function matchDigitConfidence(results, digit, val){
   const stability=agreement*.6+positive*.4;
   const validationPart=val?clamp(val.accuracy,0,1):0.5;
   const confidence=clamp((sampleFactor*.10+lift*.25+zPart*.20+lowerPart*.15+stability*.20+validationPart*.10)*100,0,95);
+  const edge=(primary.p-0.1)*100;
   return {digit,rate:primary.p*100,edge,lower:primary.lower*100,agreement:agreement*100,confidence};
 }
 
@@ -3293,6 +3435,8 @@ $("logout").onclick=()=>{
   );
 
 };
+
+$("scanVolatility").onclick=()=>startVolatilityScan();
 
 $("botMode").onchange=e=>{
   const on=e.target.value==="AUTO";
