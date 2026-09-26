@@ -1,538 +1,464 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Deriv Quantitative Digit Analyzer</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root {
-      --bg: #0d1117;
-      --card: #161b22;
-      --border: #30363d;
-      --text: #c9d1d9;
-      --accent: #58a6ff;
-      --green: #238636;
-      --red: #da3633;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 20px; font-size: 14px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 15px; }
-    h2 { font-size: 16px; margin-bottom: 12px; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
-    .control-group { margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-    label { font-size: 12px; color: #8b949e; }
-    select, input { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 6px 10px; border-radius: 4px; outline: none; }
-    .status-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
-    .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; background: var(--border); }
-    .badge.connected { background: var(--green); color: #fff; }
-    .large-stat { font-size: 32px; font-weight: bold; color: #fff; text-align: center; margin: 10px 0; }
-    .progress-bg { background: var(--border); height: 8px; border-radius: 4px; overflow: hidden; }
-    .progress-fill { background: var(--accent); height: 100%; width: 0%; transition: width 0.3s; }
-    .chart-container { position: relative; height: 180px; width: 100%; }
-    #log { height: 100px; overflow-y: auto; font-family: monospace; font-size: 11px; background: #000; padding: 8px; border-radius: 4px; border: 1px solid var(--border); }
-    .log-err { color: #f85149; }
-    .log-ok { color: #3fb950; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#0b1020">
+<title>Expert Trader Analysis — Pro</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg:#0b1020;
+  --bg2:#0f1530;
+  --panel:#121a38;
+  --panel2:#0e142c;
+  --card:#ffffff;
+  --line:#e5e9f7;
+  --line2:#2a3560;
+  --text:#0f1734;
+  --text-soft:#42507a;
+  --muted:#7b88ad;
+  --blue:#3d3ce8;
+  --cyan:#19b8ed;
+  --pink:#ed2c91;
+  --purple:#7650e9;
+  --green:#10a66a;
+  --green2:#0aa66b;
+  --orange:#f59b45;
+  --red:#ff3d5a;
+  --gold:#f4b740;
+  --shadow:0 10px 30px rgba(20,28,70,.10);
+  --shadow-lg:0 18px 50px rgba(20,28,70,.16);
+  --radius:16px;
+  --radius-sm:10px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1200px 700px at 15% -10%, #eaf0ff 0%, transparent 55%),
+    radial-gradient(900px 600px at 100% 0%, #ffe9f4 0%, transparent 45%),
+    linear-gradient(180deg,#f7f9ff,#eef2fb);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  color:var(--text);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+button,select,input{font:inherit}
+button{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,background .12s ease}
+button:active{transform:translateY(1px)}
+
+.app{
+  width:min(1240px,97%);
+  margin:14px auto 40px;
+  background:rgba(255,255,255,.72);
+  backdrop-filter:blur(8px);
+  border:1px solid #e1e6fb;
+  border-radius:20px;
+  box-shadow:var(--shadow-lg);
+  padding:16px;
+}
+
+/* ---------- TOP BAR ---------- */
+.top{
+  display:flex;align-items:center;gap:18px;
+  padding:6px 10px 18px;
+  border-bottom:1px solid var(--line);
+  flex-wrap:wrap;
+}
+.brand{min-width:220px}
+.logo{
+  font-size:28px;font-weight:900;letter-spacing:-.4px;
+  background:linear-gradient(90deg,#e51d8a,#6d2be8 60%,#2aa9e8);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.logo-line{
+  width:150px;height:3px;border-radius:8px;margin-top:6px;
+  background:linear-gradient(90deg,#ed2c91,#6d2be8,#19b8ed);
+}
+.sub{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+.controls{display:flex;align-items:end;gap:8px;margin-left:auto;flex-wrap:wrap}
+.field label{display:block;font-size:10px;font-weight:800;color:#607099;margin:0 0 5px 2px;letter-spacing:.3px;text-transform:uppercase}
+select,input[type=number]{
+  height:38px;border:1px solid #cfd7ff;border-radius:9px;background:#fff;color:#26314f;
+  padding:0 30px 0 12px;min-width:120px;
+  box-shadow:0 2px 7px rgba(60,60,180,.06);
+  outline:none;
+}
+select:focus,input:focus{border-color:#7d6bf0;box-shadow:0 0 0 3px rgba(125,107,240,.18)}
+.btn{
+  height:38px;border:0;border-radius:10px;padding:0 16px;font-weight:800;color:#fff;
+  background:linear-gradient(135deg,#4037df,#6834d7);
+  box-shadow:0 6px 14px rgba(67,55,220,.24);
+}
+.btn:hover{filter:brightness(1.05)}
+.btn.red{background:linear-gradient(135deg,#ff6b55,#ff0755)}
+.btn.ghost{background:#fff;color:#4037df;border:1px solid #d9defa;box-shadow:none}
+.btn.ghost:hover{background:#f5f6ff}
+
+/* ---------- STATUS PILLS ---------- */
+.statusbar{display:flex;justify-content:flex-end;gap:8px;margin:10px 0 4px;flex-wrap:wrap}
+.pill{
+  padding:8px 13px;border-radius:10px;color:#fff;font-size:12px;font-weight:800;
+  box-shadow:var(--shadow);display:inline-flex;align-items:center;gap:6px;
+}
+.connector{background:#0aa66b}
+.connector.warn{background:#f59b45}
+.connector.bad{background:#ff3d5a}
+.risk{background:linear-gradient(135deg,#0b9e66,#12c47c)}
+.pill.soft{background:#eef0fb;color:#4037df;box-shadow:none;font-weight:700}
+
+/* ---------- HERO MARKET CARD ---------- */
+.hero{
+  display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin:14px 0 18px;
+}
+.hero-main{
+  position:relative;overflow:hidden;
+  padding:20px 22px;border-radius:18px;
+  background:linear-gradient(120deg,#141c46 0%,#241a5c 50%,#3a1a6a 100%);
+  color:#fff;box-shadow:var(--shadow-lg);
+}
+.hero-main:before{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(600px 200px at 10% 0%, rgba(61,200,237,.28), transparent 60%),
+    radial-gradient(500px 200px at 100% 100%, rgba(237,44,145,.28), transparent 60%);
+  pointer-events:none;
+}
+.hero-name{font-size:16px;font-weight:800;opacity:.95;position:relative}
+.hero-meta{font-size:11px;color:#b9c4ec;margin-top:4px;position:relative}
+.hero-price{
+  font-size:38px;font-weight:900;letter-spacing:-1px;margin-top:14px;position:relative;
+  font-variant-numeric:tabular-nums;
+}
+.hero-digitrow{
+  display:flex;align-items:center;gap:14px;margin-top:14px;position:relative;flex-wrap:wrap;
+}
+.hero-lastdigit{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);
+  padding:8px 14px;border-radius:12px;
+}
+.hero-lastdigit small{font-size:10px;color:#cfd6f3;font-weight:700;letter-spacing:.4px}
+.hero-lastdigit b{font-size:22px;font-weight:900}
+.hero-delta{font-size:12px;font-weight:800}
+.hero-delta.up{color:#5ff0b0}
+.hero-delta.down{color:#ff9aa9}
+
+.hero-side{
+  display:grid;grid-template-columns:1fr;gap:12px;
+}
+.hero-mini{
+  background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+}
+.hero-mini small{display:block;font-size:10px;color:var(--muted);font-weight:800;letter-spacing:.4px}
+.hero-mini b{font-size:18px}
+.hero-mini .badge{
+  font-size:11px;font-weight:900;padding:5px 9px;border-radius:8px;color:#fff;
+}
+
+/* ---------- START ---------- */
+.start-wrap{text-align:center;margin:6px 0 14px}
+.start{
+  width:200px;height:46px;border:0;border-radius:14px;
+  background:linear-gradient(135deg,#ff9e24,#ff0753);
+  color:#fff;font-weight:900;font-size:14px;letter-spacing:.4px;
+  box-shadow:0 10px 24px rgba(255,65,65,.28);
+}
+.start:hover{filter:brightness(1.05)}
+
+/* ---------- DIGIT PANEL ---------- */
+.digit-panel{
+  display:grid;grid-template-columns:1fr 1fr;gap:18px;
+  padding:18px 22px;
+  background:linear-gradient(110deg,#effcff,#eef0ff);
+  border-radius:16px;border:1px solid #e1e7ff;
+}
+.digit-group{text-align:center}
+.digit-title{font-weight:900;color:#11b9ef;margin-bottom:12px;letter-spacing:.4px;font-size:12px;text-transform:uppercase}
+.digits{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.digit{
+  height:38px;background:#fff;border:1px solid #cfd8ff;border-radius:9px;color:#25304d;
+  font-weight:800;box-shadow:0 3px 8px rgba(69,78,170,.08);
+  position:relative;
+}
+.digit.active{border-color:#4e36e5;background:#eeeaff;color:#402be2;box-shadow:0 0 0 2px #6d54ec55}
+.digit .gap{
+  position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);
+  font-size:9px;font-weight:800;color:var(--muted);
+}
+.digit[data-hot="1"]{background:linear-gradient(180deg,#fff,#ffe7f2);border-color:#ffb9da}
+.digit[data-cold="1"]{background:linear-gradient(180deg,#fff,#e9f4ff);border-color:#b9d9ff}
+
+/* ---------- ACTION BAR ---------- */
+.actionbar{
+  display:flex;justify-content:center;gap:14px;margin:16px 0;padding:16px;
+  background:linear-gradient(90deg,#fff0f8,#f0edff);border-radius:14px;flex-wrap:wrap;
+}
+.action{border:0;border-radius:11px;padding:11px 26px;color:#fff;font-weight:900;letter-spacing:.3px;
+  box-shadow:0 6px 14px rgba(55,50,180,.2)}
+.action.over{background:linear-gradient(135deg,#a778e9,#8a52e0)}
+.action.even{background:linear-gradient(135deg,#ffb1a6,#ff8a7a)}
+.action.odd{background:linear-gradient(135deg,#6fc8e8,#3eb0d8)}
+.action.under{background:linear-gradient(135deg,#f2a877,#ee8b4d)}
+.action.start2{background:linear-gradient(135deg,#4038df,#6834d7)}
+.action.selected{outline:2px solid #1a1450;outline-offset:2px}
+
+/* ---------- PROGRESS BARS ---------- */
+.progress{padding:14px;background:linear-gradient(90deg,#fff8ef,#fff0f8);border-radius:14px;border:1px solid #f3e6e8}
+.prow{display:flex;align-items:center;gap:12px;margin:8px 0}
+.prow strong{width:110px;font-size:11px;letter-spacing:.3px}
+.bar{height:10px;flex:1;background:#f0e9f2;border-radius:20px;overflow:hidden}
+.fill{height:100%;width:0;border-radius:20px;background:linear-gradient(90deg,#208bf1,#7352ec);transition:width .4s ease}
+.fill.data{background:linear-gradient(90deg,#17b6a4,#16b9c8)}
+.fill.gold{background:linear-gradient(90deg,#f4b740,#ff7a3d)}
+.pct{width:44px;text-align:right;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+
+/* ---------- MATCH PANEL ---------- */
+.matches{margin:16px 0;padding:18px;text-align:center;background:linear-gradient(90deg,#effbf9,#eefdfb);border-radius:14px;border:1px solid #e0f0ed}
+.matchrow{display:flex;justify-content:center;align-items:center;gap:18px;flex-wrap:wrap}
+.matchbtn{border:0;background:#3d31d5;color:#fff;border-radius:9px;padding:9px 18px;font-weight:900}
+.center-digit{
+  width:78px;height:78px;border-radius:50%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1px;
+  font-size:26px;line-height:26px;font-weight:900;color:#fff;
+  background:linear-gradient(135deg,#7c42d9,#20b4d5);
+  box-shadow:0 0 0 6px #d9dcff,0 10px 24px #7e75d955;
+  transition:transform .2s ease,box-shadow .2s ease;
+}
+.center-digit small{font-size:9px;line-height:10px;font-weight:900;letter-spacing:.2px;opacity:.96}
+.match-confidence-hint{margin-top:10px;font-size:12px;font-weight:800;color:#59617a}
+
+/* ---------- GENERIC GRID / CARDS ---------- */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:#fff;border:1px solid #e2e7fb;border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+.title{font-size:13px;font-weight:900;color:#1a2a55;margin-bottom:12px;letter-spacing:.2px;display:flex;align-items:center;gap:8px}
+.title:before{content:"";width:6px;height:6px;border-radius:2px;background:linear-gradient(135deg,#20aee8,#7650e9)}
+.chartbox{height:250px;position:relative}
+.last{text-align:center;color:#4055e8;font-size:20px;font-weight:900;margin-top:6px}
+
+/* ---------- STATUS GRID ---------- */
+.status-card{margin-top:16px}
+.status-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.metric{background:#fafbff;border:1px solid #e8ecfb;border-radius:10px;padding:11px}
+.metric small{display:block;color:#8390ae;font-size:9px;letter-spacing:.3px;font-weight:700;text-transform:uppercase}
+.metric b{display:block;margin-top:5px;font-size:14px;font-variant-numeric:tabular-nums}
+.signal{margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.signalbar{height:9px;flex:1;background:#eceafa;border-radius:20px;overflow:hidden}
+.signalfill{height:100%;width:0;background:linear-gradient(90deg,#1e8df2,#7752ea);border-radius:20px;transition:width .4s ease}
+.signaltext{font-size:12px;font-weight:900;padding:9px 12px;border-radius:9px;background:#fff6e8;color:#b06a10;white-space:nowrap}
+
+/* ---------- LOG ---------- */
+.log{margin-top:16px;background:#0e142c;color:#dce6ff;border-radius:12px;padding:12px;font:11.5px/1.55 ui-monospace,Menlo,monospace;max-height:170px;overflow:auto}
+.log .err{color:#ff8997}
+.log .ok{color:#6ce7ac}
+.log .warn{color:#ffd27a}
+
+/* ---------- ADVANCED ANALYTICS ---------- */
+.analytics-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:6px}
+.analytics-card{border:1px solid #e3e8fb;border-radius:12px;padding:12px;background:#fbfcff}
+.analytics-card h4{margin:0 0 8px;font-size:10px;letter-spacing:.4px;color:var(--muted);text-transform:uppercase;font-weight:800}
+.analytics-card .big{font-size:20px;font-weight:900;color:#1a2a55}
+.analytics-card .subline{font-size:11px;color:var(--text-soft);margin-top:5px}
+
+/* streak pills */
+.streak-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.streak-pill{font-size:11px;font-weight:800;padding:6px 10px;border-radius:8px;background:#eef0fb;color:#3d31d5;border:1px solid #e0e4fb}
+.streak-pill.hot{background:#ffe7f0;color:#c11c66;border-color:#ffc4dd}
+
+/* transition matrix */
+.matrix{display:grid;grid-template-columns:repeat(11,1fr);gap:3px;font-size:10px;margin-top:6px}
+.matrix div{
+  text-align:center;padding:5px 0;border-radius:5px;font-weight:700;color:#2b3560;
+  background:#f2f4fd;
+}
+.matrix .hdr{background:#e6eafc;color:#3d31d5;font-weight:900}
+.matrix .diag{background:#e8fff4;color:#07734e}
+
+/* backtest table */
+.backtest-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:8px}
+.backtest-table th,.backtest-table td{padding:7px 8px;text-align:left;border-bottom:1px solid #eef0f8}
+.backtest-table th{font-weight:800;color:var(--muted);text-transform:uppercase;font-size:9.5px;letter-spacing:.4px}
+.backtest-table td b{color:#1a2a55}
+.backtest-table tr:last-child td{border-bottom:0}
+
+/* accuracy grid */
+.accuracy-metric{border:1px solid #e3e8fb;border-radius:12px;padding:11px;background:#fbfcff;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.accuracy-metric b{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+.accuracy-metric span{font-size:17px;font-weight:800}
+
+/* contract confidence */
+.contract-confidence-card{border:1px solid #e3e8fb;border-radius:12px;padding:12px;background:#fbfcff;min-height:112px;transition:box-shadow .15s}
+.contract-confidence-card:hover{box-shadow:0 8px 20px rgba(60,60,180,.08)}
+.contract-confidence-card .cc-head{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.contract-confidence-card .cc-value{font-size:22px;font-weight:900}
+.contract-confidence-card .cc-bar{height:8px;background:#edf0fb;border-radius:8px;overflow:hidden;margin:9px 0 7px}
+.contract-confidence-card .cc-fill{height:100%;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px;transition:width .5s}
+.cc-best{outline:2px solid #6d2be8;outline-offset:2px}
+
+/* volatility scan */
+.volatility-match-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:14px;align-items:stretch}
+.volatility-match-grid > div{min-height:280px;box-sizing:border-box}
+.volatility-match-grid #volatilityScanList{max-height:230px;overflow-y:auto;padding-right:4px}
+.volatility-match-grid #matchConfidenceList{max-height:200px;overflow-y:auto;padding-right:4px}
+.scan-summary{font-size:12px}
+
+/* match run planner */
+.run-row{border:1px solid #e3e8fb;border-radius:12px;padding:12px;margin:9px 0;background:#fbfcff}
+.run-row .flex{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.run-bar{height:8px;background:#edf0fb;border-radius:8px;overflow:hidden;margin:9px 0}
+.run-fill{height:100%;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px;transition:width .5s}
+
+/* toast */
+#toast{position:fixed;top:16px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:9999;pointer-events:none}
+.toast{
+  background:#0e142c;color:#fff;padding:11px 14px;border-radius:10px;font-size:12.5px;font-weight:700;
+  box-shadow:0 12px 30px rgba(0,0,0,.35);opacity:0;transform:translateY(-8px);transition:all .25s ease;
+  border-left:3px solid #6d2be8;max-width:320px;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{border-left-color:#12c47c}
+.toast.warn{border-left-color:#f4b740}
+.toast.err{border-left-color:#ff3d5a}
+
+/* settings */
+.settings{margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.settings .field select,.settings .field input{height:35px}
+.check{margin-left:auto;font-size:11px;font-weight:800;color:#4a5683}
+
+.footer{text-align:center;color:#8994b2;font-size:10px;margin:18px 0 4px;line-height:1.6}
+
+/* kbd hint */
+kbd{background:#f0f2fb;border:1px solid #d9defa;border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:10px;font-weight:800;color:#4037df;font-family:ui-monospace,Menlo,monospace}
+
+@media(max-width:960px){
+  .hero{grid-template-columns:1fr}
+  .top{align-items:flex-start;flex-direction:column}
+  .controls{margin-left:0}
+  .statusbar{justify-content:flex-start}
+  .status-grid{grid-template-columns:repeat(3,1fr)}
+  .analytics-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:760px){
+  .grid,.digit-panel{grid-template-columns:1fr}
+  .volatility-match-grid{grid-template-columns:1fr}
+  #contractConfidenceGrid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+  #accuracyEngineGrid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+}
+@media(max-width:650px){
+  .status-grid{grid-template-columns:repeat(2,1fr)}
+  .actionbar{flex-wrap:wrap}
+  .digits{gap:6px}
+  .digit-panel{padding:14px}
+  .app{width:98%;padding:10px}
+  .hero-price{font-size:30px}
+  .analytics-grid{grid-template-columns:1fr}
+}
+@media(max-width:420px){
+  #contractConfidenceGrid{grid-template-columns:1fr !important}
+  #accuracyEngineGrid{grid-template-columns:1fr !important}
+}
+</style>
 </head>
+
 <body>
 
-  <div class="status-bar">
-    <span id="connector" class="badge">● Disconnected</span>
-    <span id="status" class="badge">Idle</span>
-    <span>Symbol: <strong id="marketName">-</strong></span>
-    <span>Price: <strong id="price">-</strong></span>
-    <span>Digit Count: <strong id="tickCount">0</strong></span>
+<div id="toast"></div>
+
+<div class="app">
+
+<!-- ================= TOP BAR ================= -->
+<header class="top">
+  <div class="brand">
+    <div class="logo">Expert Trader</div>
+    <div class="logo-line"></div>
+    <div class="sub">Deriv digit market intelligence • Advanced statistical analysis</div>
   </div>
 
-  <div class="grid">
-    <!-- Configuration -->
-    <div class="card">
-      <h2>Configuration</h2>
-      <div class="control-group">
-        <label for="market">Market Symbol</label>
-        <select id="market"><option>Loading Markets...</option></select>
-      </div>
-      <div class="control-group">
-        <label for="contract">Contract Mode</label>
-        <select id="contract">
-          <option value="OVER">OVER</option>
-          <option value="UNDER">UNDER</option>
-          <option value="EVEN">EVEN</option>
-          <option value="ODD">ODD</option>
-          <option value="MATCH">MATCH</option>
-          <option value="DIFF">DIFF</option>
-        </select>
-      </div>
-      <div class="control-group">
-        <label for="barrier">Target Barrier</label>
-        <input type="number" id="barrier" value="4" min="0" max="9">
-      </div>
-      <div class="control-group">
-        <label for="duration">Duration (Ticks)</label>
-        <input type="number" id="duration" value="1" min="1" max="10">
-      </div>
-      <div class="control-group">
-        <label for="sample">Sample Window</label>
-        <select id="sample">
-          <option value="50">50 Ticks</option>
-          <option value="100" selected>100 Ticks</option>
-          <option value="250">250 Ticks</option>
-          <option value="500">500 Ticks</option>
-        </select>
-      </div>
-      <div class="control-group">
-        <label for="threshold">Signal Threshold</label>
-        <select id="threshold">
-          <option value="60%">60% Confidence</option>
-          <option value="70%" selected>70% Confidence</option>
-          <option value="80%">80% Confidence</option>
-        </select>
-      </div>
+  <div class="controls">
+    <div class="field">
+      <label>Market</label>
+      <select id="market"></select>
     </div>
-
-    <!-- Signal Display -->
-    <div class="card">
-      <h2>Model Evaluation</h2>
-      <div class="large-stat" id="signalText">No Signal</div>
-      <div class="control-group">
-        <label>Confidence Metric</label>
-        <span id="confidencePct">0%</span>
-      </div>
-      <div class="progress-bg">
-        <div id="confidenceFill" class="progress-fill"></div>
-      </div>
-      <div style="margin-top: 15px; text-align: center;">
-        <span style="font-size: 12px; color: #8b949e;">Active Digit</span>
-        <div class="large-stat" id="lastDigitBig" style="color: var(--accent);">-</div>
-      </div>
+    <div class="field">
+      <label>Contract</label>
+      <select id="contract">
+        <option value="OVER">OVER</option>
+        <option value="UNDER">UNDER</option>
+        <option value="MATCH">MATCH</option>
+        <option value="DIFF">DIFFERS</option>
+        <option value="EVEN">EVEN</option>
+        <option value="ODD">ODD</option>
+      </select>
     </div>
-
-    <!-- Frequency Chart -->
-    <div class="card">
-      <h2>Digit Distribution (%)</h2>
-      <div class="chart-container">
-        <canvas id="frequencyChart"></canvas>
-      </div>
+    <div class="field">
+      <label>Duration</label>
+      <select id="duration">
+        <option value="10">10 Ticks</option>
+        <option value="25">25 Ticks</option>
+        <option value="50">50 Ticks</option>
+        <option value="100" selected>100 Ticks</option>
+        <option value="300">300 Ticks</option>
+        <option value="500">500 Ticks</option>
+        <option value="1000">1000 Ticks</option>
+      </select>
     </div>
+    <div class="field">
+      <label>Sample</label>
+      <select id="sample">
+        <option value="100">100</option>
+        <option value="300">300</option>
+        <option value="500" selected>500</option>
+        <option value="1000">1000</option>
+        <option value="2000">2000</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Bot</label>
+      <select id="botMode">
+        <option value="AUTO" selected>Auto Signal</option>
+        <option value="OFF">Manual</option>
+      </select>
+    </div>
+    <button class="btn ghost" id="exportBtn" title="Export tick & signal history">⤓ Export</button>
+    <button class="btn red" id="logout">Logout</button>
   </div>
+</header>
 
-  <div class="grid">
-    <!-- Pattern Chart -->
-    <div class="card">
-      <h2>30-Tick Sequence Trajectory</h2>
-      <div class="chart-container">
-        <canvas id="patternChart"></canvas>
+<!-- ================= STATUS ================= -->
+<div class="statusbar">
+  <span class="pill connector" id="connector">● Connecting</span>
+  <span class="pill risk">🛡 Risk Management</span>
+  <span class="pill soft" id="keyhint"><kbd>S</kbd> start/stop • <kbd>1</kbd>–<kbd>9</kbd> barrier</span>
+</div>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-main">
+    <div class="hero-name" id="marketName">Loading Deriv markets…</div>
+    <div class="hero-meta" id="marketMeta">Public market data</div>
+    <div class="hero-price" id="price">0.0000</div>
+    <div class="hero-digitrow">
+      <div class="hero-lastdigit">
+        <small>LAST DIGIT</small>
+        <b id="lastDigit">—</b>
       </div>
-    </div>
-
-    <!-- Execution Log -->
-    <div class="card">
-      <h2>System Output</h2>
-      <div id="log"></div>
+      <div class="hero-delta up" id="priceDelta">▲ 0.0000</div>
+      <div class="hero-delta" id="tickRate" style="color:#b9c4ec;font-weight:700">— ticks/s</div>
     </div>
   </div>
 
-<script>
-"use strict";
-
-/* ==========================================================
-   1. STATE MANAGEMENT & CONSTANTS
-   ========================================================== */
-const WS_URL = "wss://ws.derivws.com/websockets/v3?app_id=1089";
-const $ = id => document.getElementById(id);
-
-const S = {
-  ws: null,
-  connected: false,
-  manual: false,
-  symbol: "",
-  pip: null,
-  markets: [],
-  ticks: [],
-  request: 1,
-  chart: null,
-  patternChart: null,
-  lastAnalysis: 0,
-  subId: null
-};
-
-/* ==========================================================
-   2. MATHEMATICAL & QUANT ENGINE
-   ========================================================== */
-function log(msg, type = "") {
-  const d = document.createElement("div");
-  if (type) d.className = type;
-  d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-  $("log").appendChild(d);
-  $("log").scrollTop = $("log").scrollHeight;
-}
-
-function req() { return ++S.request; }
-function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
-
-function pipOf(x) {
-  const p = Number(x.pip_size ?? x.pip);
-  return Number.isFinite(p) ? p : null;
-}
-
-function digitOf(quote, pip) {
-  if (!Number.isFinite(Number(quote))) return null;
-  const n = Number(quote);
-  let decimals = null;
-
-  if (Number.isFinite(pip) && pip > 0) {
-    if (pip < 1) decimals = Math.max(0, Math.round(-Math.log10(pip)));
-  }
-  if (decimals === null) {
-    const t = String(quote);
-    decimals = t.includes(".") ? t.split(".")[1].length : 0;
-  }
-
-  const fixed = n.toFixed(decimals);
-  const digits = fixed.replace(/\D/g, "");
-  return digits ? Number(digits.at(-1)) : null;
-}
-
-/* Wilson score interval calculation */
-function wilson(success, n) {
-  if (!n || n <= 0) return 0;
-  const z = 1.96;
-  const p = clamp(success / n, 0, 1);
-  const d = 1 + (z * z) / n;
-  const center = p + (z * z) / (2 * n);
-  const spread = z * Math.sqrt(Math.max(0, (p * (1 - p) + (z * z) / (4 * n)) / n));
-  return clamp((center - spread) / d, 0, 1);
-}
-
-function zscore(p, base, n) {
-  if (!n || n <= 0) return 0;
-  const v = n * base * (1 - base);
-  return v > 0 ? ((p - base) * n) / Math.sqrt(v) : 0;
-}
-
-function counts(a) {
-  const c = Array(10).fill(0);
-  a.forEach(x => { if (x >= 0 && x <= 9) c[x]++; });
-  return c;
-}
-
-function probs(c) {
-  const total = c.reduce((a, b) => a + b, 0) + 10; // Laplace smoothing
-  return c.map(x => (x + 1) / total);
-}
-
-function baseline(type, b) {
-  if (type === "OVER") return (9 - b) / 10;
-  if (type === "UNDER") return b / 10;
-  if (type === "MATCH") return 0.1;
-  if (type === "DIFF") return 0.9;
-  return 0.5;
-}
-
-function event(d, type, b) {
-  if (type === "OVER") return d > b;
-  if (type === "UNDER") return d < b;
-  if (type === "MATCH") return d === b;
-  if (type === "DIFF") return d !== b;
-  if (type === "EVEN") return d % 2 === 0;
-  return d % 2 === 1;
-}
-
-function contractProb(p, type, b) {
-  if (type === "OVER") return p.slice(b + 1).reduce((a, x) => a + x, 0);
-  if (type === "UNDER") return p.slice(0, b).reduce((a, x) => a + x, 0);
-  if (type === "MATCH") return p[b] || 0;
-  if (type === "DIFF") return 1 - (p[b] || 0);
-  if (type === "EVEN") return p.filter((_, i) => i % 2 === 0).reduce((a, x) => a + x, 0);
-  return p.filter((_, i) => i % 2 === 1).reduce((a, x) => a + x, 0);
-}
-
-function horizonDigits(windowSize, duration) {
-  const out = [];
-  const total = S.ticks.length;
-  if (total <= duration) return out;
-
-  const end = total - duration;
-  const start = Math.max(0, end - windowSize);
-
-  for (let i = start; i < end; i++) {
-    if (S.ticks[i + duration]) {
-      out.push(S.ticks[i + duration].digit);
-    }
-  }
-  return out;
-}
-
-function validation(type, b, duration) {
-  const total = S.ticks.length;
-  if (total < Math.max(80, duration + 30)) return null;
-
-  let tested = 0;
-  let correct = 0;
-  const evalCount = Math.min(100, total - duration - 20);
-  const startIdx = total - duration - evalCount;
-
-  for (let i = startIdx; i < total - duration; i++) {
-    const train = S.ticks.slice(Math.max(0, i - 150), i);
-    if (train.length < 20) continue;
-
-    const actual = S.ticks[i + duration]?.digit;
-    if (actual == null) continue;
-
-    tested++;
-    if (event(actual, type, b)) correct++;
-  }
-
-  return tested ? { accuracy: correct / tested, samples: tested } : null;
-}
-
-function modelCandidateStats(type, b, duration) {
-  const windows = [50, 100, 250, 500].filter(w => w + duration < S.ticks.length);
-  if (!windows.length) return null;
-
-  const rows = windows.map(w => {
-    const ds = horizonDigits(w, duration);
-    if (!ds.length) return null;
-    const p = probs(counts(ds));
-    const cp = contractProb(p, type, b);
-    const base = baseline(type, b);
-    const wins = ds.filter(d => event(d, type, b)).length;
-    return {
-      w, ds, p, cp, base,
-      edge: (cp - base) * 100,
-      z: zscore(cp, base, ds.length),
-      lower: wilson(wins, ds.length)
-    };
-  }).filter(Boolean);
-
-  if (!rows.length) return null;
-
-  const selectedSample = Number($("sample").value);
-  const primary = rows.find(x => x.w === selectedSample) || rows.at(-1);
-  const vf = validation(type, b, duration);
-  const multiWindow = rows.filter(r => r.edge > 0).length / rows.length;
-  const valScore = vf ? clamp(vf.accuracy, 0, 1) : 0.5;
-
-  const confidence = clamp((multiWindow * 0.4 + valScore * 0.4 + clamp(primary.z / 2, 0, 1) * 0.2) * 100, 0, 95);
-
-  return { type, b, primary, rows, confidence, multiWindow: multiWindow * 100, validation: vf };
-}
-
-/* ==========================================================
-   3. WEBSOCKET & DATA FLOW
-   ========================================================== */
-function connect() {
-  if (S.ws && (S.ws.readyState === 0 || S.ws.readyState === 1)) return;
-  $("connector").textContent = "● Connecting";
-  $("connector").className = "badge";
-  log("Connecting to Deriv WS Server...");
-
-  try {
-    S.ws = new WebSocket(WS_URL);
-  } catch (e) {
-    log("WS Instantiation Failed: " + e.message, "log-err");
-    return;
-  }
-
-  S.ws.onopen = () => {
-    S.connected = true;
-    $("connector").textContent = "● Connected";
-    $("connector").className = "badge connected";
-    log("Connected.", "log-ok");
-    send({ active_symbols: "brief", product_type: "basic", req_id: req() });
-  };
-
-  S.ws.onmessage = e => handle(e.data);
-  S.ws.onerror = () => { log("WebSocket Error", "log-err"); };
-  S.ws.onclose = () => {
-    S.connected = false;
-    $("connector").textContent = "● Disconnected";
-    $("connector").className = "badge";
-    setTimeout(connect, 3000);
-  };
-}
-
-function send(x) {
-  if (!S.ws || S.ws.readyState !== 1) return false;
-  S.ws.send(JSON.stringify(x));
-  return true;
-}
-
-function handle(raw) {
-  let d;
-  try { d = JSON.parse(raw); } catch (e) { return; }
-
-  if (d.error) {
-    log("API Error: " + (d.error.message || "Unknown"), "log-err");
-    return;
-  }
-
-  if (d.msg_type === "active_symbols") populateMarkets(d);
-  if (d.msg_type === "history") processHistory(d);
-  if (d.msg_type === "tick") processTick(d);
-}
-
-function populateMarkets(d) {
-  const list = (d.active_symbols || []).filter(x => x.symbol);
-  S.markets = list;
-  const sel = $("market");
-  sel.innerHTML = "";
-
-  S.markets.forEach(m => {
-    const o = document.createElement("option");
-    o.value = m.symbol;
-    o.textContent = `${m.display_name} (${m.symbol})`;
-    sel.appendChild(o);
-  });
-
-  if (S.markets.length) {
-    sel.value = S.markets[0].symbol;
-    chooseMarket(sel.value);
-  }
-}
-
-function chooseMarket(sym) {
-  const m = S.markets.find(x => x.symbol === sym);
-  if (!m) return;
-  
-  if (S.subId) {
-    send({ forget: S.subId, req_id: req() });
-    S.subId = null;
-  }
-
-  S.symbol = sym;
-  S.pip = pipOf(m);
-  S.ticks = [];
-  $("marketName").textContent = m.display_name;
-  loadHistory();
-}
-
-function loadHistory() {
-  if (!S.connected || !S.symbol) return;
-  const sample = Number($("sample").value);
-  const duration = Number($("duration").value);
-  const count = Math.min(1000, sample + duration + 100);
-
-  S.ticks = [];
-  $("status").textContent = "Loading Data";
-  send({ ticks_history: S.symbol, end: "latest", count: count, style: "ticks", req_id: req() });
-}
-
-function processHistory(d) {
-  if (!d.history || !Array.isArray(d.history.prices)) return;
-  if (Number.isFinite(Number(d.pip_size))) S.pip = Number(d.pip_size);
-
-  const prices = d.history.prices;
-  const times = d.history.times || [];
-
-  S.ticks = prices.map((q, i) => ({
-    quote: Number(q),
-    epoch: Number(times[i] || 0),
-    digit: digitOf(Number(q), S.pip)
-  })).filter(x => Number.isFinite(x.quote) && x.digit !== null);
-
-  $("tickCount").textContent = S.ticks.length;
-  send({ ticks: S.symbol, subscribe: 1, req_id: req() });
-  $("status").textContent = "Live";
-  analyze();
-}
-
-function processTick(d) {
-  const t = d.tick;
-  if (!t) return;
-  if (d.subscription && d.subscription.id) S.subId = d.subscription.id;
-
-  const q = Number(t.quote);
-  if (!Number.isFinite(q)) return;
-  const digit = digitOf(q, S.pip);
-  if (digit === null) return;
-
-  S.ticks.push({ quote: q, epoch: Number(t.epoch || Date.now() / 1000), digit });
-  if (S.ticks.length > 1000) S.ticks.shift();
-
-  $("price").textContent = q.toString();
-  $("lastDigitBig").textContent = digit;
-  $("tickCount").textContent = S.ticks.length;
-
-  if (Date.now() - S.lastAnalysis > 500) {
-    S.lastAnalysis = Date.now();
-    analyze();
-  }
-}
-
-/* ==========================================================
-   4. UI RENDERING & CHARTS
-   ========================================================== */
-function analyze() {
-  const duration = Number($("duration").value);
-  const type = $("contract").value;
-  const barrier = Number($("barrier").value);
-
-  if (S.ticks.length < Math.max(30, duration + 10)) {
-    $("status").textContent = "Buffering";
-    return;
-  }
-
-  const model = modelCandidateStats(type, barrier, duration);
-  if (!model) return;
-
-  const confidence = model.confidence;
-  const targetThreshold = Number($("threshold").value.replace("%", ""));
-
-  $("confidencePct").textContent = confidence.toFixed(0) + "%";
-  $("confidenceFill").style.width = confidence + "%";
-
-  const isSignal = confidence >= targetThreshold;
-  $("status").textContent = isSignal ? "Signal Active" : "Analyzing";
-  $("signalText").textContent = isSignal ? `${type} ${barrier} (${confidence.toFixed(0)}%)` : "No Signal";
-  $("signalText").style.color = isSignal ? "#3fb950" : "#fff";
-
-  renderFrequency(model.primary.p);
-  updatePatternChart();
-}
-
-function renderFrequency(p) {
-  if (!S.chart) {
-    S.chart = new Chart($("frequencyChart"), {
-      type: "bar",
-      data: {
-        labels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-        datasets: [{ data: Array(10).fill(10), backgroundColor: "#58a6ff", borderRadius: 4 }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-    });
-  }
-  S.chart.data.datasets[0].data = p.map(x => x * 100);
-  S.chart.update("none");
-}
-
-function updatePatternChart() {
-  if (!S.patternChart) {
-    S.patternChart = new Chart($("patternChart"), {
-      type: "line",
-      data: { labels: [], datasets: [{ data: [], borderColor: "#bc8cff", fill: false, tension: 0.2 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-    });
-  }
-  const last = S.ticks.slice(-30);
-  S.patternChart.data.labels = last.map((_, i) => i + 1);
-  S.patternChart.data.datasets[0].data = last.map(x => x.digit);
-  S.patternChart.update("none");
-}
-
-/* ==========================================================
-   5. LISTENERS & INIT
-   ========================================================== */
-$("market").onchange = e => chooseMarket(e.target.value);
-$("contract").onchange = analyze;
-$("barrier").onchange = analyze;
-$("duration").onchange = loadHistory;
-$("sample").onchange = loadHistory;
-$("threshold").onchange = analyze;
-
-connect();
-</script>
-</body>
-</html>
-
+  <div class="hero-side">
+    <div class="hero-mini">
+      <div>
+        <small>DIGIT BIAS</small>
+        <b id="miniBias">—</b>
+      </div>
+      <span class="badge" id="miniBiasBadge" style="background:#7650e9">—</span>
+    </div>
+    <div class="hero-mini">
+      <div>
+        <small>STRONGEST PATTERN</small>
+        <b id="miniPattern">—</b
