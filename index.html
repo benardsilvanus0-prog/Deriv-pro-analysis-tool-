@@ -3,323 +3,417 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="theme-color" content="#0b1020">
-<title>Expert Trader — Pro Analysis</title>
+<meta name="theme-color" content="#0b0e14">
+<title>Expert Trader Pro</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 :root{
-  --bg:#0a0f1e;--bg2:#0e1428;--panel:#111935;--panel2:#0d142a;
-  --card:#ffffff;--line:#e5e9f7;--line2:#2a3560;
-  --text:#0f1734;--soft:#42507a;--muted:#7b88ad;
-  --blue:#3d3ce8;--cyan:#19b8ed;--pink:#ed2c91;--purple:#7650e9;
-  --green:#10a66a;--green2:#0aa66b;--orange:#f59b45;--red:#ff3d5a;--gold:#f4b740;
-  --shadow:0 10px 30px rgba(20,28,70,.10);
-  --shadow-lg:0 18px 50px rgba(20,28,70,.16);
-  --r:16px;
+  --bg:#0b0e14; --card:#151924; --card-hover:#1a1f2e; --line:#2a3145;
+  --text:#e2e8f0; --muted:#8b95a4; --blue:#4f6ef2; --cyan:#22d3ee;
+  --pink:#ec4899; --purple:#a855f7; --green:#10b981; --orange:#f59e0b; --red:#ef4444;
+  --shadow:0 10px 30px rgba(0,0,0,.3); --glass:rgba(21, 25, 36, 0.95);
 }
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{
-  background:
-    radial-gradient(1200px 700px at 15% -10%, #eaf0ff 0%, transparent 55%),
-    radial-gradient(900px 600px at 100% 0%, #ffe9f4 0%, transparent 45%),
-    linear-gradient(180deg,#f7f9ff,#eef2fb);
-  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
-  color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;
-}
-button,select,input{font:inherit}
-button{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,filter .12s ease}
-button:active{transform:translateY(1px)}
+*{box-sizing:border-box; margin:0; padding:0}
+body{background:var(--bg); font-family:'Inter', system-ui, sans-serif; color:var(--text); line-height:1.5}
+button,select{font:inherit; cursor:pointer}
 
-.app{width:min(1240px,97%);margin:14px auto 40px;background:rgba(255,255,255,.72);backdrop-filter:blur(8px);border:1px solid #e1e6fb;border-radius:20px;box-shadow:var(--shadow-lg);padding:16px}
+.app{width:min(1200px,96%); margin:20px auto 40px; background:var(--glass); border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow); padding:20px}
 
-/* TOP BAR */
-.top{display:flex;align-items:center;gap:18px;padding:6px 10px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.brand{min-width:220px}
-.logo{font-size:28px;font-weight:900;letter-spacing:-.4px;background:linear-gradient(90deg,#e51d8a,#6d2be8 60%,#2aa9e8);-webkit-background-clip:text;background-clip:text;color:transparent}
-.logo-line{width:150px;height:3px;border-radius:8px;margin-top:6px;background:linear-gradient(90deg,#ed2c91,#6d2be8,#19b8ed)}
-.sub{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5}
-.controls{display:flex;align-items:end;gap:8px;margin-left:auto;flex-wrap:wrap}
-.field label{display:block;font-size:10px;font-weight:800;color:#607099;margin:0 0 5px 2px;letter-spacing:.3px;text-transform:uppercase}
-select,input[type=number]{height:38px;border:1px solid #cfd7ff;border-radius:9px;background:#fff;color:#26314f;padding:0 30px 0 12px;min-width:120px;box-shadow:0 2px 7px rgba(60,60,180,.06);outline:none}
-select:focus,input:focus{border-color:#7d6bf0;box-shadow:0 0 0 3px rgba(125,107,240,.18)}
-.btn{height:38px;border:0;border-radius:10px;padding:0 16px;font-weight:800;color:#fff;background:linear-gradient(135deg,#4037df,#6834d7);box-shadow:0 6px 14px rgba(67,55,220,.24)}
-.btn:hover{filter:brightness(1.05)}
-.btn.red{background:linear-gradient(135deg,#ff6b55,#ff0755)}
-.btn.ghost{background:#fff;color:#4037df;border:1px solid #d9defa;box-shadow:none}
-.btn.ghost:hover{background:#f5f6ff}
+/* Header & Controls */
+.top{display:flex; align-items:center; gap:20px; padding:10px 15px 20px; border-bottom:1px solid var(--line); flex-wrap:wrap}
+.logo{font-size:26px; font-weight:900; background: linear-gradient(135deg, var(--pink), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent}
+.sub{font-size:11px; color:var(--muted); margin-top:4px}
+.controls{display:flex; align-items:end; gap:10px; margin-left:auto; flex-wrap:wrap}
+.field label{display:block; font-size:10px; font-weight:700; color:var(--muted); margin:0 0 6px 2px; text-transform: uppercase; letter-spacing: 0.5px}
+select{height:38px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--text); padding:0 12px; min-width:120px; outline:none}
+select:focus{border-color: var(--blue)}
+.btn{height:38px; border:0; border-radius:8px; padding:0 18px; font-weight:700; color:#fff; background:linear-gradient(135deg, var(--blue), var(--purple)); transition: transform 0.1s}
+.btn:hover{transform: translateY(-1px)}
+.btn.red{background:linear-gradient(135deg, var(--red), #b91c1c)}
 
-/* STATUS PILLS */
-.statusbar{display:flex;justify-content:flex-end;gap:8px;margin:10px 0 4px;flex-wrap:wrap}
-.pill{padding:8px 13px;border-radius:10px;color:#fff;font-size:12px;font-weight:800;box-shadow:var(--shadow);display:inline-flex;align-items:center;gap:6px}
-.connector{background:#0aa66b}
-.connector.warn{background:#f59b45}
-.connector.bad{background:#ff3d5a}
-.risk{background:linear-gradient(135deg,#0b9e66,#12c47c)}
-.pill.soft{background:#eef0fb;color:#4037df;box-shadow:none;font-weight:700}
+/* Status & Market */
+.statusbar{display:flex; justify-content:flex-end; gap:10px; margin:15px 0}
+.pill{padding:8px 14px; border-radius:20px; color:#fff; font-size:11px; font-weight:700; background:var(--card); border:1px solid var(--line)}
+.connector{color: var(--red)}
+.market-card{margin:20px 0; padding:24px; text-align:center; background:linear-gradient(145deg, var(--card), #111520); border:1px solid var(--line); border-radius:16px}
+.market-name{font-size:16px; font-weight:800; color:var(--cyan)}
+.price{font-size:32px; font-weight:900; margin:12px 0; font-variant-numeric: tabular-nums}
+.market-meta{font-size:12px; color:var(--muted)}
+.market-meta b{color: var(--orange); font-size: 14px}
 
-/* HERO */
-.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin:14px 0 18px}
-.hero-main{position:relative;overflow:hidden;padding:20px 22px;border-radius:18px;background:linear-gradient(120deg,#141c46 0%,#241a5c 50%,#3a1a6a 100%);color:#fff;box-shadow:var(--shadow-lg)}
-.hero-main:before{content:"";position:absolute;inset:0;background:radial-gradient(600px 200px at 10% 0%, rgba(61,200,237,.28), transparent 60%),radial-gradient(500px 200px at 100% 100%, rgba(237,44,145,.28), transparent 60%);pointer-events:none}
-.hero-name{font-size:16px;font-weight:800;opacity:.95;position:relative}
-.hero-meta{font-size:11px;color:#b9c4ec;margin-top:4px;position:relative}
-.hero-price{font-size:38px;font-weight:900;letter-spacing:-1px;margin-top:14px;position:relative;font-variant-numeric:tabular-nums}
-.hero-digitrow{display:flex;align-items:center;gap:14px;margin-top:14px;position:relative;flex-wrap:wrap}
-.hero-lastdigit{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:8px 14px;border-radius:12px}
-.hero-lastdigit small{font-size:10px;color:#cfd6f3;font-weight:700;letter-spacing:.4px}
-.hero-lastdigit b{font-size:22px;font-weight:900}
-.hero-delta{font-size:12px;font-weight:800}
-.hero-delta.up{color:#5ff0b0}
-.hero-delta.down{color:#ff9aa9}
-.hero-side{display:grid;grid-template-columns:1fr;gap:12px}
-.hero-mini{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;gap:10px}
-.hero-mini small{display:block;font-size:10px;color:var(--muted);font-weight:800;letter-spacing:.4px}
-.hero-mini b{font-size:18px}
-.hero-mini .badge{font-size:11px;font-weight:900;padding:5px 9px;border-radius:8px;color:#fff}
+.start-wrap{text-align:center; margin:20px 0}
+.start{width:200px; height:48px; border:0; border-radius:12px; background:linear-gradient(135deg, var(--green), #059669); color:#fff; font-weight:800; font-size:15px; transition: all 0.2s}
+.start:hover{transform: scale(1.02)}
 
-/* START */
-.start-wrap{text-align:center;margin:6px 0 14px}
-.start{width:200px;height:46px;border:0;border-radius:14px;background:linear-gradient(135deg,#ff9e24,#ff0753);color:#fff;font-weight:900;font-size:14px;letter-spacing:.4px;box-shadow:0 10px 24px rgba(255,65,65,.28)}
-
-/* DIGIT PANEL */
-.digit-panel{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:18px 22px;background:linear-gradient(110deg,#effcff,#eef0ff);border-radius:16px;border:1px solid #e1e7ff}
+/* Digit Panels */
+.digit-panel{display:grid; grid-template-columns:1fr 1fr; gap:20px; padding:24px; background:var(--card); border-radius:16px; border:1px solid var(--line)}
 .digit-group{text-align:center}
-.digit-title{font-weight:900;color:#11b9ef;margin-bottom:12px;letter-spacing:.4px;font-size:12px;text-transform:uppercase}
-.digits{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-.digit{height:38px;background:#fff;border:1px solid #cfd8ff;border-radius:9px;color:#25304d;font-weight:800;box-shadow:0 3px 8px rgba(69,78,170,.08);position:relative}
-.digit.active{border-color:#4e36e5;background:#eeeaff;color:#402be2;box-shadow:0 0 0 2px #6d54ec55}
-.digit[data-hot="1"]{background:linear-gradient(180deg,#fff,#ffe7f2);border-color:#ffb9da}
-.digit[data-cold="1"]{background:linear-gradient(180deg,#fff,#e9f4ff);border-color:#b9d9ff}
+.digit-title{font-weight:800; color:var(--cyan); margin-bottom:16px; font-size: 14px; text-transform: uppercase}
+.digits{display:grid; grid-template-columns:repeat(5,1fr); gap:10px}
+.digit{height:40px; background:#1e2436; border:1px solid var(--line); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; transition: all 0.3s}
+.digit.active{border-color:var(--blue); background:rgba(79, 110, 242, 0.2); color:var(--blue); box-shadow:0 0 10px rgba(79, 110, 242, 0.3)}
 
-/* ACTION BAR */
-.actionbar{display:flex;justify-content:center;gap:14px;margin:16px 0;padding:16px;background:linear-gradient(90deg,#fff0f8,#f0edff);border-radius:14px;flex-wrap:wrap}
-.action{border:0;border-radius:11px;padding:11px 26px;color:#fff;font-weight:900;letter-spacing:.3px;box-shadow:0 6px 14px rgba(55,50,180,.2)}
-.action.over{background:linear-gradient(135deg,#a778e9,#8a52e0)}
-.action.even{background:linear-gradient(135deg,#ffb1a6,#ff8a7a)}
-.action.odd{background:linear-gradient(135deg,#6fc8e8,#3eb0d8)}
-.action.under{background:linear-gradient(135deg,#f2a877,#ee8b4d)}
-.action.start2{background:linear-gradient(135deg,#4038df,#6834d7)}
-.action.selected{outline:2px solid #1a1450;outline-offset:2px}
+/* Action Bar & Progress */
+.actionbar{display:flex; justify-content:center; gap:12px; margin:24px 0; padding:20px; background:var(--card); border-radius:16px; border:1px solid var(--line); flex-wrap:wrap}
+.action{border:0; border-radius:10px; padding:12px 28px; color:#fff; font-weight:800}
+.over{background:var(--blue)} .even{background:var(--pink)} .start2{background:var(--purple)} .odd{background:var(--cyan); color: #0b0e14} .under{background:var(--orange)}
+.progress{padding:20px; background:var(--card); border-radius:16px; border:1px solid var(--line)}
+.prow{display:flex; align-items:center; gap:16px; margin:10px 0}
+.prow strong{width:120px; font-size:12px; color:var(--muted); text-transform: uppercase}
+.bar{height:12px; flex:1; background:#1e2436; border-radius:20px; overflow:hidden}
+.fill{height:100%; width:0; border-radius:20px; background:linear-gradient(90deg, var(--blue), var(--purple)); transition: width 0.5s}
+.fill.data{background:linear-gradient(90deg, var(--green), var(--cyan))}
+.pct{width:40px; text-align:right; font-size:12px; font-weight:800}
 
-/* PROGRESS */
-.progress{padding:14px;background:linear-gradient(90deg,#fff8ef,#fff0f8);border-radius:14px;border:1px solid #f3e6e8}
-.prow{display:flex;align-items:center;gap:12px;margin:8px 0}
-.prow strong{width:120px;font-size:11px;letter-spacing:.3px}
-.bar{height:10px;flex:1;background:#f0e9f2;border-radius:20px;overflow:hidden}
-.fill{height:100%;width:0;border-radius:20px;background:linear-gradient(90deg,#208bf1,#7352ec);transition:width .4s ease}
-.fill.data{background:linear-gradient(90deg,#17b6a4,#16b9c8)}
-.fill.gold{background:linear-gradient(90deg,#f4b740,#ff7a3d)}
-.pct{width:44px;text-align:right;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+/* Matches */
+.matches{margin:24px 0; padding:20px; text-align:center; background:var(--card); border-radius:16px; border:1px solid var(--line)}
+.matchrow{display:flex; justify-content:center; align-items:center; gap:16px}
+.matchbtn{border:0; background:var(--blue); color:#fff; border-radius:8px; padding:10px 20px; font-weight:800}
+.center-digit{width:70px; height:70px; border-radius:50%; display:flex; flex-direction:column; justify-content:center; align-items:center; font-size:24px; font-weight:900; color:#fff; background:linear-gradient(135deg, var(--purple), var(--cyan)); box-shadow:0 0 0 4px var(--card), 0 8px 20px rgba(168, 85, 247, 0.4)}
+.center-digit small{font-size:10px; font-weight:800; opacity:0.9}
+.match-confidence-hint{margin-top:12px; font-size:12px; font-weight:700; color:var(--muted)}
 
-/* MATCH PANEL */
-.matches{margin:16px 0;padding:18px;text-align:center;background:linear-gradient(90deg,#effbf9,#eefdfb);border-radius:14px;border:1px solid #e0f0ed}
-.matchrow{display:flex;justify-content:center;align-items:center;gap:18px;flex-wrap:wrap}
-.matchbtn{border:0;background:#3d31d5;color:#fff;border-radius:9px;padding:9px 18px;font-weight:900}
-.center-digit{width:78px;height:78px;border-radius:50%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1px;font-size:26px;line-height:26px;font-weight:900;color:#fff;background:linear-gradient(135deg,#7c42d9,#20b4d5);box-shadow:0 0 0 6px #d9dcff,0 10px 24px #7e75d955;transition:transform .2s ease}
-.center-digit small{font-size:9px;line-height:10px;font-weight:900;opacity:.96}
-.match-confidence-hint{margin-top:10px;font-size:12px;font-weight:800;color:#59617a}
+/* Cards & Charts */
+.card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom: 16px}
+.title{font-size:16px; font-weight:900; color:var(--cyan); margin-bottom:16px}
+.chartbox{height:260px; position:relative}
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:16px}
 
-/* GRID / CARDS */
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.card{background:#fff;border:1px solid #e2e7fb;border-radius:14px;padding:18px;box-shadow:var(--shadow)}
-.title{font-size:13px;font-weight:900;color:#1a2a55;margin-bottom:12px;letter-spacing:.2px;display:flex;align-items:center;gap:8px}
-.title:before{content:"";width:6px;height:6px;border-radius:2px;background:linear-gradient(135deg,#20aee8,#7650e9)}
-.chartbox{height:250px;position:relative}
-.last{text-align:center;color:#4055e8;font-size:20px;font-weight:900;margin-top:6px}
+/* Status Grid */
+.status-grid{display:grid; grid-template-columns:repeat(6,1fr); gap:10px}
+.metric{background:#1e2436; border:1px solid var(--line); border-radius:10px; padding:12px; text-align:center}
+.metric small{display:block; color:var(--muted); font-size:10px; text-transform: uppercase}
+.metric b{display:block; margin-top:6px; font-size:16px}
+.signal{margin-top:16px; display:flex; align-items:center; gap:12px}
+.signalbar{height:10px; flex:1; background:#1e2436; border-radius:20px; overflow:hidden}
+.signalfill{height:100%; width:0; background:linear-gradient(90deg, var(--green), var(--cyan)); transition: width 0.5s}
+.signaltext{font-size:12px; font-weight:800; padding:8px 14px; border-radius:8px; background:rgba(245, 158, 11, 0.1); color:var(--orange); white-space:nowrap}
 
-/* STATUS GRID */
-.status-card{margin-top:16px}
-.status-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-.metric{background:#fafbff;border:1px solid #e8ecfb;border-radius:10px;padding:11px}
-.metric small{display:block;color:#8390ae;font-size:9px;letter-spacing:.3px;font-weight:700;text-transform:uppercase}
-.metric b{display:block;margin-top:5px;font-size:14px;font-variant-numeric:tabular-nums}
-.signal{margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.signalbar{height:9px;flex:1;background:#eceafa;border-radius:20px;overflow:hidden}
-.signalfill{height:100%;width:0;background:linear-gradient(90deg,#1e8df2,#7752ea);border-radius:20px;transition:width .4s ease}
-.signaltext{font-size:12px;font-weight:900;padding:9px 12px;border-radius:9px;background:#fff6e8;color:#b06a10;white-space:nowrap}
+/* Multi-Market Scanner */
+.scanner-list{display: flex; flex-direction: column; gap: 12px}
+.scanner-item{background: #1e2436; border: 1px solid var(--line); border-radius: 12px; padding: 16px}
+.scanner-header{display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px}
+.scanner-title{font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 8px}
+.scanner-title .dot{width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green)}
+.scanner-price{font-size: 12px; color: var(--muted)}
+.scanner-body{display: flex; align-items: center; gap: 16px}
+.circle-timer{width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--cyan); display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: 900; font-size: 18px; animation: spin 2s linear infinite}
+.circle-timer span{font-size: 9px; color: var(--muted); animation: spin 2s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scanner-info{flex: 1}
+.scanner-status{font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 6px; color: var(--cyan)}
+.scanner-status .blue-dot{width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); animation: pulse 1.5s infinite}
+.scanner-meta{font-size: 11px; color: var(--muted); margin-top: 4px}
+.match-badge{width: 45px; height: 45px; border-radius: 50%; background: var(--orange); color: #fff; display: flex; justify-content: center; align-items: center; font-weight: 900; font-size: 20px; flex-shrink: 0}
+.digit-strip{display: flex; gap: 6px; margin-top: 14px; overflow-x: auto}
+.digit-box{width: 28px; height: 28px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: 800; flex-shrink: 0}
+.digit-box.active{background: var(--blue); border-color: var(--blue); color: #fff}
+@keyframes pulse{50%{opacity:0.4}}
 
-/* LOG */
-.log{margin-top:16px;background:#0e142c;color:#dce6ff;border-radius:12px;padding:12px;font:11.5px/1.55 ui-monospace,Menlo,monospace;max-height:170px;overflow:auto}
-.log .err{color:#ff8997}.log .ok{color:#6ce7ac}.log .warn{color:#ffd27a}
+.footer{text-align:center; color:var(--muted); font-size:10px; margin:20px 0 4px}
 
-/* ANALYTICS */
-.analytics-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:6px}
-.analytics-card{border:1px solid #e3e8fb;border-radius:12px;padding:12px;background:#fbfcff}
-.analytics-card h4{margin:0 0 8px;font-size:10px;letter-spacing:.4px;color:var(--muted);text-transform:uppercase;font-weight:800}
-.analytics-card .big{font-size:20px;font-weight:900;color:#1a2a55}
-.analytics-card .subline{font-size:11px;color:var(--soft);margin-top:5px}
-.streak-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.streak-pill{font-size:11px;font-weight:800;padding:6px 10px;border-radius:8px;background:#eef0fb;color:#3d31d5;border:1px solid #e0e4fb}
-.streak-pill.hot{background:#ffe7f0;color:#c11c66;border-color:#ffc4dd}
-.matrix{display:grid;grid-template-columns:repeat(11,1fr);gap:3px;font-size:10px;margin-top:6px}
-.matrix > div{text-align:center;padding:5px 0;border-radius:5px;font-weight:700;color:#2b3560;background:#f2f4fd}
-.matrix .hdr{background:#e6eafc;color:#3d31d5;font-weight:900}
-.backtest-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:8px}
-.backtest-table th,.backtest-table td{padding:7px 8px;text-align:left;border-bottom:1px solid #eef0f8}
-.backtest-table th{font-weight:800;color:var(--muted);text-transform:uppercase;font-size:9.5px;letter-spacing:.4px}
-.backtest-table td b{color:#1a2a55}
-.backtest-table tr:last-child td{border-bottom:0}
-
-.accuracy-metric{border:1px solid #e3e8fb;border-radius:12px;padding:11px;background:#fbfcff;display:flex;justify-content:space-between;gap:8px;align-items:center}
-.accuracy-metric b{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
-.accuracy-metric span{font-size:17px;font-weight:800}
-
-.contract-confidence-card{border:1px solid #e3e8fb;border-radius:12px;padding:12px;background:#fbfcff;min-height:112px}
-.contract-confidence-card .cc-head{display:flex;justify-content:space-between;align-items:center;gap:6px}
-.contract-confidence-card .cc-value{font-size:22px;font-weight:900}
-.contract-confidence-card .cc-bar{height:8px;background:#edf0fb;border-radius:8px;overflow:hidden;margin:9px 0 7px}
-.contract-confidence-card .cc-fill{height:100%;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px;transition:width .5s}
-.cc-best{outline:2px solid #6d2be8;outline-offset:2px}
-
-.volatility-match-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:14px;align-items:stretch}
-.volatility-match-grid > div{min-height:280px;box-sizing:border-box}
-.volatility-match-grid #volatilityScanList{max-height:230px;overflow-y:auto;padding-right:4px}
-.volatility-match-grid #matchConfidenceList{max-height:200px;overflow-y:auto;padding-right:4px}
-.scan-summary{font-size:12px}
-
-.run-row{border:1px solid #e3e8fb;border-radius:12px;padding:12px;margin:9px 0;background:#fbfcff}
-.run-row .flex{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
-.run-bar{height:8px;background:#edf0fb;border-radius:8px;overflow:hidden;margin:9px 0}
-.run-fill{height:100%;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px;transition:width .5s}
-
-/* TOAST */
-#toast{position:fixed;top:16px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:9999;pointer-events:none}
-.toast{background:#0e142c;color:#fff;padding:11px 14px;border-radius:10px;font-size:12.5px;font-weight:700;box-shadow:0 12px 30px rgba(0,0,0,.35);opacity:0;transform:translateY(-8px);transition:all .25s ease;border-left:3px solid #6d2be8;max-width:320px}
-.toast.show{opacity:1;transform:translateY(0)}
-.toast.ok{border-left-color:#12c47c}
-.toast.warn{border-left-color:#f4b740}
-.toast.err{border-left-color:#ff3d5a}
-
-.settings{margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.settings .field select,.settings .field input{height:35px}
-.check{margin-left:auto;font-size:11px;font-weight:800;color:#4a5683}
-.footer{text-align:center;color:#8994b2;font-size:10px;margin:18px 0 4px;line-height:1.6}
-kbd{background:#f0f2fb;border:1px solid #d9defa;border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:10px;font-weight:800;color:#4037df;font-family:ui-monospace,Menlo,monospace}
-
-@media(max-width:960px){
-  .hero{grid-template-columns:1fr}
-  .top{align-items:flex-start;flex-direction:column}
-  .controls{margin-left:0}
-  .statusbar{justify-content:flex-start}
+@media(max-width:900px){
+  .top{flex-direction:column; align-items:flex-start}
+  .controls{margin-left:0; width:100%}
   .status-grid{grid-template-columns:repeat(3,1fr)}
-  .analytics-grid{grid-template-columns:repeat(2,1fr)}
-}
-@media(max-width:760px){
-  .grid,.digit-panel{grid-template-columns:1fr}
-  .volatility-match-grid{grid-template-columns:1fr}
-  #contractConfidenceGrid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
-  #accuracyEngineGrid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+  .grid{grid-template-columns:1fr}
 }
 @media(max-width:650px){
+  .digit-panel{grid-template-columns:1fr}
   .status-grid{grid-template-columns:repeat(2,1fr)}
-  .actionbar{flex-wrap:wrap}
-  .digits{gap:6px}
-  .digit-panel{padding:14px}
-  .app{width:98%;padding:10px}
-  .hero-price{font-size:30px}
-  .analytics-grid{grid-template-columns:1fr}
-}
-@media(max-width:420px){
-  #contractConfidenceGrid{grid-template-columns:1fr !important}
-  #accuracyEngineGrid{grid-template-columns:1fr !important}
 }
 </style>
 </head>
 <body>
-<div id="toast"></div>
+
 <div class="app">
+  <header class="top">
+    <div>
+      <div class="logo">Expert Trader Pro</div>
+      <div class="sub">Deriv digit market intelligence • Live Analysis</div>
+    </div>
+    <div class="controls">
+      <div class="field">
+        <label>Market</label>
+        <select id="market"><option>Loading markets...</option></select>
+      </div>
+      <div class="field">
+        <label>Contract</label>
+        <select id="contract">
+          <option value="OVER">OVER</option><option value="UNDER">UNDER</option>
+          <option value="MATCH">MATCH</option><option value="DIFF">DIFFERS</option>
+          <option value="EVEN">EVEN</option><option value="ODD">ODD</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Sample</label>
+        <select id="sample">
+          <option value="100">100</option><option value="300">300</option>
+          <option value="500" selected>500</option><option value="1000">1000</option>
+        </select>
+      </div>
+      <button class="btn" id="logoutBtn">Logout</button>
+    </div>
+  </header>
 
-<header class="top">
-  <div class="brand">
-    <div class="logo">Expert Trader</div>
-    <div class="logo-line"></div>
-    <div class="sub">Deriv digit market intelligence • Advanced statistical analysis</div>
+  <div class="statusbar">
+    <span class="pill connector" id="connector">● Connecting</span>
+    <span class="pill" style="color:var(--green)">🛡 Risk Management</span>
   </div>
-  <div class="controls">
-    <div class="field"><label>Market</label><select id="market"></select></div>
-    <div class="field"><label>Contract</label>
-      <select id="contract">
-        <option value="OVER">OVER</option>
-        <option value="UNDER">UNDER</option>
-        <option value="MATCH">MATCH</option>
-        <option value="DIFF">DIFFERS</option>
-        <option value="EVEN">EVEN</option>
-        <option value="ODD">ODD</option>
-      </select>
-    </div>
-    <div class="field"><label>Duration</label>
-      <select id="duration">
-        <option value="10">10 Ticks</option>
-        <option value="25">25 Ticks</option>
-        <option value="50">50 Ticks</option>
-        <option value="100" selected>100 Ticks</option>
-        <option value="300">300 Ticks</option>
-        <option value="500">500 Ticks</option>
-        <option value="1000">1000 Ticks</option>
-      </select>
-    </div>
-    <div class="field"><label>Sample</label>
-      <select id="sample">
-        <option value="100">100</option>
-        <option value="300">300</option>
-        <option value="500" selected>500</option>
-        <option value="1000">1000</option>
-        <option value="2000">2000</option>
-      </select>
-    </div>
-    <div class="field"><label>Bot</label>
-      <select id="botMode">
-        <option value="AUTO" selected>Auto Signal</option>
-        <option value="OFF">Manual</option>
-      </select>
-    </div>
-    <button class="btn ghost" id="exportBtn" title="Export tick & signal history">⤓ Export</button>
-    <button class="btn red" id="logout">Logout</button>
-  </div>
-</header>
 
-<div class="statusbar">
-  <span class="pill connector" id="connector">● Connecting</span>
-  <span class="pill risk">🛡 Risk Management</span>
-  <span class="pill soft" id="lastTickPill">⏱ —</span>
-  <span class="pill soft" id="keyhint"><kbd>S</kbd> start/stop • <kbd>1</kbd>–<kbd>9</kbd> barrier</span>
+  <section class="market-card">
+    <div class="market-name" id="marketName">Loading Deriv markets…</div>
+    <div class="market-meta" id="marketMeta">Public market data</div>
+    <div class="price" id="price">0.0000</div>
+    <div class="market-meta">Last digit: <b id="lastDigit">—</b></div>
+  </section>
+
+  <div class="start-wrap">
+    <button class="start" id="startBtn">▶ Start Analysis</button>
+  </div>
+
+  <section class="digit-panel">
+    <div class="digit-group">
+      <div class="digit-title">Over</div>
+      <div class="digits" id="overDigits"></div>
+    </div>
+    <div class="digit-group">
+      <div class="digit-title">Under</div>
+      <div class="digits" id="underDigits"></div>
+    </div>
+  </section>
+
+  <section class="actionbar">
+    <button class="action over">Over</button>
+    <button class="action even">Even</button>
+    <button class="action start2">Start</button>
+    <button class="action odd">Odd</button>
+    <button class="action under">Under</button>
+  </section>
+
+  <section class="progress">
+    <div class="prow">
+      <strong>Confidence</strong>
+      <div class="bar"><div class="fill" id="confidenceFill"></div></div>
+      <div class="pct" id="confidencePct">0%</div>
+    </div>
+    <div class="prow">
+      <strong>Data Progress</strong>
+      <div class="bar"><div class="fill data" id="dataFill"></div></div>
+      <div class="pct" id="dataPct">0%</div>
+    </div>
+  </section>
+
+  <section class="matches">
+    <div class="matchrow">
+      <button class="matchbtn">Matches</button>
+      <div class="center-digit">
+        <span id="centerDigitValue">—</span>
+        <small id="centerDigitConfidence">—%</small>
+      </div>
+      <button class="matchbtn">Differs</button>
+    </div>
+    <div class="match-confidence-hint" id="matchConfidenceHint">MATCH confidence: —</div>
+  </section>
+
+  <section class="card" id="multiMarketScanner">
+    <div class="title">📡 Multi-Market Volatility Scanner</div>
+    <div class="sub" style="color:var(--muted); margin-bottom:16px; font-size:12px">Real-time digit analysis across multiple volatility indices.</div>
+    <div class="scanner-list" id="scannerList"></div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <div class="title">Frequency Distribution</div>
+      <div class="chartbox"><canvas id="frequencyChart"></canvas></div>
+      <div style="text-align:center; color:var(--blue); font-size:20px; font-weight:900; margin-top:10px">Last Digit: <span id="lastDigitBig">-</span></div>
+    </div>
+    <div class="card">
+      <div class="title">Trading Pattern (Live Data)</div>
+      <div class="chartbox"><canvas id="patternChart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="title">Analysis Status</div>
+    <div class="status-grid">
+      <div class="metric"><small>Status</small><b id="status">Waiting</b></div>
+      <div class="metric"><small>Tick Data</small><b id="tickCount">0</b></div>
+      <div class="metric"><small>Mode</small><b id="modeText">ANALYSIS</b></div>
+      <div class="metric"><small>Pattern</small><b id="pattern">—</b></div>
+      <div class="metric"><small>Best Digit</small><b id="bestDigit">—</b></div>
+      <div class="metric"><small>Confidence</small><b id="signalConfidence">0%</b></div>
+    </div>
+    <div class="signal">
+      <div class="signalbar"><div class="signalfill" id="signalFill"></div></div>
+      <div class="signaltext" id="signalText">No signal</div>
+    </div>
+  </section>
+
+  <div class="footer">Expert Trader Pro • For educational and analysis purposes only. Trading involves risk.</div>
 </div>
 
-<section class="hero">
-  <div class="hero-main">
-    <div class="hero-name" id="marketName">Loading Deriv markets…</div>
-    <div class="hero-meta" id="marketMeta">Public market data</div>
-    <div class="hero-price" id="price">0.0000</div>
-    <div class="hero-digitrow">
-      <div class="hero-lastdigit"><small>LAST DIGIT</small><b id="lastDigit">—</b></div>
-      <div class="hero-delta up" id="priceDelta">▲ 0.0000</div>
-      <div class="hero-delta" id="tickRate" style="color:#b9c4ec;font-weight:700">— ticks/s</div>
-    </div>
-  </div>
-  <div class="hero-side">
-    <div class="hero-mini"><div><small>DIGIT BIAS</small><b id="miniBias">—</b></div><span class="badge" id="miniBiasBadge" style="background:#7650e9">—</span></div>
-    <div class="hero-mini"><div><small>STRONGEST PATTERN</small><b id="miniPattern">—</b></div><span class="badge" id="miniPatternBadge" style="background:#0aa66b">—</span></div>
-    <div class="hero-mini"><div><small>SIGNAL STRENGTH</small><b id="miniStrength">—</b></div><span class="badge" id="miniStrengthBadge" style="background:#f59b45">—</span></div>
-  </div>
-</section>
+<script>
+// --- CONFIGURATION & STATE ---
+const APP_ID = 1089;
+const WS_URL = `wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`;
+let ws, currentSubId = null, ticksData = [], maxSample = 500;
+let freqChart, patternChart;
+let isAnalyzing = false;
 
-<div class="start-wrap"><button class="start" id="start">▶ Start Analysis</button></div>
+// --- INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', () => {
+  initUI();
+  initCharts();
+  initScanner();
+  connectWebSocket();
+  
+  document.getElementById('startBtn').addEventListener('click', toggleAnalysis);
+  document.getElementById('sample').addEventListener('change', (e) => {
+    maxSample = parseInt(e.target.value);
+    if(ticksData.length > maxSample) ticksData = ticksData.slice(-maxSample);
+    updateAnalysisUI();
+  });
+  document.getElementById('market').addEventListener('change', changeMarket);
+});
 
-<section class="digit-panel">
-  <div class="digit-group"><div class="digit-title">Over Barrier</div><div class="digits" id="overDigits"></div></div>
-  <div class="digit-group"><div class="digit-title">Under Barrier</div><div class="digits" id="underDigits"></div></div>
-</section>
+function initUI() {
+  const over = document.getElementById('overDigits');
+  const under = document.getElementById('underDigits');
+  for(let i=0; i<=9; i++) {
+    over.innerHTML += `<div class="digit" id="over-${i}">${i}</div>`;
+    under.innerHTML += `<div class="digit" id="under-${i}">${i}</div>`;
+  }
+}
 
-<section class="actionbar">
-  <button class="action over" data-contract="OVER">Over</button>
-  <button class="action even" data-contract="EVEN">Even</button>
-  <button class="action start2" id="start2">Start</button>
-  <button class="action odd" data-contract="ODD">Odd</button>
-  <button class="action under" data-contract="UNDER">Under</button>
-</section>
+// --- WEBSOCKET ENGINE ---
+function connectWebSocket() {
+  ws = new WebSocket(WS_URL);
+  
+  ws.onopen = () => {
+    const conn = document.getElementById('connector');
+    conn.textContent = '● Connected';
+    conn.style.color = 'var(--green)';
+    document.getElementById('status').textContent = 'Connected';
+    ws.send(JSON.stringify({ active_symbols: 'brief', product_type: 'basic' }));
+  };
 
-<section class="progress">
-  <div class="prow"><strong>Model Confidence</strong><div class="bar"><div class="fill" id="confidenceFill"></div></div><div class="pct" id="confidencePct">0%</div></div>
-  <div class="prow"><strong>Data Progress</strong><div class="bar"><div class="fill data" id="dataFill"></div></div><div class="pct" id="dataPct">0%</div></div>
-  <div class="prow"><strong>Signal Strength</strong><div class="bar"><d
+  ws.onmessage = (msg) => {
+    const data = JSON.parse(msg.data);
+    if (data.error) {
+      console.error('API Error:', data.error.message);
+      return;
+    }
+
+    if (data.msg_type === 'active_symbols') {
+      populateMarkets(data.active_symbols);
+    } else if (data.msg_type === 'history') {
+      ticksData = data.history.prices.map(p => Math.floor(p % 10));
+      updateAnalysisUI();
+      if (!currentSubId) {
+        ws.send(JSON.stringify({ ticks: document.getElementById('market').value, subscribe: 1 }));
+      }
+    } else if (data.msg_type === 'tick') {
+      if (data.subscription) currentSubId = data.subscription.id;
+      processTick(data.tick);
+    }
+  };
+
+  ws.onclose = () => {
+    const conn = document.getElementById('connector');
+    conn.textContent = '● Disconnected';
+    conn.style.color = 'var(--red)';
+    document.getElementById('status').textContent = 'Reconnecting...';
+    setTimeout(connectWebSocket, 5000);
+  };
+}
+
+function populateMarkets(symbols) {
+  const select = document.getElementById('market');
+  select.innerHTML = '';
+  const volatilityIndices = symbols.filter(s => s.market === 'synthetic_index' && s.symbol.includes('R_'));
+  
+  volatilityIndices.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.symbol;
+    opt.textContent = s.display_name;
+    select.appendChild(opt);
+  });
+  
+  if(volatilityIndices.length > 0) {
+    document.getElementById('marketName').textContent = volatilityIndices[0].display_name;
+    changeMarket();
+  }
+}
+
+function changeMarket() {
+  if (currentSubId) {
+    ws.send(JSON.stringify({ forget: currentSubId }));
+    currentSubId = null;
+  }
+  ticksData = [];
+  const symbol = document.getElementById('market').value;
+  document.getElementById('marketName').textContent = document.getElementById('market').options[document.getElementById('market').selectedIndex].text;
+  ws.send(JSON.stringify({ ticks_history: symbol, end: 'latest', count: maxSample, style: 'ticks' }));
+}
+
+function processTick(tick) {
+  document.getElementById('price').textContent = tick.quote.toFixed(4);
+  const lastDigit = Math.floor(tick.quote % 10);
+  
+  document.getElementById('lastDigit').textContent = lastDigit;
+  document.getElementById('lastDigitBig').textContent = lastDigit;
+  
+  ticksData.push(lastDigit);
+  if (ticksData.length > maxSample) ticksData.shift();
+  
+  updateAnalysisUI();
+}
+
+// --- ANALYSIS & UI UPDATES ---
+function toggleAnalysis() {
+  isAnalyzing = !isAnalyzing;
+  const btn = document.getElementById('startBtn');
+  btn.textContent = isAnalyzing ? '⏸ Stop Analysis' : '▶ Start Analysis';
+  document.getElementById('status').textContent = isAnalyzing ? 'Analyzing' : 'Paused';
+  if(isAnalyzing && ticksData.length === 0) changeMarket();
+}
+
+function updateAnalysisUI() {
+  if (ticksData.length === 0) return;
+  
+  const total = ticksData.length;
+  const freq = new Array(10).fill(0);
+  ticksData.forEach(d => freq[d]++);
+  
+  // Update Progress
+  const progressPct = Math.min((total / maxSample) * 100, 100);
+  document.getElementById('dataFill').style.width = `${progressPct}%`;
+  document.getElementById('dataPct').textContent = `${Math.round(progressPct)}%`;
+  document.getElementById('tickCount').textContent = total;
+
+  // Calculate Best Digit & Confidence
+  let maxFreq = 0, bestDigit = 0;
+  freq.forEach((count, i) => {
+    if (count > maxFreq) { maxFreq = count; bestDigit = i; }
+  });
+  
+  const confidence = Math.round((maxFreq / total) * 100);
+  document.getElementById('confidenceFill').style.width = `${confidence}%`;
+  document.getElementById('confidencePct').textContent = `${confidence}%`;
+  document.getElementById('signalFill').style.width = `${confidence}%`;
+  document.getElementById('signalConfidence').textContent = `${confidence}%`;
+  document.getElementById('bestDigit').textContent = bestDigit;
+  document.getElementById('centerDigitValue').textContent = bestDigit;
+  document.getElementById('centerDigitConfidence').textContent = `${confidence}%`;
+  document.getElementById('matchConfidenceHint').textContent = `MATCH confidence for digit ${bestDigit}: ${confidence}%`;
+
+  // Highlight Digits
+  document.querySelectorAll('.digit').forEach(el => el.classList.remove('active'));
+  const overEl = document.getElementById(`over-${bestDigit}`);
+  const underEl = document.getElementById(`under-${bestDigit}`);
+  if(overEl) overEl.classList.add('active');
+  if(underEl) underEl.classList.add('active');
+
+  // Pattern Det
