@@ -3,125 +3,268 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="theme-color" content="#ffffff">
-<title>Expert Trader Analysis</title>
+<meta name="theme-color" content="#0b1020">
+<title>Expert Trader — Pro Analysis</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{
-  --bg:#f7f9ff;--card:#fff;--line:#dfe5ff;--text:#17234a;--muted:#7180a3;
+  --bg:#0a0f1e;--bg2:#0e1428;--panel:#111935;--panel2:#0d142a;
+  --card:#ffffff;--line:#e5e9f7;--line2:#2a3560;
+  --text:#0f1734;--soft:#42507a;--muted:#7b88ad;
   --blue:#3d3ce8;--cyan:#19b8ed;--pink:#ed2c91;--purple:#7650e9;
-  --green:#10a66a;--orange:#f59b45;--red:#ff3d5a;
-  --shadow:0 10px 30px rgba(71,82,160,.10)
+  --green:#10a66a;--green2:#0aa66b;--orange:#f59b45;--red:#ff3d5a;--gold:#f4b740;
+  --shadow:0 10px 30px rgba(20,28,70,.10);
+  --shadow-lg:0 18px 50px rgba(20,28,70,.16);
+  --r:16px;
 }
 *{box-sizing:border-box}
-body{margin:0;background:linear-gradient(135deg,#fbfcff,#f6f8ff);font-family:Inter,Arial,sans-serif;color:var(--text)}
-button,select{font:inherit}button{cursor:pointer}
-.app{width:min(1180px,96%);margin:10px auto 35px;background:rgba(255,255,255,.72);border:1px solid #e1e6fb;border-radius:18px;box-shadow:var(--shadow);padding:14px}
-.top{display:flex;align-items:center;gap:18px;padding:8px 12px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.logo{font-size:29px;font-weight:900;color:#e51d8a;text-shadow:0 5px 20px #eab1db}
-.logo-line{width:145px;height:3px;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px;margin-top:4px}
-.sub{font-size:11px;color:var(--muted);margin-top:5px}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1200px 700px at 15% -10%, #eaf0ff 0%, transparent 55%),
+    radial-gradient(900px 600px at 100% 0%, #ffe9f4 0%, transparent 45%),
+    linear-gradient(180deg,#f7f9ff,#eef2fb);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;
+}
+button,select,input{font:inherit}
+button{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,filter .12s ease}
+button:active{transform:translateY(1px)}
+
+.app{width:min(1240px,97%);margin:14px auto 40px;background:rgba(255,255,255,.72);backdrop-filter:blur(8px);border:1px solid #e1e6fb;border-radius:20px;box-shadow:var(--shadow-lg);padding:16px}
+
+/* TOP BAR */
+.top{display:flex;align-items:center;gap:18px;padding:6px 10px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{min-width:220px}
+.logo{font-size:28px;font-weight:900;letter-spacing:-.4px;background:linear-gradient(90deg,#e51d8a,#6d2be8 60%,#2aa9e8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo-line{width:150px;height:3px;border-radius:8px;margin-top:6px;background:linear-gradient(90deg,#ed2c91,#6d2be8,#19b8ed)}
+.sub{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5}
 .controls{display:flex;align-items:end;gap:8px;margin-left:auto;flex-wrap:wrap}
-.field label{display:block;font-size:10px;font-weight:800;color:#607099;margin:0 0 5px 2px}
-select{height:38px;border:1px solid #cfd7ff;border-radius:8px;background:#fff;color:#26314f;padding:0 28px 0 12px;min-width:120px;box-shadow:0 2px 7px rgba(60,60,180,.06)}
-.btn{height:38px;border:0;border-radius:9px;padding:0 16px;font-weight:800;color:#fff;background:linear-gradient(135deg,#4037df,#6834d7);box-shadow:0 6px 14px rgba(67,55,220,.20)}
+.field label{display:block;font-size:10px;font-weight:800;color:#607099;margin:0 0 5px 2px;letter-spacing:.3px;text-transform:uppercase}
+select,input[type=number]{height:38px;border:1px solid #cfd7ff;border-radius:9px;background:#fff;color:#26314f;padding:0 30px 0 12px;min-width:120px;box-shadow:0 2px 7px rgba(60,60,180,.06);outline:none}
+select:focus,input:focus{border-color:#7d6bf0;box-shadow:0 0 0 3px rgba(125,107,240,.18)}
+.btn{height:38px;border:0;border-radius:10px;padding:0 16px;font-weight:800;color:#fff;background:linear-gradient(135deg,#4037df,#6834d7);box-shadow:0 6px 14px rgba(67,55,220,.24)}
+.btn:hover{filter:brightness(1.05)}
 .btn.red{background:linear-gradient(135deg,#ff6b55,#ff0755)}
-.statusbar{display:flex;justify-content:flex-end;gap:8px;margin-top:-45px;margin-bottom:18px;pointer-events:none}
-.pill{padding:9px 13px;border-radius:9px;color:#fff;font-size:12px;font-weight:800;box-shadow:var(--shadow)}
-.connector{background:#0aa66b}.risk{background:#0b9e66}
-.market-card{margin:24px 0 20px;padding:15px;text-align:center;background:#fff;border:1px solid #e6eaff;border-radius:13px;box-shadow:var(--shadow)}
-.market-name{font-size:15px;font-weight:800}
-.price{font-size:22px;font-weight:900;color:#3e40e6;margin-top:8px}
-.market-meta{font-size:10px;color:var(--muted);margin-top:3px}
-.start-wrap{text-align:center;margin:16px}
-.start{width:180px;height:44px;border:0;border-radius:13px;background:linear-gradient(135deg,#ff9e24,#ff0753);color:#fff;font-weight:900;font-size:14px;box-shadow:0 8px 20px rgba(255,65,65,.22)}
-.digit-panel{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:18px 35px;background:linear-gradient(110deg,#effcff,#eef0ff);border-radius:13px;border:1px solid #e1e7ff}
+.btn.ghost{background:#fff;color:#4037df;border:1px solid #d9defa;box-shadow:none}
+.btn.ghost:hover{background:#f5f6ff}
+
+/* STATUS PILLS */
+.statusbar{display:flex;justify-content:flex-end;gap:8px;margin:10px 0 4px;flex-wrap:wrap}
+.pill{padding:8px 13px;border-radius:10px;color:#fff;font-size:12px;font-weight:800;box-shadow:var(--shadow);display:inline-flex;align-items:center;gap:6px}
+.connector{background:#0aa66b}
+.connector.warn{background:#f59b45}
+.connector.bad{background:#ff3d5a}
+.risk{background:linear-gradient(135deg,#0b9e66,#12c47c)}
+.pill.soft{background:#eef0fb;color:#4037df;box-shadow:none;font-weight:700}
+
+/* HERO */
+.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin:14px 0 18px}
+.hero-main{position:relative;overflow:hidden;padding:20px 22px;border-radius:18px;background:linear-gradient(120deg,#141c46 0%,#241a5c 50%,#3a1a6a 100%);color:#fff;box-shadow:var(--shadow-lg)}
+.hero-main:before{content:"";position:absolute;inset:0;background:radial-gradient(600px 200px at 10% 0%, rgba(61,200,237,.28), transparent 60%),radial-gradient(500px 200px at 100% 100%, rgba(237,44,145,.28), transparent 60%);pointer-events:none}
+.hero-name{font-size:16px;font-weight:800;opacity:.95;position:relative}
+.hero-meta{font-size:11px;color:#b9c4ec;margin-top:4px;position:relative}
+.hero-price{font-size:38px;font-weight:900;letter-spacing:-1px;margin-top:14px;position:relative;font-variant-numeric:tabular-nums}
+.hero-digitrow{display:flex;align-items:center;gap:14px;margin-top:14px;position:relative;flex-wrap:wrap}
+.hero-lastdigit{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:8px 14px;border-radius:12px}
+.hero-lastdigit small{font-size:10px;color:#cfd6f3;font-weight:700;letter-spacing:.4px}
+.hero-lastdigit b{font-size:22px;font-weight:900}
+.hero-delta{font-size:12px;font-weight:800}
+.hero-delta.up{color:#5ff0b0}
+.hero-delta.down{color:#ff9aa9}
+.hero-side{display:grid;grid-template-columns:1fr;gap:12px}
+.hero-mini{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hero-mini small{display:block;font-size:10px;color:var(--muted);font-weight:800;letter-spacing:.4px}
+.hero-mini b{font-size:18px}
+.hero-mini .badge{font-size:11px;font-weight:900;padding:5px 9px;border-radius:8px;color:#fff}
+
+/* START */
+.start-wrap{text-align:center;margin:6px 0 14px}
+.start{width:200px;height:46px;border:0;border-radius:14px;background:linear-gradient(135deg,#ff9e24,#ff0753);color:#fff;font-weight:900;font-size:14px;letter-spacing:.4px;box-shadow:0 10px 24px rgba(255,65,65,.28)}
+
+/* DIGIT PANEL */
+.digit-panel{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:18px 22px;background:linear-gradient(110deg,#effcff,#eef0ff);border-radius:16px;border:1px solid #e1e7ff}
 .digit-group{text-align:center}
-.digit-title{font-weight:900;color:#11b9ef;margin-bottom:13px}
+.digit-title{font-weight:900;color:#11b9ef;margin-bottom:12px;letter-spacing:.4px;font-size:12px;text-transform:uppercase}
 .digits{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-.digit{height:34px;background:#fff;border:1px solid #cfd8ff;border-radius:7px;color:#25304d;font-weight:800;box-shadow:0 3px 8px rgba(69,78,170,.08)}
+.digit{height:38px;background:#fff;border:1px solid #cfd8ff;border-radius:9px;color:#25304d;font-weight:800;box-shadow:0 3px 8px rgba(69,78,170,.08);position:relative}
 .digit.active{border-color:#4e36e5;background:#eeeaff;color:#402be2;box-shadow:0 0 0 2px #6d54ec55}
-.actionbar{display:flex;justify-content:center;gap:16px;margin:18px 0;padding:18px;background:linear-gradient(90deg,#fff0f8,#f0edff);border-radius:12px}
-.action{border:0;border-radius:10px;padding:11px 26px;color:#fff;font-weight:900;box-shadow:0 5px 12px rgba(55,50,180,.18)}
-.over{background:#a778e9}.even{background:#ff9b90}.start2{background:#4038df}.odd{background:#6fc8e8}.under{background:#f29a61}
-.progress{padding:15px 14px;background:linear-gradient(90deg,#fff8ef,#fff0f8);border-radius:12px;border:1px solid #f3e6e8}
-.prow{display:flex;align-items:center;gap:12px;margin:7px 0}
-.prow strong{width:100px;font-size:11px}
+.digit[data-hot="1"]{background:linear-gradient(180deg,#fff,#ffe7f2);border-color:#ffb9da}
+.digit[data-cold="1"]{background:linear-gradient(180deg,#fff,#e9f4ff);border-color:#b9d9ff}
+
+/* ACTION BAR */
+.actionbar{display:flex;justify-content:center;gap:14px;margin:16px 0;padding:16px;background:linear-gradient(90deg,#fff0f8,#f0edff);border-radius:14px;flex-wrap:wrap}
+.action{border:0;border-radius:11px;padding:11px 26px;color:#fff;font-weight:900;letter-spacing:.3px;box-shadow:0 6px 14px rgba(55,50,180,.2)}
+.action.over{background:linear-gradient(135deg,#a778e9,#8a52e0)}
+.action.even{background:linear-gradient(135deg,#ffb1a6,#ff8a7a)}
+.action.odd{background:linear-gradient(135deg,#6fc8e8,#3eb0d8)}
+.action.under{background:linear-gradient(135deg,#f2a877,#ee8b4d)}
+.action.start2{background:linear-gradient(135deg,#4038df,#6834d7)}
+.action.selected{outline:2px solid #1a1450;outline-offset:2px}
+
+/* PROGRESS */
+.progress{padding:14px;background:linear-gradient(90deg,#fff8ef,#fff0f8);border-radius:14px;border:1px solid #f3e6e8}
+.prow{display:flex;align-items:center;gap:12px;margin:8px 0}
+.prow strong{width:120px;font-size:11px;letter-spacing:.3px}
 .bar{height:10px;flex:1;background:#f0e9f2;border-radius:20px;overflow:hidden}
-.fill{height:100%;width:0;border-radius:20px;background:linear-gradient(90deg,#208bf1,#7352ec)}
+.fill{height:100%;width:0;border-radius:20px;background:linear-gradient(90deg,#208bf1,#7352ec);transition:width .4s ease}
 .fill.data{background:linear-gradient(90deg,#17b6a4,#16b9c8)}
-.pct{width:38px;text-align:right;font-size:11px;font-weight:800}
-.matches{margin:16px 0;padding:16px;text-align:center;background:linear-gradient(90deg,#effbf9,#eefdfb);border-radius:12px;border:1px solid #e0f0ed}
-.matchrow{display:flex;justify-content:center;align-items:center;gap:12px}
-.matchbtn{border:0;background:#3d31d5;color:#fff;border-radius:7px;padding:8px 17px;font-weight:900}
-.center-digit{width:62px;height:62px;border-radius:50%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1px;font-size:22px;line-height:22px;font-weight:900;color:#fff;background:linear-gradient(135deg,#7c42d9,#20b4d5);box-shadow:0 0 0 5px #d9dcff,0 8px 20px #7e75d955}
+.fill.gold{background:linear-gradient(90deg,#f4b740,#ff7a3d)}
+.pct{width:44px;text-align:right;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+
+/* MATCH PANEL */
+.matches{margin:16px 0;padding:18px;text-align:center;background:linear-gradient(90deg,#effbf9,#eefdfb);border-radius:14px;border:1px solid #e0f0ed}
+.matchrow{display:flex;justify-content:center;align-items:center;gap:18px;flex-wrap:wrap}
+.matchbtn{border:0;background:#3d31d5;color:#fff;border-radius:9px;padding:9px 18px;font-weight:900}
+.center-digit{width:78px;height:78px;border-radius:50%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1px;font-size:26px;line-height:26px;font-weight:900;color:#fff;background:linear-gradient(135deg,#7c42d9,#20b4d5);box-shadow:0 0 0 6px #d9dcff,0 10px 24px #7e75d955;transition:transform .2s ease}
 .center-digit small{font-size:9px;line-height:10px;font-weight:900;opacity:.96}
-.match-confidence-hint{margin-top:9px;font-size:11px;font-weight:800;color:#59617a}
+.match-confidence-hint{margin-top:10px;font-size:12px;font-weight:800;color:#59617a}
+
+/* GRID / CARDS */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.card{background:#fff;border:1px solid #e2e7fb;border-radius:12px;padding:16px;box-shadow:var(--shadow)}
-.title{font-size:14px;font-weight:900;color:#20aee8;margin-bottom:12px}
-.chartbox{height:245px;position:relative}
-.last{text-align:center;color:#4055e8;font-size:20px;font-weight:900;margin-top:3px}
+.card{background:#fff;border:1px solid #e2e7fb;border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+.title{font-size:13px;font-weight:900;color:#1a2a55;margin-bottom:12px;letter-spacing:.2px;display:flex;align-items:center;gap:8px}
+.title:before{content:"";width:6px;height:6px;border-radius:2px;background:linear-gradient(135deg,#20aee8,#7650e9)}
+.chartbox{height:250px;position:relative}
+.last{text-align:center;color:#4055e8;font-size:20px;font-weight:900;margin-top:6px}
+
+/* STATUS GRID */
 .status-card{margin-top:16px}
-.status-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-.metric{background:#fafbff;border:1px solid #e8ecfb;border-radius:8px;padding:10px}
-.metric small{display:block;color:#8390ae;font-size:9px}
-.metric b{display:block;margin-top:5px;font-size:14px}
+.status-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.metric{background:#fafbff;border:1px solid #e8ecfb;border-radius:10px;padding:11px}
+.metric small{display:block;color:#8390ae;font-size:9px;letter-spacing:.3px;font-weight:700;text-transform:uppercase}
+.metric b{display:block;margin-top:5px;font-size:14px;font-variant-numeric:tabular-nums}
 .signal{margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .signalbar{height:9px;flex:1;background:#eceafa;border-radius:20px;overflow:hidden}
-.signalfill{height:100%;width:0;background:linear-gradient(90deg,#1e8df2,#7752ea);border-radius:20px}
-.signaltext{font-size:12px;font-weight:900;padding:9px 12px;border-radius:8px;background:#fff6e8;color:#b06a10;white-space:nowrap}
-.log{margin-top:16px;background:#10162b;color:#dce6ff;border-radius:10px;padding:10px;font:11px/1.5 monospace;max-height:150px;overflow:auto}
-.log .err{color:#ff8997}.log .ok{color:#6ce7ac}
-.footer{text-align:center;color:#8994b2;font-size:10px;margin:18px 0 4px}
+.signalfill{height:100%;width:0;background:linear-gradient(90deg,#1e8df2,#7752ea);border-radius:20px;transition:width .4s ease}
+.signaltext{font-size:12px;font-weight:900;padding:9px 12px;border-radius:9px;background:#fff6e8;color:#b06a10;white-space:nowrap}
+
+/* LOG */
+.log{margin-top:16px;background:#0e142c;color:#dce6ff;border-radius:12px;padding:12px;font:11.5px/1.55 ui-monospace,Menlo,monospace;max-height:170px;overflow:auto}
+.log .err{color:#ff8997}.log .ok{color:#6ce7ac}.log .warn{color:#ffd27a}
+
+/* ANALYTICS */
+.analytics-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:6px}
+.analytics-card{border:1px solid #e3e8fb;border-radius:12px;padding:12px;background:#fbfcff}
+.analytics-card h4{margin:0 0 8px;font-size:10px;letter-spacing:.4px;color:var(--muted);text-transform:uppercase;font-weight:800}
+.analytics-card .big{font-size:20px;font-weight:900;color:#1a2a55}
+.analytics-card .subline{font-size:11px;color:var(--soft);margin-top:5px}
+.streak-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.streak-pill{font-size:11px;font-weight:800;padding:6px 10px;border-radius:8px;background:#eef0fb;color:#3d31d5;border:1px solid #e0e4fb}
+.streak-pill.hot{background:#ffe7f0;color:#c11c66;border-color:#ffc4dd}
+.matrix{display:grid;grid-template-columns:repeat(11,1fr);gap:3px;font-size:10px;margin-top:6px}
+.matrix > div{text-align:center;padding:5px 0;border-radius:5px;font-weight:700;color:#2b3560;background:#f2f4fd}
+.matrix .hdr{background:#e6eafc;color:#3d31d5;font-weight:900}
+.backtest-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:8px}
+.backtest-table th,.backtest-table td{padding:7px 8px;text-align:left;border-bottom:1px solid #eef0f8}
+.backtest-table th{font-weight:800;color:var(--muted);text-transform:uppercase;font-size:9.5px;letter-spacing:.4px}
+.backtest-table td b{color:#1a2a55}
+.backtest-table tr:last-child td{border-bottom:0}
+
 .accuracy-metric{border:1px solid #e3e8fb;border-radius:12px;padding:11px;background:#fbfcff;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.accuracy-metric b{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
 .accuracy-metric span{font-size:17px;font-weight:800}
-.contract-confidence-card{border:1px solid #e3e8fb;border-radius:12px;padding:12px;background:#fbfcff;min-height:108px}
+
+.contract-confidence-card{border:1px solid #e3e8fb;border-radius:12px;padding:12px;background:#fbfcff;min-height:112px}
 .contract-confidence-card .cc-head{display:flex;justify-content:space-between;align-items:center;gap:6px}
-.contract-confidence-card .cc-value{font-size:21px;font-weight:800}
+.contract-confidence-card .cc-value{font-size:22px;font-weight:900}
 .contract-confidence-card .cc-bar{height:8px;background:#edf0fb;border-radius:8px;overflow:hidden;margin:9px 0 7px}
-.contract-confidence-card .cc-fill{height:100%;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px}
+.contract-confidence-card .cc-fill{height:100%;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px;transition:width .5s}
+.cc-best{outline:2px solid #6d2be8;outline-offset:2px}
+
+.volatility-match-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:14px;align-items:stretch}
 .volatility-match-grid > div{min-height:280px;box-sizing:border-box}
-.volatility-match-grid #volatilityScanList{max-height:205px;overflow-y:auto;padding-right:4px}
-.volatility-match-grid #matchConfidenceList{max-height:170px;overflow-y:auto;padding-right:4px}
-.volatility-match-grid .scan-summary{font-size:12px}
-@media(max-width:900px){.top{align-items:flex-start;flex-direction:column}.controls{margin-left:0}.statusbar{margin:0;justify-content:flex-start}.status-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:760px){.volatility-match-grid{grid-template-columns:1fr !important}#accuracyEngineGrid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}}
-@media(max-width:650px){.grid,.digit-panel{grid-template-columns:1fr}.status-grid{grid-template-columns:repeat(2,1fr)}.actionbar{flex-wrap:wrap}.digits{gap:6px}.digit-panel{padding:14px}.app{width:98%;padding:8px}}
-@media(max-width:420px){#accuracyEngineGrid{grid-template-columns:1fr !important}#contractConfidenceGrid{grid-template-columns:1fr !important}}
+.volatility-match-grid #volatilityScanList{max-height:230px;overflow-y:auto;padding-right:4px}
+.volatility-match-grid #matchConfidenceList{max-height:200px;overflow-y:auto;padding-right:4px}
+.scan-summary{font-size:12px}
+
+.run-row{border:1px solid #e3e8fb;border-radius:12px;padding:12px;margin:9px 0;background:#fbfcff}
+.run-row .flex{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.run-bar{height:8px;background:#edf0fb;border-radius:8px;overflow:hidden;margin:9px 0}
+.run-fill{height:100%;background:linear-gradient(90deg,#ed2c91,#6d2be8);border-radius:8px;transition:width .5s}
+
+/* TOAST */
+#toast{position:fixed;top:16px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:9999;pointer-events:none}
+.toast{background:#0e142c;color:#fff;padding:11px 14px;border-radius:10px;font-size:12.5px;font-weight:700;box-shadow:0 12px 30px rgba(0,0,0,.35);opacity:0;transform:translateY(-8px);transition:all .25s ease;border-left:3px solid #6d2be8;max-width:320px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{border-left-color:#12c47c}
+.toast.warn{border-left-color:#f4b740}
+.toast.err{border-left-color:#ff3d5a}
+
+.settings{margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.settings .field select,.settings .field input{height:35px}
+.check{margin-left:auto;font-size:11px;font-weight:800;color:#4a5683}
+.footer{text-align:center;color:#8994b2;font-size:10px;margin:18px 0 4px;line-height:1.6}
+kbd{background:#f0f2fb;border:1px solid #d9defa;border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:10px;font-weight:800;color:#4037df;font-family:ui-monospace,Menlo,monospace}
+
+@media(max-width:960px){
+  .hero{grid-template-columns:1fr}
+  .top{align-items:flex-start;flex-direction:column}
+  .controls{margin-left:0}
+  .statusbar{justify-content:flex-start}
+  .status-grid{grid-template-columns:repeat(3,1fr)}
+  .analytics-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:760px){
+  .grid,.digit-panel{grid-template-columns:1fr}
+  .volatility-match-grid{grid-template-columns:1fr}
+  #contractConfidenceGrid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+  #accuracyEngineGrid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+}
+@media(max-width:650px){
+  .status-grid{grid-template-columns:repeat(2,1fr)}
+  .actionbar{flex-wrap:wrap}
+  .digits{gap:6px}
+  .digit-panel{padding:14px}
+  .app{width:98%;padding:10px}
+  .hero-price{font-size:30px}
+  .analytics-grid{grid-template-columns:1fr}
+}
+@media(max-width:420px){
+  #contractConfidenceGrid{grid-template-columns:1fr !important}
+  #accuracyEngineGrid{grid-template-columns:1fr !important}
+}
 </style>
 </head>
 <body>
-
+<div id="toast"></div>
 <div class="app">
 
 <header class="top">
-  <div>
+  <div class="brand">
     <div class="logo">Expert Trader</div>
     <div class="logo-line"></div>
-    <div class="sub">Deriv digit market intelligence • Analysis only</div>
+    <div class="sub">Deriv digit market intelligence • Advanced statistical analysis</div>
   </div>
   <div class="controls">
     <div class="field"><label>Market</label><select id="market"></select></div>
-    <div class="field"><label>Contract Type</label>
+    <div class="field"><label>Contract</label>
       <select id="contract">
-        <option value="OVER">OVER</option><option value="UNDER">UNDER</option>
-        <option value="MATCH">MATCH</option><option value="DIFF">DIFFERS</option>
-        <option value="EVEN">EVEN</option><option value="ODD">ODD</option>
+        <option value="OVER">OVER</option>
+        <option value="UNDER">UNDER</option>
+        <option value="MATCH">MATCH</option>
+        <option value="DIFF">DIFFERS</option>
+        <option value="EVEN">EVEN</option>
+        <option value="ODD">ODD</option>
       </select>
     </div>
     <div class="field"><label>Duration</label>
       <select id="duration">
-        <option value="10">10 Ticks</option><option value="25">25 Ticks</option>
-        <option value="50">50 Ticks</option><option value="100" selected>100 Ticks</option>
-        <option value="300">300 Ticks</option><option value="500">500 Ticks</option>
+        <option value="10">10 Ticks</option>
+        <option value="25">25 Ticks</option>
+        <option value="50">50 Ticks</option>
+        <option value="100" selected>100 Ticks</option>
+        <option value="300">300 Ticks</option>
+        <option value="500">500 Ticks</option>
         <option value="1000">1000 Ticks</option>
       </select>
     </div>
-    <div class="field"><label>Analysis</label>
+    <div class="field"><label>Sample</label>
       <select id="sample">
-        <option value="100">100</option><option value="300">300</option>
-        <option value="500" selected>500</option><option value="1000">1000</option>
+        <option value="100">100</option>
+        <option value="300">300</option>
+        <option value="500" selected>500</option>
+        <option value="1000">1000</option>
         <option value="2000">2000</option>
       </select>
     </div>
@@ -131,7 +274,7 @@ select{height:38px;border:1px solid #cfd7ff;border-radius:8px;background:#fff;co
         <option value="OFF">Manual</option>
       </select>
     </div>
-    <button class="btn" id="mode">Analysis ▼</button>
+    <button class="btn ghost" id="exportBtn" title="Export tick & signal history">⤓ Export</button>
     <button class="btn red" id="logout">Logout</button>
   </div>
 </header>
@@ -139,23 +282,33 @@ select{height:38px;border:1px solid #cfd7ff;border-radius:8px;background:#fff;co
 <div class="statusbar">
   <span class="pill connector" id="connector">● Connecting</span>
   <span class="pill risk">🛡 Risk Management</span>
-  <span class="pill risk" id="lastTickPill" style="background:#3d3ce8">⏱ —</span>
+  <span class="pill soft" id="lastTickPill">⏱ —</span>
+  <span class="pill soft" id="keyhint"><kbd>S</kbd> start/stop • <kbd>1</kbd>–<kbd>9</kbd> barrier</span>
 </div>
 
-<section class="market-card">
-  <div class="market-name" id="marketName">Loading Deriv markets…</div>
-  <div class="market-meta" id="marketMeta">Public market data</div>
-  <div class="price" id="price">0.0000</div>
-  <div class="market-meta">Last digit: <b id="lastDigit">—</b></div>
+<section class="hero">
+  <div class="hero-main">
+    <div class="hero-name" id="marketName">Loading Deriv markets…</div>
+    <div class="hero-meta" id="marketMeta">Public market data</div>
+    <div class="hero-price" id="price">0.0000</div>
+    <div class="hero-digitrow">
+      <div class="hero-lastdigit"><small>LAST DIGIT</small><b id="lastDigit">—</b></div>
+      <div class="hero-delta up" id="priceDelta">▲ 0.0000</div>
+      <div class="hero-delta" id="tickRate" style="color:#b9c4ec;font-weight:700">— ticks/s</div>
+    </div>
+  </div>
+  <div class="hero-side">
+    <div class="hero-mini"><div><small>DIGIT BIAS</small><b id="miniBias">—</b></div><span class="badge" id="miniBiasBadge" style="background:#7650e9">—</span></div>
+    <div class="hero-mini"><div><small>STRONGEST PATTERN</small><b id="miniPattern">—</b></div><span class="badge" id="miniPatternBadge" style="background:#0aa66b">—</span></div>
+    <div class="hero-mini"><div><small>SIGNAL STRENGTH</small><b id="miniStrength">—</b></div><span class="badge" id="miniStrengthBadge" style="background:#f59b45">—</span></div>
+  </div>
 </section>
 
-<div class="start-wrap">
-  <button class="start" id="start">▶ Start Analysis</button>
-</div>
+<div class="start-wrap"><button class="start" id="start">▶ Start Analysis</button></div>
 
 <section class="digit-panel">
-  <div class="digit-group"><div class="digit-title">Over</div><div class="digits" id="overDigits"></div></div>
-  <div class="digit-group"><div class="digit-title">Under</div><div class="digits" id="underDigits"></div></div>
+  <div class="digit-group"><div class="digit-title">Over Barrier</div><div class="digits" id="overDigits"></div></div>
+  <div class="digit-group"><div class="digit-title">Under Barrier</div><div class="digits" id="underDigits"></div></div>
 </section>
 
 <section class="actionbar">
@@ -167,170 +320,6 @@ select{height:38px;border:1px solid #cfd7ff;border-radius:8px;background:#fff;co
 </section>
 
 <section class="progress">
-  <div class="prow"><strong>Confidence</strong><div class="bar"><div class="fill" id="confidenceFill"></div></div><div class="pct" id="confidencePct">0%</div></div>
+  <div class="prow"><strong>Model Confidence</strong><div class="bar"><div class="fill" id="confidenceFill"></div></div><div class="pct" id="confidencePct">0%</div></div>
   <div class="prow"><strong>Data Progress</strong><div class="bar"><div class="fill data" id="dataFill"></div></div><div class="pct" id="dataPct">0%</div></div>
-</section>
-
-<section class="matches">
-  <div class="matchrow">
-    <button class="matchbtn">Matches</button>
-    <div class="center-digit" id="centerDigit">
-      <span id="centerDigitValue">—</span>
-      <small id="centerDigitConfidence">—%</small>
-    </div>
-    <button class="matchbtn">Differs</button>
-  </div>
-  <div class="match-confidence-hint" id="matchConfidenceHint">MATCH confidence: —</div>
-</section>
-
-<section class="card" id="matchRunPlannerCard" style="margin-top:16px">
-  <div class="title">🎯 MATCH Run Planner</div>
-  <div class="sub">Strongest different MATCH digits, their observed confidence, and a model-estimated maximum number of consecutive attempts. Statistical guidance only.</div>
-  <div id="matchRunPlanner" style="margin-top:12px"></div>
-</section>
-
-<section class="grid">
-  <div class="card">
-    <div class="title">Frequency Distribution</div>
-    <div class="chartbox"><canvas id="frequencyChart"></canvas></div>
-    <div class="last">Last Digit: <span id="lastDigitBig">-</span></div>
-  </div>
-  <div class="card">
-    <div class="title">Trading Pattern (Live Data)</div>
-    <div class="chartbox"><canvas id="patternChart"></canvas></div>
-  </div>
-</section>
-
-<section class="card status-card">
-  <div class="title">Analysis Status</div>
-  <div class="status-grid">
-    <div class="metric"><small>Status</small><b id="status">Waiting</b></div>
-    <div class="metric"><small>Tick Data</small><b id="tickCount">0</b></div>
-    <div class="metric"><small>Mode</small><b id="modeText">ANALYSIS</b></div>
-    <div class="metric"><small>Pattern</small><b id="pattern">—</b></div>
-    <div class="metric"><small>Best Digit</small><b id="bestDigit">—</b></div>
-    <div class="metric"><small>Signal Confidence</small><b id="signalConfidence">0%</b></div>
-  </div>
-  <div class="signal">
-    <div class="signalbar"><div class="signalfill" id="signalFill"></div></div>
-    <div class="signaltext" id="signalText">No signal</div>
-  </div>
-  <div class="sub" id="message" style="margin-top:8px">Connect to Deriv and collect historical ticks.</div>
-</section>
-
-<section class="card" id="botCard" style="margin-top:16px">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-    <div>
-      <div class="title" style="margin-bottom:4px">🤖 Automatic Signal Generator</div>
-      <div class="sub">Live statistical signal from the selected tick stream. Descriptive analysis, not a guaranteed prediction.</div>
-    </div>
-    <span class="pill" id="botBadge" style="background:#7650e9;padding:7px 10px">AUTO BOT</span>
-  </div>
-  <div class="status-grid" style="margin-top:12px">
-    <div class="metric"><small>Signal</small><b id="botSignal">WAIT</b></div>
-    <div class="metric"><small>Digit / Barrier</small><b id="botDigit">—</b></div>
-    <div class="metric"><small>Observed Rate</small><b id="botStrength">—</b></div>
-    <div class="metric"><small>Ticks Since Signal</small><b id="botAge">—</b></div>
-    <div class="metric"><small>Next Refresh</small><b id="botNext">—</b></div>
-    <div class="metric"><small>Contract</small><b id="botType">—</b></div>
-  </div>
-  <div id="signalHistory" class="log" style="margin-top:12px;max-height:120px"></div>
-</section>
-
-<section class="card" id="accuracyEngineCard" style="margin-top:16px">
-  <div class="title">🧠 Advanced Accuracy Engine</div>
-  <div class="sub">Multi-window frequency, recency weighting, time-block stability, conditional sequence evidence and walk-forward validation.</div>
-  <div id="accuracyEngineGrid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px">
-    <div class="accuracy-metric"><b>Multi-window</b><span id="accWindow">—</span></div>
-    <div class="accuracy-metric"><b>Stability</b><span id="accStability">—</span></div>
-    <div class="accuracy-metric"><b>Sequence</b><span id="accSequence">—</span></div>
-    <div class="accuracy-metric"><b>Validation</b><span id="accValidation">—</span></div>
-  </div>
-  <div id="accuracyEngineMessage" class="sub" style="margin-top:10px"></div>
-</section>
-
-<section class="card" id="contractConfidenceCard" style="margin-top:16px">
-  <div class="title">🎯 Even / Odd / Over / Under Analysis</div>
-  <div class="sub">Confidence is calculated from the current historical digit sample. Over/Under barriers are evaluated automatically.</div>
-  <div id="contractConfidenceGrid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px">
-    <div class="contract-confidence-card" id="evenConfidenceCard"></div>
-    <div class="contract-confidence-card" id="oddConfidenceCard"></div>
-    <div class="contract-confidence-card" id="overConfidenceCard"></div>
-    <div class="contract-confidence-card" id="underConfidenceCard"></div>
-  </div>
-  <div id="contractConfidenceSummary" class="sub" style="margin-top:10px"></div>
-</section>
-
-<section class="card" id="volatilityMatchDashboard" style="margin-top:16px;min-height:330px">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-    <div>
-      <div class="title">📊 Volatility MATCH Intelligence</div>
-      <div class="sub">Combines the Volatility scanner with digit-by-digit MATCH confidence so you can see the strongest observed markets and digits in one place.</div>
-    </div>
-    <button class="btn" id="scanVolatility">Scan Volatility</button>
-  </div>
-  <div id="volatilityScanStatus" class="sub" style="margin-top:10px">Ready to scan available Volatility markets.</div>
-  <div class="volatility-match-grid" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:14px;align-items:stretch">
-    <div style="border:1px solid #e3e8fb;border-radius:14px;padding:14px;background:#fff">
-      <div class="title" style="margin-bottom:4px">Best Volatility MATCH</div>
-      <div class="sub">Markets are ordered by the statistical confidence score.</div>
-      <div id="volatilityScanList" style="margin-top:12px"></div>
-    </div>
-    <div class="card" id="matchConfidenceCard" style="margin:0;box-shadow:none">
-      <div class="title" style="margin-bottom:4px">MATCH Digit Confidence</div>
-      <div class="sub" id="matchConfidenceSub">Digit-by-digit statistical confidence for the selected market.</div>
-      <div id="bestScannedMatch" style="margin-top:10px"></div>
-      <div id="matchConfidenceList" style="margin-top:12px"></div>
-    </div>
-  </div>
-</section>
-
-<section class="card" id="backtestCard" style="margin-top:16px">
-  <div class="title">📈 Historical Signal Backtest</div>
-  <div class="sub">Walk-forward simulation of the current model on your loaded tick history.</div>
-  <div id="backtestSummary" class="sub" style="margin-top:8px"></div>
-</section>
-
-<section class="card settings" style="margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-  <div class="field"><label>Analysis Ticks</label>
-    <select id="analysisTicks"><option>100</option><option>300</option><option selected>500</option><option>1000</option><option>2000</option></select>
-  </div>
-  <div class="field"><label>Minimum Confidence</label>
-    <select id="threshold"><option>55%</option><option>60%</option><option selected>65%</option><option>70%</option><option>75%</option></select>
-  </div>
-  <div class="field"><label>Barrier</label>
-    <select id="barrier">
-      <option>0</option><option>1</option><option>2</option><option>3</option>
-      <option selected>4</option><option>5</option><option>6</option>
-      <option>7</option><option>8</option><option>9</option>
-    </select>
-  </div>
-  <label class="check" style="margin-left:auto;font-size:11px;font-weight:800">
-    <input type="checkbox" id="auto"> Auto analysis every 30 seconds
-  </label>
-</section>
-
-<div class="log" id="log"></div>
-<div class="footer">Expert Trader Analysis • Statistical analysis only. No automatic trading. No guaranteed results.</div>
-
-</div>
-
-<script>
-"use strict";
-
-/* ==========================================================
-   ORIGINAL CONNECTION LOGIC — UNCHANGED
-   ========================================================== */
-const WS_URL = "wss://api.derivws.com/trading/v1/options/ws/public";
-const $ = id => document.getElementById(id);
-
-const S = {
-  ws:null, connected:false, manual:false,
-  symbol:"", pip:null, markets:[],
-  ticks:[], request:1, timer:null, polling:false,
-  chart:null, patternChart:null,
-  contract:"OVER", barrier:4,
-  lastAnalysis:0, subId:null,
-  autoLastTick:0, autoLastSignature:"",
-  signalHistory:[], signalEvery:5,
-  volat
+  <div class="prow"><strong>Signal Strength</strong><div class="bar"><d
